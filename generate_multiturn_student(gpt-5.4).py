@@ -26,7 +26,7 @@ except Exception as e:
     exit(1)
 
 
-def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 8) -> dict:
+def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 12) -> dict:
 
     formatted_profile = (
         f"【学年】: {profile_dict.get('grade', '不明')}\n"
@@ -67,7 +67,7 @@ def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 8) -> d
                 active_student_context = student_context
 
             student_response = client.chat.completions.create(
-                model="gpt-4o-mini", 
+                model="gpt-5.4-mini", 
                 messages=active_student_context,
                 temperature=0.7
             )
@@ -145,7 +145,7 @@ def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 8) -> d
 # 実行・保存ブロック
 if __name__ == "__main__":
     profile_filename = os.path.join(BASE_DIR, "student_profile.json")
-    output_filename = os.path.join(BASE_DIR, "multiturn_math_student(gpt-4o-mini)_sample.json")
+    output_filename = os.path.join(BASE_DIR, "multiturn_math_student(gpt-5.4-mini)_sample.json")
     
     # MATH or GSM8K を選択
     input_filename = os.path.join(BASE_DIR, "translated_math_sample.jsonl")
@@ -179,7 +179,7 @@ if __name__ == "__main__":
             
         profile_item = student_presets[index % len(student_presets)]
         
-        dialogue_result = generate_dialogue(problem_text, profile_item, max_turns=8)
+        dialogue_result = generate_dialogue(problem_text, profile_item, max_turns=12)
         
         dialogue_result["source_id"] = item.get("id", f"unknown_{index}")
         

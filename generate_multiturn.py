@@ -66,12 +66,12 @@ def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 8) -> d
             else:
                 active_student_context = student_context
 
-            student_response = client.responses.create(
-                model="gpt-5.4-mini", 
-                input=active_student_context,
-                reasoning={"effort": "none"}
+            student_response = client.chat.completions.create(
+                model="gpt-4o-mini", 
+                messages=active_student_context,
+                temperature=0.7
             )
-            student_utterance = student_response.output_text.strip()
+            student_utterance = student_response.choices[0].message.content.strip()
         except Exception as e:
             print(f"\n生徒APIエラー: {e}")
             break
@@ -145,10 +145,10 @@ def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 8) -> d
 # 実行・保存ブロック
 if __name__ == "__main__":
     profile_filename = os.path.join(BASE_DIR, "student_profile.json")
-    output_filename = os.path.join(BASE_DIR, "debug_tutoring_dataset.json")
+    output_filename = os.path.join(BASE_DIR, "multiturn_math_student(gpt-4o-mini)_sample.json")
     
     # MATH or GSM8K を選択
-    input_filename = os.path.join(BASE_DIR, "translated_gsm8k_sample.jsonl")
+    input_filename = os.path.join(BASE_DIR, "translated_math_sample.jsonl")
     
     if not os.path.exists(profile_filename):
         raise FileNotFoundError(f"エラー: プロファイルファイルが見つかりません: {profile_filename}")
@@ -167,8 +167,8 @@ if __name__ == "__main__":
     LIMIT = 5
     target_problems = problems_list[:LIMIT]
     
-    print(f"設定プロファイル: {len(student_presets)}件 をロードしました。")
-    print(f"先頭の {LIMIT} 件を使ってサンプル対話を合成します。\n")
+    print(f"設定プロファイル: {len(student_presets)}件 をロード")
+    print(f"先頭の {LIMIT} 件を使ってサンプル対話を合成\n")
     
     all_results = []
     

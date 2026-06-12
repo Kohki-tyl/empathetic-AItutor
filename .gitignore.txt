@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+.env
+
+data/
+*.jsonl
+*.json
+
+.DS_Store
+Thumbs.db

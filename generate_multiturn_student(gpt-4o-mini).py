@@ -16,8 +16,8 @@ def load_prompt_file(filename):
         return f.read()
 
 try:
-    TEACHER_SYSTEM = load_prompt_file("teacher_system.txt")
-    STUDENT_SYSTEM_TEMPLATE = load_prompt_file("student_system.txt")
+    TEACHER_SYSTEM = load_prompt_file(os.path.join("prompts", "teacher_system.txt"))
+    STUDENT_SYSTEM_TEMPLATE = load_prompt_file(os.path.join("prompts", "student_system.txt"))
 except Exception as e:
     exit(1)
 
@@ -136,9 +136,9 @@ def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 15) -> 
     }
 
 if __name__ == "__main__":
-    profile_filename = os.path.join(BASE_DIR, "student_profile.json")
+    profile_filename = os.path.join(BASE_DIR, "prompts", "student_profile.json")
     output_filename = os.path.join(BASE_DIR, "multiturn_math_student(gpt-4o-mini)_sample_5.json")
-    input_filename = os.path.join(BASE_DIR, "translated_math_sample.jsonl")
+    input_filename = os.path.join(BASE_DIR, "questions", "translated_math_sample.jsonl")
     
     with open(profile_filename, "r", encoding="utf-8") as f:
         student_presets = json.load(f)

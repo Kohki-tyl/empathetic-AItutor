@@ -5,8 +5,7 @@ __pycache__/
 .env
 
 data/
-*.jsonl
-*.json
+sample_log
 
 .DS_Store
 Thumbs.db

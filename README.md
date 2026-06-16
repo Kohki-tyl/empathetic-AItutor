@@ -130,11 +130,12 @@ pip install uv
 uv pip install openai datasets tqdm
 ```
 
-###3. パイプラインの実行手順
+### 3. パイプラインの実行手順
 Step 1: シードデータの作成（翻訳とフィルタリング）
 Hugging Face から元の MATH ベンチマークを読み込み、日本語化されたシード問題集をビルドします。
 ```bash
 python translate_dataset.py
+```
 * 実行が成功すると、カレントディレクトリに translated_math.jsonl が生成されます。
 
 Step 2: 共感対話シミュレーション（マルチターン合成）の実行

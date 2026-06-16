@@ -25,27 +25,27 @@ LLM（Large Language Models）の高度な役割演技（Role-playing）シミ�
 ## 🛠 パイプライン・アーキテクチャ
 
 データ合成は以下の2つの独立したステップ（パイプライン）で実行されます。
-[Hugging Face: MATH Benchmark]
-│
-▼ (Step 1: translate_dataset.py)
-┌──────────────────────────────────────────┐
-│ ・図形問題のフィルタリング (Regex Parser)   │
-│ ・CoTプロンプトによる高品質日本語翻訳        │
-└─────────────┬────────────────────────────┘
-│
-▼ [translated_math.jsonl]
-│
-▼ (Step 2: generate_dialogue.py / GM_completionsAPI.py)
-┌──────────────────────────────────────────┐
-│  User Simulator (Student) [gpt-5.4-mini] │
-│                     ▲                    │
-│                     │ (マルチターン対話)   │
-│                     ▼                    │
-│    Tutor Agent (Teacher)   [gpt-5.4]     │
-│    └─ Structured Outputs (JSON Schema)   │
-└─────────────────────┬────────────────────┘
-│
-▼ [CoT_emotional_cycle_sample.json]
+```mermaid
+flowchart TD
+    A["[Hugging Face: MATH Benchmark]"] --> B1
+    
+    subgraph Step1 ["Step 1: translate_dataset.py"]
+        B1["図形問題のフィルタリング<br>(Regex Parser)"]
+        B2["高品質日本語翻訳<br>(CoTプロンプト)"]
+        B1 --> B2
+    end
+    
+    B2 --> C["[translated_math.jsonl]"] --> Step2
+    
+    subgraph Step2 ["Step 2: GM_completionsAPI.py"]
+        direction TB
+        S["User Simulator (Student)<br>[gpt-5.4-mini]"]
+        T["Tutor Agent (Teacher)<br>[gpt-5.4]<br>└─ Structured Outputs (JSON Schema)"]
+        S <-->|"マルチターン対話"| T
+    end
+    
+    Step2 --> D["[CoT_emotional_cycle_sample.json]"]
+```
 
 ### Step 1: データセットのフィルタリングと高品質日本語翻訳 (`translate_dataset.py`)
 * **データソース**: Hugging Faceの `nlile/hendrycks-MATH-benchmark` を使用します。
@@ -110,6 +110,7 @@ empathetic-AItutor/
 ├── translate_dataset.py         # MATHデータセットのフィルタリング・日本語翻訳スクリプト
 ├── GM_completionsAPI.py         # 翻訳済みデータをシードにしたマルチターン対話合成コアスクリプト
 └── README.md                    # 本ドキュメント
+```
 
 ## 🚀 開発環境の構築と実行手順
 
@@ -119,12 +120,14 @@ OpenAI API へのアクセスを制御するため、以下の環境変数を事
 ```bash
 export GPT_API_KEY="your_openai_api_key_here"
 export OPENAI_BASE_URL="[https://api.openai.com/v1](https://api.openai.com/v1)"
+```
 
 ### 2. セットアップ・コマンド
 パッケージ管理ツール uv を用いて、高速かつクリーンに依存関係をインストールします。
 ```bash
 pip install uv
 uv pip install openai datasets tqdm
+```
 
 ###3. パイプラインの実行手順
 Step 1: シードデータの作成（翻訳とフィルタリング）
@@ -137,6 +140,7 @@ Step 2: 共感対話シミュレーション（マルチターン合成）の実
 生成された日本語問題をシードとし、生徒プロファイルを動的にマッピングしながらチューター対話をシミュレートします。
 ```bash
 python GM_completionsAPI.py
+```
 * 最大15ターンの対話がロールプレイされ、最終的に CoT_emotional_cycle_sample.json として、CoT推論ログと感情ラベルが付与された高品質なSFT用コーパスが出力されます。
 
 ## 🎯 今後の展望・研究への応用 (Future Work)
@@ -146,7 +150,25 @@ python GM_completionsAPI.py
 * チューター発話（teacher_utterance）だけでなく、思考プロセス（thought_process）も含めてモデルに学習させることで、推論能力と認知的共感能力を同時に担保した実用的なAIチューターモデルの構築を目指します。
 
 ### 2 LLM-as-a-Judge による教育的フィードバックの自動評価
-*合成された対話コーパスをベースラインとし、提示された足場かけが本当に生徒モデルのZPD（最近接領域）に適合していたか、感情の悪化をどれだけ防げたかを定量評価する枠組みを構築します。
+* 合成された対話コーパスをベースラインとし、提示された足場かけが本当に生徒モデルのZPD（最近接領域）に適合していたか、感情の悪化をどれだけ防げたかを定量評価する枠組みを構築します。
 
 ### 3 マルチモダリティ・実対話への拡張
 * 現在はテキストベースのシミュレーションですが、ここで構築した感情トラッキングのロジックを、音声のトーンや韻律、あるいは数式の手書き入力ステップと統合することで、より現実の指導現場に近い、真の「共感的AI Tutor」への発展を視野に入れています。
+
+---
+
+## 📚 参考文献 (References)
+
+### 和文文献 (Domestic Conferences)
+* 鈴江 万碧, 堀尾 海斗, 折田 奈甫, 河原 大輔. (2025). 対話に対する共感のアノテーションと共感制御可能な対話モデルの構築. *言語処理学会 第31回年次大会 発表論文集*, pp. 4133-4136.
+* 古橋 萌々香, 中山 功太, 児玉 貴志, 菅原 朔, 高見 享佑. (2026). LLM による教育的フィードバックの生成と評価. *言語処理学会 第32回年次大会 発表論文集*.
+* 亀田 隆雅, 馬 青. (2025). LLM を用いた日本語学習者支援. *言語処理学会 第31回年次大会 発表論文集*.
+* 井手 竜也. (2021). 生成と分類のマルチタスク学習による感情が考慮された対話応答生成. *言語処理学会 第27回年次大会 発表論文集*, pp. 643-646.
+
+### 英文文献 (International Journals & Conferences)
+* **[AutoTutor / Affective Computing]** D'Mello, S., & Graesser, A. (2012). AutoTutor and Affective AutoTutor: Learning by Talking with Cognitively and Emotionally Intelligent Computers that Talk Back. *ACM Transactions on Interactive Intelligent Systems (TiiS)*, 2(4), 1-39.
+* **[KMP-Bench / Tutor Evaluation]** Shi, W., Ren, H., Pan, J., Zhou, A., Wang, K., Lu, Z., Yang, Y., Hu, Y., Wei, L., Zhan, M., & Li, H. (2026). From Solver to Tutor: Evaluating the Pedagogical Intelligence of LLMs with KMP-Bench. *arXiv preprint arXiv:2603.02775*.
+* **[DialogXpert / Emotion-Aware Dialogue]** Rakib, T. B. A., Mehrish, A., Soon, L. K., Lim, W. H., & Poria, S. (2025). DialogXpert: Driving Intelligent and Emotion-Aware Conversations through Online Value-Based Reinforcement Learning with LLM Priors. *arXiv preprint arXiv:2505.17795*.
+* **[Control-Value Theory]** Pekrun, R. (2024). Control-Value Theory: From Achievement Emotion to a General Theory of Human Emotions. *Educational Psychology Review*, 36(3), 83.
+* **[Dialogue Tutoring System]** Perez, J., & Ong, E. (2024). Designing an LLM-Based Dialogue Tutoring System for Novice Programming. *Proceedings of the 32nd International Conference on Computers in Education (ICCE 2024)*.
+* **[Pedagogical Agents]** Okonkwo, C. (2001). Affective Pedagogical Agents and User Persuasion. *Department of Computer Science, University of Saskatchewan*.

@@ -1,10 +1,10 @@
 import os
 import json
+import re
 from openai import OpenAI
 from datasets import load_dataset
 from tqdm import tqdm
 
-# 1. APIクライアントの初期化
 api_key = os.getenv('GPT_API_KEY')
 client = OpenAI(api_key=api_key)
 
@@ -17,9 +17,8 @@ def load_prompt_file(filename):
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
-# 翻訳用プロンプトのロード
 try:
-    TRANSLATOR_SYSTEM = load_prompt_file("translator_system.txt")
+    TRANSLATOR_SYSTEM = load_prompt_file(os.path.join("prompts", "translator_system.txt"))
     print("翻訳用システムプロンプトの読み込みに成功")
 except Exception as e:
     print(f"プロンプト読込エラー: {e}")
@@ -27,14 +26,9 @@ except Exception as e:
 
 
 def translate_dataset(limit=5):
-    print("Hugging Faceからデータセットを読み込み中")
-    
-    # MATHを使用する場合
-    # dataset = load_dataset("nlile/hendrycks-MATH-benchmark")
-    # train_data = dataset["train"]
-    
-    # GSM8Kを使用する場合
-    dataset = load_dataset("openai/gsm8k", "main")
+    print("Hugging FaceからMATHデータセットを読み込み中...")
+
+    dataset = load_dataset("nlile/hendrycks-MATH-benchmark")
     train_data = dataset["train"]
     
     print(f"読み込み完了 (総データ数: {len(train_data)}件)")
@@ -44,11 +38,9 @@ def translate_dataset(limit=5):
     
     for i in tqdm(range(limit), desc="翻訳進捗"):
         item = train_data[i]
-        
-        # MATHのキー構造（problem / solution）
-        # GSM8Kの場合は "question" と "answer" に変更
-        original_problem = item.get("question", "")
-        original_solution = item.get("answer", "")
+
+        original_problem = item.get("problem", "")
+        original_solution = item.get("solution", "")
         prob_type = item.get("type", "unknown")
         prob_level = item.get("level", "unknown")
         
@@ -60,38 +52,43 @@ def translate_dataset(limit=5):
         ]
         
         try:
-            response = client.responses.create(
-                model="gpt-5.5",
-                input=context,
-                reasoning={"effort": "low"}
+            response = client.chat.completions.create(
+                model="gpt-5.4", 
+                messages=context,
+                temperature=0.3 
             )
-            translated_text = response.output_text.strip()
+            translated_text = response.choices[0].message.content.strip()
             
-            q_match = translated_text.split("[Q]")[1].split("[A]")[0].strip() if "[Q]" in translated_text else ""
-            a_match = translated_text.split("[A]")[1].strip() if "[A]" in translated_text else ""
+            thought_process_match = re.search(r'\[Thought Process\](.*?)\[Q\]', translated_text, re.DOTALL)
+            q_match = re.search(r'\[Q\](.*?)\[A\]', translated_text, re.DOTALL)
+            a_match = re.search(r'\[A\](.*)', translated_text, re.DOTALL)
+        
+            thought_process_text = thought_process_match.group(1).strip() if thought_process_match else ""
+            q_text = q_match.group(1).strip() if q_match else ""
+            a_text = a_match.group(1).strip() if a_match else ""
             
             translated_results.append({
-                "id": f"gsm8k_train_{i}",
+                "id": f"math_train_{i}",
                 "type": prob_type,
                 "level": prob_level,
                 "original_problem": original_problem,
-                "translated_question": q_match,
+                "thought_process": thought_process_text,
+                "translated_question": q_text,
                 "original_solution": original_solution,
-                "translated_solution": a_match
+                "translated_solution": a_text
             })
             
         except Exception as e:
             print(f"\nAPIエラー (ID: {i}): {e}")
             continue
 
-    # 保存
-    output_filename = os.path.join(BASE_DIR, "translated_gsm8k_sample_2.jsonl")
+    output_filename = os.path.join(BASE_DIR, "translated_math_sample_CoT.jsonl")
     
     with open(output_filename, "w", encoding="utf-8") as f:
         for res in translated_results:
             f.write(json.dumps(res, ensure_ascii=False) + "\n")
             
-    print(f"\n翻訳処理が完了しました 結果を以下の場所に保存しました:\n   {output_filename}")
+    print(f"\n翻訳処理が完了しました。結果を以下の場所に保存しました:\n   {output_filename}")
 
 
 if __name__ == "__main__":

@@ -147,8 +147,8 @@ def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 15) -> 
 
 if __name__ == "__main__":
     profile_filename = os.path.join(BASE_DIR, "prompts", "student_profile.json")
-    output_filename = os.path.join(BASE_DIR, "CoT_emotional_cycle_sample_3.json")
-    input_filename = os.path.join(BASE_DIR, "questions", "translated_math_sample.jsonl")
+    output_filename = os.path.join(BASE_DIR, "CoT_emotional_cycle_sample_4.json")
+    input_filename = os.path.join(BASE_DIR, "questions", "translated_math.jsonl")
     
     with open(profile_filename, "r", encoding="utf-8") as f:
         student_presets = json.load(f)
@@ -159,7 +159,7 @@ if __name__ == "__main__":
             if line.strip():
                 problems_list.append(json.loads(line))
                 
-    LIMIT = 5
+    LIMIT = 15
     target_problems = problems_list[:LIMIT]
     
     all_results = []

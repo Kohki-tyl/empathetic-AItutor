@@ -82,7 +82,7 @@ def translate_dataset(limit=5):
             print(f"\nAPIエラー (ID: {i}): {e}")
             continue
 
-    output_filename = os.path.join(BASE_DIR, "translated_math_sample_CoT.jsonl")
+    output_filename = os.path.join(BASE_DIR, "translated_math.jsonl")
     
     with open(output_filename, "w", encoding="utf-8") as f:
         for res in translated_results:
@@ -92,4 +92,4 @@ def translate_dataset(limit=5):
 
 
 if __name__ == "__main__":
-    translate_dataset(limit=5)
+    translate_dataset(limit=200)

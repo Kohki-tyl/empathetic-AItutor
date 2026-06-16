@@ -17,7 +17,7 @@ def load_prompt_file(filename):
 
 try:
     TEACHER_SYSTEM = load_prompt_file(os.path.join("prompts", "teacher_system_v2.txt"))
-    STUDENT_SYSTEM_TEMPLATE = load_prompt_file(os.path.join("prompts", "student_system.txt"))
+    STUDENT_SYSTEM_TEMPLATE = load_prompt_file(os.path.join("prompts", "student_system_v2.txt"))
 except Exception as e:
     exit(1)
 
@@ -147,7 +147,7 @@ def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 15) -> 
 
 if __name__ == "__main__":
     profile_filename = os.path.join(BASE_DIR, "prompts", "student_profile.json")
-    output_filename = os.path.join(BASE_DIR, "CoT_emotional_cycle_sample_2.json")
+    output_filename = os.path.join(BASE_DIR, "CoT_emotional_cycle_sample_3.json")
     input_filename = os.path.join(BASE_DIR, "questions", "translated_math_sample.jsonl")
     
     with open(profile_filename, "r", encoding="utf-8") as f:

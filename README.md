@@ -108,6 +108,7 @@ empathetic-AItutor/
 │   ├── translator_system.txt    # MATHベンチマークを高精度に日本語化するCoTプロンプト
 │   └── student_profile.json     # ターゲットプロファイル（学年・既習範囲・個別弱点領域の定義マスタ）
 ├── translate_dataset.py         # MATHデータセットのフィルタリング・日本語翻訳スクリプト
+├── CoT_emotional_cycle_sample   # MATHデータセットの日本語翻訳
 ├── GM_completionsAPI.py         # 翻訳済みデータをシードにしたマルチターン対話合成コアスクリプト
 └── README.md                    # 本ドキュメント
 ```

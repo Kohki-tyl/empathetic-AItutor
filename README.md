@@ -54,9 +54,9 @@ flowchart TD
 
 ### Step 2: 役割演技（Role-playing）によるマルチターン対話合成 (`GM_completionsAPI.py`)
 * **User Simulator (Student Model)**:
-  * `gpt-5.4-mini` を採用し、ターゲットとなる生徒のプロファイル（学年、既習範囲、苦手な領域、ミスしやすい傾向）と、問題に応じた感情遷移ルール（`student_system_v2.txt`）をインプットしてシミュレートします。
+  * `gpt-5.4-mini` を採用し、ターゲットとなる生徒のプロファイル（学年、既習範囲、苦手な領域、ミスしやすい傾向）と、問題に応じた感情遷移ルール（`student_system.txt`）をインプットしてシミュレートします。
 * **Tutor Agent (Teacher Model)**:
-  * `gpt-5.4` を採用し、指導戦略プロンプト（`teacher_system_v2.txt`）に従って動作します。
+  * `gpt-5.4` を採用し、指導戦略プロンプト（`teacher_system.txt`）に従って動作します。
   * OpenAI APIの **Structured Outputs (`strict: true`)** 機能を活用し、チューターの思考ログ、感情分類、および最終発話を厳密なJSON Schemaで制御・抽出します。
 
 ---
@@ -103,14 +103,17 @@ D'Melloらのモデルを拡張し、学習科学の文脈で定義された以�
 ```plaintext
 empathetic-AItutor/
 ├── prompts/
-│   ├── teacher_system_v2.txt    # 教師（チューター）の指導戦略・感情サイクル追尾プロンプト
-│   ├── student_system_v2.txt    # 生徒のペルソナ・感情遷移トリガールール
-│   ├── translator_system.txt    # MATHベンチマークを高精度に日本語化するCoTプロンプト
-│   └── student_profile.json     # ターゲットプロファイル（学年・既習範囲・個別弱点領域の定義マスタ）
-├── translate_dataset.py         # MATHデータセットのフィルタリング・日本語翻訳スクリプト
-├── CoT_emotional_cycle_sample   # MATHデータセットの日本語翻訳
-├── GM_completionsAPI.py         # 翻訳済みデータをシードにしたマルチターン対話合成コアスクリプト
-└── README.md                    # 本ドキュメント
+│   ├── teacher_system.txt               # 教師（チューター）の指導戦略・感情サイクル追尾プロンプト
+│   ├── student_system.txt               # 生徒のペルソナ・感情遷移トリガールール
+│   ├── translator_system.txt            # MATHベンチマークを日本語化するCoTプロンプト
+│   └── student_profile.json             # ターゲットプロファイル（学年・既習範囲・個別弱点領域の定義マスタ）
+├── questions/
+│   ├── clean_dataset.py                 # 図形問題フィルタリングスクリプト
+│   └── translated_math_filtered.jsonl   # 図形問題フィルタリング後翻訳済みMATHデータ
+├── translate_dataset.py                 # MATHデータセットの日本語翻訳スクリプト
+├── CoT_emotional_cycle_sample           # 生成対話（マルチターン）サンプル
+├── GM_completionsAPI.py                 # 翻訳済みデータをシードにしたマルチターン対話合成コアスクリプト
+└── README.md                            # 本ドキュメント
 ```
 
 ## 開発環境の構築と実行手順

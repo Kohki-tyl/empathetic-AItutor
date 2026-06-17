@@ -31,7 +31,7 @@ flowchart TD
     
     subgraph Step1 ["Step 1: translate_dataset.py"]
         B1["図形問題のフィルタリング<br>(Regex Parser)"]
-        B2["高品質日本語翻訳<br>(CoTプロンプト)"]
+        B2["日本語翻訳<br>(CoTプロンプト)"]
         B1 --> B2
     end
     

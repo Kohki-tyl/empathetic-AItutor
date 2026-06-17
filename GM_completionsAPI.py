@@ -33,7 +33,7 @@ teacher_response_schema = {
                 "student_emotion": {
                     "type": "string",
                     "enum": [
-                        "Engaged", "Curious", "Neutral", "Mild_Confusion", "Deep_Confusion", 
+                        "Engaged", "Curious", "Neutral", "Confusion", 
                         "Frustrated", "Bored", "Anxious", "Eureka", "Proud", "Relieved"
                     ]
                 },
@@ -146,8 +146,8 @@ def generate_dialogue(problem: str, profile_dict: dict, initial_condition: str, 
 
 if __name__ == "__main__":
     profile_filename = os.path.join(BASE_DIR, "prompts", "student_profile.json")
-    output_filename = os.path.join(BASE_DIR, "CoT_ec_init_emotion_v1.json")
-    input_filename = os.path.join(BASE_DIR, "questions", "translated_math.jsonl")
+    output_filename = os.path.join(BASE_DIR, "CoT_ec_init_emotion_v2.json")
+    input_filename = os.path.join(BASE_DIR, "questions", "translated_math_filtered.jsonl")
     
     with open(profile_filename, "r", encoding="utf-8") as f:
         student_presets = json.load(f)
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     
     condition_presets = [
         "あなたは現在【Frustrated】状態です。気分の悪さ、あるいはこの問題への強い苦手意識により、最初からイライラしており投げやりなトーンです。",
-        "あなたは現在【Mild_Confusion】状態です。問題を見て少し戸惑っており、自信がなさそうに解き始めます。",
+        "あなたは現在【Confusion】状態です。問題を見て少し戸惑っており、自信がなさそうに解き始めます。",
         "あなたは現在【Engaged】状態です。前向きに解く意欲があり、集中して取り組み始めます。"
     ]
     

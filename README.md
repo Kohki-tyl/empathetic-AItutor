@@ -73,7 +73,7 @@ flowchart TD
 | `roadmap_breakdown` | `string` | 目標達成（問題解決）までに必要なステップの分解ロードマップ |
 | `next_step_plan` | `string` | このターンで提示する具体的な動的足場かけのアプローチ計画 |
 | `is_completed` | `boolean` | 生徒が自力で正解に到達し、対話セッションを終了してよいかどうかのフラグ |
-| `teacher_utterance` | `string` | 生徒に提示される、認认知共感と言語的足場かけを含んだ最終的な指導発話テキスト |
+| `teacher_utterance` | `string` | 生徒に提示される、認知的共感と言語的足場かけを含んだ最終的な指導発話テキスト |
 
 ### 2. トラッキングされる11種類の感情クラス (`student_emotion`)
 D'Melloらのモデルを拡張し、学習科学の文脈で定義された以下の11状態を追尾します。

@@ -5,7 +5,7 @@ import random
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def prepare_sft_data(train_ratio=0.8, val_ratio=0.2):
-    with open(os.path.join(BASE_DIR, "prompts", "corpus_teacher_system.txt"), "r", encoding="utf-8") as f:
+    with open(os.path.join(BASE_DIR, "prompts", "teacher_system.txt"), "r", encoding="utf-8") as f:
         teacher_system = f.read()
 
     input_path = os.path.join(BASE_DIR, "empathetic_dialogues.jsonl")

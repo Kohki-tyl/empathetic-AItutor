@@ -16,8 +16,8 @@ def load_prompt_file(filename):
         return f.read()
 
 try:
-    TEACHER_SYSTEM = load_prompt_file(os.path.join("prompts", "teacher_system_v2.txt"))
-    STUDENT_SYSTEM_TEMPLATE = load_prompt_file(os.path.join("prompts", "student_system_v2.txt"))
+    TEACHER_SYSTEM = load_prompt_file(os.path.join("prompts", "teacher_system.txt"))
+    STUDENT_SYSTEM_TEMPLATE = load_prompt_file(os.path.join("prompts", "student_system.txt"))
 except Exception as e:
     exit(1)
 
@@ -29,14 +29,11 @@ teacher_response_schema = {
         "schema": {
             "type": "object",
             "properties": {
-                "thought_process": {
-                    "type": "string",
-                    "description": "生徒のつまずき原因、感情、およびどのような足場かけが必要かの推論プロセス"
-                },
+                "thought_process": {"type": "string"},
                 "student_emotion": {
                     "type": "string",
                     "enum": [
-                        "Engaged", "Curious", "Neutral", "Mild_Confusion", "Deep_Confusion", 
+                        "Engaged", "Curious", "Neutral", "Confusion", 
                         "Frustrated", "Bored", "Anxious", "Eureka", "Proud", "Relieved"
                     ]
                 },
@@ -54,7 +51,7 @@ teacher_response_schema = {
     }
 }
 
-def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 15) -> dict:
+def generate_dialogue(problem: str, profile_dict: dict, initial_condition: str, max_turns: int = 15) -> dict:
     formatted_profile = (
         f"【学年】: {profile_dict.get('grade', '不明')}\n"
         f"【学習済みの範囲】: {profile_dict.get('learned_scope', '不明')}\n"
@@ -62,7 +59,11 @@ def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 15) -> 
         f"【苦手な範囲】: {profile_dict.get('weak_area', '不明')}"
     )
     
-    student_system_prompt = STUDENT_SYSTEM_TEMPLATE.format(TARGET_PROBLEM=problem, STUDENT_PROFILE=formatted_profile)
+    student_system_prompt = STUDENT_SYSTEM_TEMPLATE.format(
+        TARGET_PROBLEM=problem, 
+        STUDENT_PROFILE=formatted_profile,
+        INITIAL_CONDITION=initial_condition
+    )
     
     teacher_context = [
         {"role": "system", "content": TEACHER_SYSTEM},
@@ -76,7 +77,6 @@ def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 15) -> 
     is_completed = False
 
     for current_turn in range(max_turns):
-        
         try:
             if current_turn == 0:
                 active_student_context = student_context + [{"role": "user", "content": "それでは、提示された問題を解き始めてください。"}]
@@ -86,7 +86,7 @@ def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 15) -> 
             student_response = client.chat.completions.create(
                 model="gpt-5.4-mini", 
                 messages=active_student_context,
-                temperature=0.7
+                temperature=0.8 
             )
             student_utterance = student_response.choices[0].message.content.strip()
         except Exception as e:
@@ -106,11 +106,10 @@ def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 15) -> 
                 model="gpt-5.4", 
                 messages=teacher_context,
                 response_format=teacher_response_schema,
-                temperature=0.7
+                temperature=0.2
             )
             
             teacher_data = json.loads(teacher_response.choices[0].message.content)
-            
             thought_process = teacher_data.get("thought_process", "")
             student_emotion = teacher_data.get("student_emotion", "")
             roadmap_val = teacher_data.get("roadmap_breakdown", "")
@@ -147,8 +146,8 @@ def generate_dialogue(problem: str, profile_dict: dict, max_turns: int = 15) -> 
 
 if __name__ == "__main__":
     profile_filename = os.path.join(BASE_DIR, "prompts", "student_profile.json")
-    output_filename = os.path.join(BASE_DIR, "CoT_emotional_cycle_sample_4.json")
-    input_filename = os.path.join(BASE_DIR, "questions", "translated_math.jsonl")
+    output_filename = os.path.join(BASE_DIR, "CoT_ec_init_emotion_v2.json")
+    input_filename = os.path.join(BASE_DIR, "questions", "translated_math_filtered.jsonl")
     
     with open(profile_filename, "r", encoding="utf-8") as f:
         student_presets = json.load(f)
@@ -161,8 +160,13 @@ if __name__ == "__main__":
                 
     LIMIT = 15
     target_problems = problems_list[:LIMIT]
-    
     all_results = []
+    
+    condition_presets = [
+        "あなたは現在【Frustrated】状態です。気分の悪さ、あるいはこの問題への強い苦手意識により、最初からイライラしており投げやりなトーンです。",
+        "あなたは現在【Confusion】状態です。問題を見て少し戸惑っており、自信がなさそうに解き始めます。",
+        "あなたは現在【Engaged】状態です。前向きに解く意欲があり、集中して取り組み始めます。"
+    ]
     
     for index, item in enumerate(tqdm(target_problems)):
         problem_text = item.get("translated_question")
@@ -170,8 +174,8 @@ if __name__ == "__main__":
             continue
             
         profile_item = student_presets[index % len(student_presets)]
-        
-        dialogue_result = generate_dialogue(problem_text, profile_item, max_turns=15)
+        selected_condition = condition_presets[index % len(condition_presets)]
+        dialogue_result = generate_dialogue(problem_text, profile_item, selected_condition, max_turns=15)
         dialogue_result["source_id"] = item.get("id", f"unknown_{index}")
         all_results.append(dialogue_result)
         

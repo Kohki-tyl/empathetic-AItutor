@@ -25,21 +25,41 @@ except Exception as e:
     exit(1)
 
 
-def translate_dataset(limit=5):
+def is_text_only_problem(problem_text):
+    if not problem_text:
+        return True
+    if "[asy]" in problem_text or "[/asy]" in problem_text:
+        return False
+    exclude_keywords = [
+        r"shown.*figure", r"shown.*diagram", r"shown.*graph", r"shown.*below", r"as.*shown", r"refer.*diagram"
+    ]
+    for pattern in exclude_keywords:
+        if re.search(pattern, problem_text, re.IGNORECASE | re.DOTALL):
+            return False
+    return True
+
+
+def translate_dataset(limit=200):
     print("Hugging FaceからMATHデータセットを読み込み中...")
 
     dataset = load_dataset("nlile/hendrycks-MATH-benchmark")
     train_data = dataset["train"]
     
     print(f"読み込み完了 (総データ数: {len(train_data)}件)")
-    print(f"先頭の {limit} 件の翻訳を開始\n")
+    print(f"先頭から図形問題を除外して {limit} 件の翻訳を開始\n")
     
     translated_results = []
+    idx = 0
+    pbar = tqdm(total=limit, desc="翻訳進捗")
     
-    for i in tqdm(range(limit), desc="翻訳進捗"):
-        item = train_data[i]
+    while len(translated_results) < limit and idx < len(train_data):
+        item = train_data[idx]
+        idx += 1
 
         original_problem = item.get("problem", "")
+        if not is_text_only_problem(original_problem):
+            continue
+
         original_solution = item.get("solution", "")
         prob_type = item.get("type", "unknown")
         prob_level = item.get("level", "unknown")
@@ -68,7 +88,7 @@ def translate_dataset(limit=5):
             a_text = a_match.group(1).strip() if a_match else ""
             
             translated_results.append({
-                "id": f"math_train_{i}",
+                "id": f"math_train_{idx - 1}",
                 "type": prob_type,
                 "level": prob_level,
                 "original_problem": original_problem,
@@ -77,11 +97,13 @@ def translate_dataset(limit=5):
                 "original_solution": original_solution,
                 "translated_solution": a_text
             })
+            pbar.update(1)
             
         except Exception as e:
-            print(f"\nAPIエラー (ID: {i}): {e}")
+            print(f"\nAPIエラー (ID: {idx - 1}): {e}")
             continue
 
+    pbar.close()
     output_filename = os.path.join(BASE_DIR, "translated_math.jsonl")
     
     with open(output_filename, "w", encoding="utf-8") as f:

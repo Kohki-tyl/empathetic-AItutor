@@ -1,0 +1,4 @@
+SFTの際の教師プロンプト作成
+judgeプロンプトの作成（共感レベルをどう評価するかも議論）
+sft_train用のmessegeの内容確認（教師プロンプトをどうするか）
+sft前のswallowとsft後のswallowの比較

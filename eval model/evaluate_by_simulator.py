@@ -5,14 +5,18 @@ from tqdm import tqdm
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# 1. クライアントの初期化
+# 自動採点用（OpenAI API）
 api_key = os.getenv('GPT_API_KEY')
 openai_client = OpenAI(api_key=api_key)
 
+# 先生役 ＆ 生徒役
 local_client = OpenAI(
     api_key="EMPTY", 
     base_url="http://localhost:8000/v1" 
 )
 
+# 2. プロンプトと設定の読み込み
 def load_prompt_file(filename):
     path = os.path.join(BASE_DIR, "prompts", filename)
     with open(path, "r", encoding="utf-8") as f:
@@ -21,13 +25,16 @@ def load_prompt_file(filename):
 TEACHER_SYSTEM = load_prompt_file("teacher_system.txt")
 STUDENT_SYSTEM_TEMPLATE = load_prompt_file("eval_student_system.txt")
 JUDGE_SYSTEM = load_prompt_file("eval_judge_system.txt")
+EMPATHY_JUDGE_SYSTEM = load_prompt_file("eval_empathy_judge_system.txt")
 
 MODEL_NAME = "tokyo-tech-nlp/Swallow-70b-instruct-v0.1"
 
-judge_response_schema = {
+# 3. Judge用JSONスキーマの定義
+# 数学の正誤判定スキーマ (Phase 2用)
+math_judge_response_schema = {
     "type": "json_schema",
     "json_schema": {
-        "name": "judge_response",
+        "name": "math_judge_response",
         "strict": True,
         "schema": {
             "type": "object",
@@ -41,6 +48,34 @@ judge_response_schema = {
     }
 }
 
+# 共感レベルの100点満点評価スキーマ (Phase 1用)
+empathy_judge_response_schema = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "empathy_judge_response",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "emotion_alignment_score": {"type": "integer"},
+                "pedagogical_empathy_score": {"type": "integer"},
+                "length_control_score": {"type": "integer"},
+                "total_score": {"type": "integer"},
+                "empathy_reason": {"type": "string"}
+            },
+            "required": [
+                "emotion_alignment_score", 
+                "pedagogical_empathy_score", 
+                "length_control_score", 
+                "total_score", 
+                "empathy_reason"
+            ],
+            "additionalProperties": False
+        }
+    }
+}
+
+# 4. データ読み込み関数
 def load_jsonl(filename):
     data = {}
     path = os.path.join(BASE_DIR, "questions", filename)
@@ -52,18 +87,19 @@ def load_jsonl(filename):
                 data[item_id] = item
     return data
 
+# 5. メインの評価シミュレーション
 def run_evaluation():
-    print("評価用データセットとプロファイルを読み込んでいます...")
+    print("評価用データセットとプロファイルを読み込んでいます")
     original_tests = load_jsonl("test_math_questions.jsonl")
     similar_tests = load_jsonl("similar_test_math_questions.jsonl")
     
-    profile_path = os.path.join(BASE_DIR, "prompts", "student_profile.json")
+    profile_path = os.path.join(BASE_DIR, "prompts", "eval_student_profile.json")
     with open(profile_path, "r", encoding="utf-8") as f:
         student_profiles = json.load(f)
     
     output_path = os.path.join(BASE_DIR, "evaluation_results.jsonl")
     with open(output_path, "w", encoding="utf-8") as f:
-        pass 
+        pass
 
     profile_idx = 0
 
@@ -76,6 +112,7 @@ def run_evaluation():
         sim_q = sim_item["similar_question"]
         sim_a = sim_item["similar_solution"]
 
+        # 生徒プロファイルの割り当て
         current_profile = student_profiles[profile_idx % len(student_profiles)]
         profile_idx += 1
         
@@ -85,10 +122,11 @@ def run_evaluation():
             f"【苦手な範囲】: {current_profile.get('weak_area', '不明')}"
         )
 
+        # Phase 1用の生徒プロンプト構築
         phase1_student_sys = STUDENT_SYSTEM_TEMPLATE.replace("{STUDENT_PROFILE}", formatted_profile)
         phase1_student_sys = phase1_student_sys.replace("{CURRENT_MODE}", "対話学習（Phase 1）")
 
-        # Phase 1: 対話学習
+        # Phase 1: 対話学習セッション（最大15ターン）
         teacher_context = [
             {"role": "system", "content": TEACHER_SYSTEM},
             {"role": "user", "content": f"問題: {orig_q}\n\n上記の問題を出題しました。生徒の発話を待機し、対応を開始してください。"}
@@ -103,7 +141,7 @@ def run_evaluation():
         is_completed = False
 
         for turn in range(15):
-            # 生徒（Simulator）の発話: ローカルの Swallow を使用
+            # 生徒（Simulator）の発話
             try:
                 res_student = local_client.chat.completions.create(
                     model=MODEL_NAME,
@@ -116,11 +154,10 @@ def run_evaluation():
                 break
                 
             dialogue_log.append({"role": "student", "content": student_msg})
-            
             teacher_context.append({"role": "user", "content": student_msg})
             student_context.append({"role": "assistant", "content": student_msg})
 
-            # 教師（評価対象モデル）の発話: ローカルの Swallow を使用
+            # 教師（評価対象モデル）の発話
             try:
                 res_teacher = local_client.chat.completions.create(
                     model=MODEL_NAME,
@@ -130,18 +167,17 @@ def run_evaluation():
                 
                 teacher_response_str = res_teacher.choices[0].message.content
                 
-                # 思考ログなどのJSONパース（ローカルモデルが崩した場合のフォールバック付き）
-                try:
-                    if "{" in teacher_response_str:
-                        json_str = teacher_response_str[teacher_response_str.find("{"):teacher_response_str.rfind("}")+1]
-                        t_data = json.loads(json_str)
-                        teacher_msg = t_data.get("teacher_utterance", "")
-                        is_completed = t_data.get("is_completed", False)
-                    else:
+                # <analysis>タグのパース処理（フォールバック付き）
+                if "<analysis>" in teacher_response_str and "</analysis>" in teacher_response_str:
+                    try:
+                        analysis_part = teacher_response_str.split("</analysis>")[0]
+                        teacher_msg = teacher_response_str.split("</analysis>")[1].strip()
+                        # 【対話完了判定】の抽出（小文字化して判定）
+                        is_completed = "true" in analysis_part.split("【対話完了判定】:")[-1].lower()
+                    except Exception:
                         teacher_msg = teacher_response_str
                         is_completed = False
-                except json.JSONDecodeError:
-                    print(f"\n[Warning] {q_id}: 教師モデルのJSONパースに失敗しました。出力をそのままテキストとして扱います。")
+                else:
                     teacher_msg = teacher_response_str
                     is_completed = False
 
@@ -156,18 +192,40 @@ def run_evaluation():
             if is_completed:
                 break
 
+        # Judge 1: 共感レベルの自動採点 (Phase 1のログを使用)
+        full_dialogue_text = "\n".join([f"{d['role']}: {d['content']}" for d in dialogue_log])
+        
+        try:
+            res_empathy = openai_client.chat.completions.create(
+                model="gpt-5.4", 
+                messages=[
+                    {"role": "system", "content": EMPATHY_JUDGE_SYSTEM},
+                    {"role": "user", "content": f"【Phase 1の対話ログ】\n{full_dialogue_text}\n\nこの対話ログを基に、教師の共感レベルと指導戦略を評価し、100点満点でスコアリングしてください。"}
+                ],
+                response_format=empathy_judge_response_schema,
+                temperature=0.0
+            )
+            empathy_result = json.loads(res_empathy.choices[0].message.content)
+        except Exception as e:
+            print(f"\n[Error] Empathy Judge Error on {q_id}: {e}")
+            empathy_result = {
+                "emotion_alignment_score": 0, 
+                "pedagogical_empathy_score": 0, 
+                "length_control_score": 0, 
+                "total_score": 0, 
+                "empathy_reason": f"API Error: {e}"
+            }
+
         # Phase 2: 転移テスト（コンテキスト分離）
         phase2_student_sys = STUDENT_SYSTEM_TEMPLATE.replace("{STUDENT_PROFILE}", formatted_profile)
         phase2_student_sys = phase2_student_sys.replace("{CURRENT_MODE}", "類似問題テスト（Phase 2）")
 
-        learning_history = "\n".join([f"{d['role']}: {d['content']}" for d in dialogue_log])
-        
         phase2_prompt = (
-            f"【先ほどの学習の振り返り（参考）】\n{learning_history}\n\n"
+            f"【先ほどの学習の振り返り（参考）】\n{full_dialogue_text}\n\n"
             f"【新しい出題（類似問題）】\n{sim_q}"
         )
 
-        # Phase 2のテスト解答: ローカルの Swallow を使用
+        # Phase 2のテスト解答
         try:
             res_phase2 = local_client.chat.completions.create(
                 model=MODEL_NAME,
@@ -182,27 +240,26 @@ def run_evaluation():
             print(f"\n[Error] Phase 2 Generation Error on {q_id}: {e}")
             student_final_answer = "Error during generation"
 
-        # Judge: 解答の自動採点
+        # Judge 2: 数学解答の自動採点 (Phase 2の結果を使用)
         judge_prompt = (
             f"【生徒の解答プロセスと最終的な答え】\n{student_final_answer}\n\n"
             f"【模範解答】\n{sim_a}"
         )
         
-        # Judgeの自動採点: 外部の OpenAI API (gpt-4o) を使用
         try:
-            res_judge = openai_client.chat.completions.create(
+            res_math_judge = openai_client.chat.completions.create(
                 model="gpt-5.4", 
                 messages=[
                     {"role": "system", "content": JUDGE_SYSTEM},
                     {"role": "user", "content": judge_prompt}
                 ],
-                response_format=judge_response_schema,
+                response_format=math_judge_response_schema,
                 temperature=0.0
             )
-            judge_result = json.loads(res_judge.choices[0].message.content)
+            math_judge_result = json.loads(res_math_judge.choices[0].message.content)
         except Exception as e:
-            print(f"\n[Error] Judge Generation Error on {q_id}: {e}")
-            judge_result = {"is_correct": False, "judge_reason": f"API Error: {e}"}
+            print(f"\n[Error] Math Judge Error on {q_id}: {e}")
+            math_judge_result = {"is_correct": False, "judge_reason": f"API Error: {e}"}
 
         # 結果の保存
         session_result = {
@@ -211,15 +268,16 @@ def run_evaluation():
             "phase1_turns": len(dialogue_log) // 2,
             "phase1_is_completed": is_completed,
             "phase2_student_answer": student_final_answer,
-            "phase2_is_correct": judge_result["is_correct"],
-            "judge_reason": judge_result["judge_reason"],
+            "phase2_is_correct": math_judge_result["is_correct"],
+            "math_judge_reason": math_judge_result["judge_reason"],
+            "empathy_evaluation": empathy_result,
             "dialogue_log": dialogue_log
         }
 
         with open(output_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(session_result, ensure_ascii=False) + "\n")
 
-    print(f"\n評価シミュレーション完了！結果は {output_path} に保存されました。")
+    print(f"\n評価シミュレーション完了 結果は {output_path} に保存されました。")
 
 if __name__ == "__main__":
     run_evaluation()

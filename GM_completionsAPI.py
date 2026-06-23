@@ -146,7 +146,7 @@ def generate_dialogue(problem: str, profile_dict: dict, initial_condition: str, 
 
 if __name__ == "__main__":
     profile_filename = os.path.join(BASE_DIR, "prompts", "student_profile.json")
-    output_filename = os.path.join(BASE_DIR, "CoT_ec_init_emotion_v2.json")
+    output_filename = os.path.join(BASE_DIR, "empathetic_dialogues.jsonl")
     input_filename = os.path.join(BASE_DIR, "questions", "translated_math_filtered.jsonl")
     
     with open(profile_filename, "r", encoding="utf-8") as f:
@@ -158,15 +158,17 @@ if __name__ == "__main__":
             if line.strip():
                 problems_list.append(json.loads(line))
                 
-    LIMIT = 15
+    LIMIT = 200
     target_problems = problems_list[:LIMIT]
-    all_results = []
     
     condition_presets = [
         "あなたは現在【Frustrated】状態です。気分の悪さ、あるいはこの問題への強い苦手意識により、最初からイライラしており投げやりなトーンです。",
         "あなたは現在【Confusion】状態です。問題を見て少し戸惑っており、自信がなさそうに解き始めます。",
         "あなたは現在【Engaged】状態です。前向きに解く意欲があり、集中して取り組み始めます。"
     ]
+    
+    with open(output_filename, "w", encoding="utf-8") as f:
+        pass
     
     for index, item in enumerate(tqdm(target_problems)):
         problem_text = item.get("translated_question")
@@ -177,7 +179,6 @@ if __name__ == "__main__":
         selected_condition = condition_presets[index % len(condition_presets)]
         dialogue_result = generate_dialogue(problem_text, profile_item, selected_condition, max_turns=15)
         dialogue_result["source_id"] = item.get("id", f"unknown_{index}")
-        all_results.append(dialogue_result)
         
-    with open(output_filename, "w", encoding="utf-8") as f:
-        f.write(json.dumps(all_results, ensure_ascii=False, indent=2))
+        with open(output_filename, "a", encoding="utf-8") as f:
+            f.write(json.dumps(dialogue_result, ensure_ascii=False) + "\n")

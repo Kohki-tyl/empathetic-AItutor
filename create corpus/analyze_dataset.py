@@ -35,4 +35,4 @@ def analyze_empathetic_dialogues(filepath):
 
 if __name__ == "__main__":
     # 生成された jsonl ファイルのパスを指定して実行してください
-    analyze_empathetic_dialogues("empathetic_dialogues.jsonl")
+    analyze_empathetic_dialogues("corpus.jsonl")

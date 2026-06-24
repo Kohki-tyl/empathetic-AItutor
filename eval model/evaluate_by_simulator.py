@@ -167,13 +167,18 @@ def run_evaluation():
                 
                 teacher_response_str = res_teacher.choices[0].message.content
                 
-                # <analysis>タグのパース処理（フォールバック付き）
+                # <analysis>タグのパース処理と【対話完了判定】（フォールバック付き）
                 if "<analysis>" in teacher_response_str and "</analysis>" in teacher_response_str:
                     try:
                         analysis_part = teacher_response_str.split("</analysis>")[0]
                         teacher_msg = teacher_response_str.split("</analysis>")[1].strip()
-                        # 【対話完了判定】の抽出（小文字化して判定）
-                        is_completed = "true" in analysis_part.split("【対話完了判定】:")[-1].lower()
+                        
+                        if "[指導完了]" in teacher_msg:
+                            is_completed = True
+                            teacher_msg = teacher_msg.replace("[指導完了]", "").strip()
+                        else:
+                            is_completed = False
+                            
                     except Exception:
                         teacher_msg = teacher_response_str
                         is_completed = False

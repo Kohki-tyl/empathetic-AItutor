@@ -22,15 +22,14 @@ def load_prompt_file(filename):
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
-TEACHER_SYSTEM = load_prompt_file("teacher_system.txt")
+TEACHER_SYSTEM = load_prompt_file("sft_teacher_system.txt")
 STUDENT_SYSTEM_TEMPLATE = load_prompt_file("eval_student_system.txt")
 JUDGE_SYSTEM = load_prompt_file("eval_judge_system.txt")
 EMPATHY_JUDGE_SYSTEM = load_prompt_file("eval_empathy_judge_system.txt")
 
-MODEL_NAME = "tokyo-tech-nlp/Swallow-70b-instruct-v0.1"
+MODEL_NAME = "tokyotech-llm/Swallow-70b-instruct-v0.1"
 
 # 3. Judge用JSONスキーマの定義
-# 数学の正誤判定スキーマ (Phase 2用)
 math_judge_response_schema = {
     "type": "json_schema",
     "json_schema": {
@@ -48,7 +47,6 @@ math_judge_response_schema = {
     }
 }
 
-# 共感レベルの100点満点評価スキーマ (Phase 1用)
 empathy_judge_response_schema = {
     "type": "json_schema",
     "json_schema": {
@@ -86,6 +84,17 @@ def load_jsonl(filename):
                 item_id = item.get("id") or item.get("source_id")
                 data[item_id] = item
     return data
+
+# ======== 追加: ロールの連続を防ぐ魔法のヘルパー関数 ========
+def normalize_messages(messages):
+    fixed_messages = []
+    for msg in messages:
+        if fixed_messages and fixed_messages[-1]["role"] == msg["role"]:
+            fixed_messages[-1]["content"] += "\n\n" + msg["content"]
+        else:
+            fixed_messages.append({"role": msg["role"], "content": msg["content"]})
+    return fixed_messages
+# =========================================================
 
 # 5. メインの評価シミュレーション
 def run_evaluation():
@@ -126,7 +135,7 @@ def run_evaluation():
         phase1_student_sys = STUDENT_SYSTEM_TEMPLATE.replace("{STUDENT_PROFILE}", formatted_profile)
         phase1_student_sys = phase1_student_sys.replace("{CURRENT_MODE}", "対話学習（Phase 1）")
 
-        # Phase 1: 対話学習セッション（最大15ターン）
+        # Phase 1: 対話学習セッション（最大10ターン）
         teacher_context = [
             {"role": "system", "content": TEACHER_SYSTEM},
             {"role": "user", "content": f"問題: {orig_q}\n\n上記の問題を出題しました。生徒の発話を待機し、対応を開始してください。"}
@@ -140,13 +149,14 @@ def run_evaluation():
         dialogue_log = []
         is_completed = False
 
-        for turn in range(15):
+        for turn in range(10):
             # 生徒（Simulator）の発話
             try:
                 res_student = local_client.chat.completions.create(
                     model=MODEL_NAME,
-                    messages=student_context,
-                    temperature=0.8
+                    messages=normalize_messages(student_context), # ここで魔法の関数を通す
+                    temperature=0.8,
+                    max_tokens=512
                 )
                 student_msg = res_student.choices[0].message.content.strip()
             except Exception as e:
@@ -161,8 +171,9 @@ def run_evaluation():
             try:
                 res_teacher = local_client.chat.completions.create(
                     model=MODEL_NAME,
-                    messages=teacher_context,
-                    temperature=0.2
+                    messages=normalize_messages(teacher_context), # ここで魔法の関数を通す
+                    temperature=0.2,
+                    max_tokens=512
                 )
                 
                 teacher_response_str = res_teacher.choices[0].message.content
@@ -202,7 +213,7 @@ def run_evaluation():
         
         try:
             res_empathy = openai_client.chat.completions.create(
-                model="gpt-5.4", 
+                model="gpt-5.4",
                 messages=[
                     {"role": "system", "content": EMPATHY_JUDGE_SYSTEM},
                     {"role": "user", "content": f"【Phase 1の対話ログ】\n{full_dialogue_text}\n\nこの対話ログを基に、教師の共感レベルと指導戦略を評価し、100点満点でスコアリングしてください。"}
@@ -234,10 +245,10 @@ def run_evaluation():
         try:
             res_phase2 = local_client.chat.completions.create(
                 model=MODEL_NAME,
-                messages=[
+                messages=normalize_messages([
                     {"role": "system", "content": phase2_student_sys},
                     {"role": "user", "content": phase2_prompt}
-                ],
+                ]),
                 temperature=0.2 
             )
             student_final_answer = res_phase2.choices[0].message.content.strip()

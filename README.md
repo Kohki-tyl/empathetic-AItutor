@@ -43,6 +43,18 @@ flowchart TD
         end
     end
 ```
+Step 1: データセットのフィルタリングと日本語翻訳 (`translate_dataset.py`)
+* **データソース**: Hugging Faceの `nlile/hendrycks-MATH-benchmark` を使用します。
+* **フィルタリング**: テキストベースの対話シミュレーションに適さない図形問題などを、正規表現を用いて自動的に排他・フィルタリングします。
+* **翻訳処理**: `translator_system.txt` のCoTプロンプトにより、数式や論理構造を維持したまま、自然な日本語の問題文・解答へと高精度に翻訳し、`translated_math.jsonl` として出力します。
+
+Step 2: 役割演技（Role-playing）によるマルチターン対話合成 (`GM_completionsAPI.py`)
+* **User Simulator (Student Model)**:
+  * `gpt-5.4-mini` を採用し、ターゲットとなる生徒のプロファイル（学年、既習範囲、苦手な領域、ミスしやすい傾向）と、問題に応じた感情遷移ルール（`student_system.txt`）をインプットしてシミュレートします。
+* **Tutor Agent (Teacher Model)**:
+  * `gpt-5.4` を採用し、指導戦略プロンプト（`teacher_system.txt`）に従って動作します。
+  * OpenAI APIの **Structured Outputs (`strict: true`)** 機能を活用し、チューターの思考ログ、感情分類、および最終発話を厳密なJSON Schemaで制御・抽出します。
+    
 ### 2. モデルトレーニングフェーズ（Phase2:Model Training）
 ```mermaid
 flowchart TD
@@ -54,7 +66,9 @@ flowchart TD
         J --> K["Trained Tutor LLM<br>(SFT後 Swallow)"]
     end
 ```
-### 評価フェーズ（Phase3:Evaluation）
+生成された対話データの中から、生徒が最終的に正解に到達した（is_completed: true）高品質なセッションのみをフィルタリングし、学習用と検証用に分割してSFTフォーマットに整形します。このデータを基にオープンモデル（例：Swallow等）をファインチューニングします。
+
+### 3. 評価フェーズ（Phase3:Evaluation）
 ```mermaid
 flowchart TD
     subgraph Phase 3: Evaluation [評価フェーズ]
@@ -71,23 +85,6 @@ flowchart TD
         Q --> S{"類似問題正答率<br>(Near Transfer Accuracy)"}
     end
 ```
-### コーパス作成フェーズ (create corpus/)
-Step 1: データセットのフィルタリングと日本語翻訳 (`translate_dataset.py`)
-* **データソース**: Hugging Faceの `nlile/hendrycks-MATH-benchmark` を使用します。
-* **フィルタリング**: テキストベースの対話シミュレーションに適さない図形問題などを、正規表現を用いて自動的に排他・フィルタリングします。
-* **翻訳処理**: `translator_system.txt` のCoTプロンプトにより、数式や論理構造を維持したまま、自然な日本語の問題文・解答へと高精度に翻訳し、`translated_math.jsonl` として出力します。
-
-Step 2: 役割演技（Role-playing）によるマルチターン対話合成 (`GM_completionsAPI.py`)
-* **User Simulator (Student Model)**:
-  * `gpt-5.4-mini` を採用し、ターゲットとなる生徒のプロファイル（学年、既習範囲、苦手な領域、ミスしやすい傾向）と、問題に応じた感情遷移ルール（`student_system.txt`）をインプットしてシミュレートします。
-* **Tutor Agent (Teacher Model)**:
-  * `gpt-5.4` を採用し、指導戦略プロンプト（`teacher_system.txt`）に従って動作します。
-  * OpenAI APIの **Structured Outputs (`strict: true`)** 機能を活用し、チューターの思考ログ、感情分類、および最終発話を厳密なJSON Schemaで制御・抽出します。
-
-### モデルトレーニングフェーズ (eval model/prepare_sft_dataset.py)
-生成された対話データの中から、生徒が最終的に正解に到達した（is_completed: true）高品質なセッションのみをフィルタリングし、学習用と検証用に分割してSFTフォーマットに整形します。このデータを基にオープンモデル（例：Swallow等）をファインチューニングします。
-
-### 評価フェーズ (eval model/evaluate_by_simulator.py)
 SFT前後のモデルを教師役とし、シミュレータ環境で新規問題に対する指導を行わせます。対話ログから「共感性」を評価するフェーズと、文脈をリセットして類似問題を出題し「概念の定着度」を評価するフェーズの2段階で定量的検証を行います。
 
 ---

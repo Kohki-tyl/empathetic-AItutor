@@ -26,6 +26,7 @@
 
 本研究のアーキテクチャは、データの自動合成、モデルのファインチューニング、そしてシミュレーション環境における性能評価の3つのフェーズがシームレスに統合されたエンドツーエンドのパイプラインです。以下にその正確なフローを示します。
 
+### 1. コーパス作成フェーズ (Phase 1: Corpus Creation)
 ```mermaid
 flowchart TD
     subgraph Phase 1: Corpus Creation [コーパス作成フェーズ]
@@ -41,18 +42,24 @@ flowchart TD
             E --> F["empathetic_dialogues.jsonl"]
         end
     end
-
+```
+### 2. モデルトレーニングフェーズ（Phase2:Model Training）
+```mermaid
+flowchart TD
     subgraph Phase 2: Model Training [モデルトレーニングフェーズ]
-        F --> G["データ整形・品質フィルタリング<br>(is_completed=Trueのみ抽出)"]
+        F["empathetic_dialogues.jsonl<br>(Phase 1の出力)"] --> G["データ整形・品質フィルタリング<br>(is_completed=Trueのみ抽出)"]
         G --> H["Train (80%) / Val (20%) 分割"]
         H --> I["sft_train.jsonl / sft_val.jsonl"]
         I --> J["SFT (教師ありファインチューニング) 実行<br>対象: OSS LLM (Swallow等)"]
         J --> K["Trained Tutor LLM<br>(SFT後 Swallow)"]
     end
-
-    U["Untrained Tutor LLM<br>(SFT前 ベースライン Swallow)"]
-
+```
+### 評価フェーズ（Phase3:Evaluation）
+```mermaid
+flowchart TD
     subgraph Phase 3: Evaluation [評価フェーズ]
+        K["Trained Tutor LLM<br>(SFT後 Swallow)"] -.->|"性能評価"| M
+        U["Untrained Tutor LLM<br>(SFT前 ベースライン Swallow)"] -.->|"ベースライン評価"| M
         L["評価用新規問題<br>(Original 40問)"] --> M("対話学習セッション<br>Tutor LLM (Swallow) vs Student Simulator")
         L -.->|"類似問題生成"| R["生成類似問題<br>(Similar 40問)"]
         M --> N["対話ログ出力"]
@@ -63,9 +70,6 @@ flowchart TD
         R -->|ヒントなし出題| Q
         Q --> S{"類似問題正答率<br>(Near Transfer Accuracy)"}
     end
-    
-    K -.->|"性能評価"| M
-    U -.->|"ベースライン評価"| M
 ```
 ### コーパス作成フェーズ (create corpus/)
 Step 1: データセットのフィルタリングと日本語翻訳 (`translate_dataset.py`)

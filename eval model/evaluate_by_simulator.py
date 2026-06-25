@@ -150,11 +150,17 @@ def run_evaluation():
         is_completed = False
 
         for turn in range(10):
+            # systemと問題文（先頭2つ）は常に維持し、直近6件(3往復)を残す
+            if len(student_context) > 8:
+                active_student_ctx = student_context[:2] + student_context[-6:]
+            else:
+                active_student_ctx = student_context
+
             # 生徒（Simulator）の発話
             try:
                 res_student = local_client.chat.completions.create(
                     model=MODEL_NAME,
-                    messages=normalize_messages(student_context), # ここで魔法の関数を通す
+                    messages=normalize_messages(active_student_ctx),
                     temperature=0.8,
                     max_tokens=512
                 )
@@ -163,22 +169,30 @@ def run_evaluation():
                 print(f"\n[Error] Student Generation Error on {q_id}: {e}")
                 break
                 
+            # 大元のログと両者のコンテキストに生徒の発話を追加
             dialogue_log.append({"role": "student", "content": student_msg})
-            teacher_context.append({"role": "user", "content": student_msg})
             student_context.append({"role": "assistant", "content": student_msg})
+            teacher_context.append({"role": "user", "content": student_msg})
+
+            # ※生徒の発話を追加した後に実行
+            # systemと問題文（先頭2つ）は常に維持し、直近6件を残す
+            if len(teacher_context) > 8:
+                active_teacher_ctx = teacher_context[:2] + teacher_context[-6:]
+            else:
+                active_teacher_ctx = teacher_context
 
             # 教師（評価対象モデル）の発話
             try:
                 res_teacher = local_client.chat.completions.create(
                     model=MODEL_NAME,
-                    messages=normalize_messages(teacher_context), # ここで魔法の関数を通す
+                    messages=normalize_messages(active_teacher_ctx),
                     temperature=0.2,
                     max_tokens=512
                 )
                 
                 teacher_response_str = res_teacher.choices[0].message.content
                 
-                # <analysis>タグのパース処理と【対話完了判定】（フォールバック付き）
+                # <analysis>タグのパース処理と【対話完了判定】
                 if "<analysis>" in teacher_response_str and "</analysis>" in teacher_response_str:
                     try:
                         analysis_part = teacher_response_str.split("</analysis>")[0]
@@ -201,6 +215,7 @@ def run_evaluation():
                 print(f"\n[Error] Teacher Generation Error on {q_id}: {e}")
                 break
 
+            # 発話を全てのコンテキストに記録
             dialogue_log.append({"role": "teacher", "content": teacher_msg})
             student_context.append({"role": "user", "content": teacher_msg})
             teacher_context.append({"role": "assistant", "content": teacher_response_str})

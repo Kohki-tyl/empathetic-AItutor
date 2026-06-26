@@ -154,7 +154,7 @@ def run_evaluation():
             try:
                 res_student = local_client.chat.completions.create(
                     model=MODEL_NAME,
-                    messages=normalize_messages(active_student_ctx),
+                    messages=normalize_messages(student_context),
                     temperature=0.8,
                     max_tokens=512
                 )
@@ -172,7 +172,7 @@ def run_evaluation():
             try:
                 res_teacher = local_client.chat.completions.create(
                     model=MODEL_NAME,
-                    messages=normalize_messages(active_teacher_ctx),
+                    messages=normalize_messages(teacher_context),
                     temperature=0.2,
                     max_tokens=512
                 )

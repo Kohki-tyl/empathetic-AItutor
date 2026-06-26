@@ -179,20 +179,14 @@ def run_evaluation():
                 
                 teacher_response_str = res_teacher.choices[0].message.content
                 
-                # JSONパース（ローカルモデルが崩した場合のフォールバック付き）
-                try:
-                    if "{" in teacher_response_str:
-                        json_str = teacher_response_str[teacher_response_str.find("{"):teacher_response_str.rfind("}")+1]
-                        t_data = json.loads(json_str)
-                        teacher_msg = t_data.get("teacher_utterance", "")
-                        is_completed = t_data.get("is_completed", False)
-                    else:
-                        teacher_msg = teacher_response_str
-                        is_completed = False
-                except json.JSONDecodeError:
-                    print(f"\n[Warning] {q_id}: 教師モデルのJSONパースに失敗しました。出力をそのままテキストとして扱います。")
-                    teacher_msg = teacher_response_str
+                # [指導完了] タグの検知による指導終了判定
+                if "[指導完了]" in teacher_response_str:
+                    is_completed = True
+                    # ログにはタグを含めないようにクリーンアップ
+                    teacher_msg = teacher_response_str.replace("[指導完了]", "").strip()
+                else:
                     is_completed = False
+                    teacher_msg = teacher_response_str
 
             except Exception as e:
                 print(f"\n[Error] Teacher Generation Error on {q_id}: {e}")

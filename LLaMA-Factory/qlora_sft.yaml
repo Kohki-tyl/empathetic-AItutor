@@ -1,0 +1,41 @@
+# ファイル名: qlora_sft.yaml
+
+# ===== モデル設定 =====
+model_name_or_path: tokyotech-llm/Llama-3.1-Swallow-70B-Instruct-v0.3
+template: llama3
+quantization_bit: 4       # QLoRA (4-bit量子化) を有効化
+
+# ===== データセット設定 =====
+# ※ 先ほど dataset_info.json に追記したキー名を指定
+dataset: math_tutor_train
+eval_dataset: math_tutor_val
+cutoff_len: 2048          # メモリに収まるようにコンテキスト長を制限
+
+# ===== 学習 (SFT) のハイパーパラメータ =====
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_target: all          # 70Bモデル全体にLoRAアダプタを適用して精度を最大化
+
+# 学習量と速度のバランス設定
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 4
+learning_rate: 2.0e-4
+num_train_epochs: 3.0     # 3周学習させる
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+
+# ハードウェア最適化 (H200用)
+bf16: true                # H200で高速かつ安定するBFloat16を使用
+pure_bf16: true
+
+# ===== 評価とログの設定 =====
+eval_strategy: steps
+eval_steps: 50            # 50ステップごとに検証データで精度を確認
+logging_steps: 10
+save_steps: 100
+plot_loss: true
+overwrite_output_dir: true
+
+# 出力先ディレクトリ
+output_dir: saves/Swallow-70B/lora/sft

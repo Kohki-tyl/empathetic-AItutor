@@ -1,88 +1,101 @@
-import os
 import json
+import sys
 import random
+from pathlib import Path
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = Path(__file__).resolve().parent
 
-def prepare_sft_data(train_ratio=0.8, val_ratio=0.2):
-    with open(os.path.join(BASE_DIR, "prompts", "sft_teacher_system.txt"), "r", encoding="utf-8") as f:
-        teacher_system = f.read().strip()
-
-    input_path = os.path.join(BASE_DIR, "empathetic_dialogues.jsonl")
-    if not os.path.exists(input_path):
-        print(f"Error: {input_path} not found.")
-        return
-
-    sessions = []
-    with open(input_path, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.strip():
-                session = json.loads(line)
-                # 🌟 is_completedがFalse（未完了）のセッションは学習データから除外
-                if not session.get("is_completed", False):
-                    continue
-                sessions.append(session)
-
-    sft_data = []
-    for session in sessions:
-        problem = session.get("problem", "")
+def load_system_prompt() -> str:
+    path = BASE_DIR / "prompts" / "sft_teacher_system.txt"
+    if not path.exists():
+        # プロンプトが読み込めない場合はエラーを出力して強制終了
+        print(f"\n[Error] システムプロンプトファイルが見つかりません！\nパスを確認してください: {path}", file=sys.stderr)
+        sys.exit(1)
         
-        # 🌟 変更点1: システムプロンプトに問題文を結合しない（シンプル化）
-        messages = [{"role": "system", "content": teacher_system}]
-        
-        conversation = session.get("conversation", [])
-        is_first_student_turn = True
-        
-        for i, turn in enumerate(conversation):
-            if turn["role"] == "student":
-                content = turn["content"]
-                
-                # 🌟 変更点2: 問題文は「生徒の最初の発話」の冒頭にコンテキストとして付与
-                if is_first_student_turn:
-                    content = f"[現在出題中の問題]:\n{problem}\n\n{content}"
-                    is_first_student_turn = False
-                    
-                messages.append({"role": "user", "content": content})
-                
-            elif turn["role"] == "teacher":
-                # 🌟 変更点3: CoTを「プロセス」「感情」「次の一歩」の3項目に極小化
-                cot_text = (
-                    "<analysis>\n"
-                    f"【推論プロセス】: {turn.get('thought_process', '')}\n"
-                    f"【生徒の感情】: {turn.get('student_emotion', '')}\n"
-                    f"【次の一歩】: {turn.get('next_step_plan', '')}\n"
-                    "</analysis>\n"
-                )
-                
-                teacher_msg = turn["content"]
-                
-                # 🌟 変更点4: この対話の「一番最後」のターンの場合のみ、発話末尾に [指導完了] を付与
-                is_last_turn = (i == len(conversation) - 1)
-                if is_last_turn:
-                    teacher_msg = f"{teacher_msg.strip()}\n[指導完了]"
-                
-                assistant_content = cot_text + teacher_msg
-                messages.append({"role": "assistant", "content": assistant_content})
-        
-        sft_data.append({"messages": messages})
+    return path.read_text(encoding="utf-8").strip()
 
-    random.seed(42)
-    random.shuffle(sft_data)
+def main():
+    print("コーパス (empathetic_dialogues.jsonl) から学習用・検証用データを作成します...")
     
-    train_idx = int(len(sft_data) * train_ratio)
+    system_prompt = load_system_prompt()
+    input_path = BASE_DIR / "empathetic_dialogues.jsonl"
+    train_output_path = BASE_DIR / "sft_train.jsonl"
+    val_output_path = BASE_DIR / "sft_val.jsonl"
     
-    train_data = sft_data[:train_idx]
-    val_data = sft_data[train_idx:]
+    if not input_path.exists():
+        print(f"\n[Error] 入力ファイルが見つかりません: {input_path}", file=sys.stderr)
+        sys.exit(1)
 
-    with open(os.path.join(BASE_DIR, "sft_train.jsonl"), "w", encoding="utf-8") as f:
-        for item in train_data:
-            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    total_count = 0
+    valid_data = [] # 条件をクリアしたデータを一時保存するリスト
+    
+    with input_path.open("r", encoding="utf-8") as f_in:
+        for line in f_in:
+            if not line.strip(): continue
+            total_count += 1
+            session = json.loads(line)
             
-    with open(os.path.join(BASE_DIR, "sft_val.jsonl"), "w", encoding="utf-8") as f:
-        for item in val_data:
-            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+            # フィルタリング: 指導完了フラグのみで判定
+            if not session.get("is_completed", False): 
+                continue
 
-    print(f"✅ SFT Data Prepared (New Strategy) -> Train: {len(train_data)} cases, Val: {len(val_data)} cases")
+            problem_text = session.get("problem", "")
+            conversation = session.get("conversation", [])
+            
+            # messagesフォーマットの初期化（Systemプロンプトを設定）
+            messages = [{"role": "system", "content": system_prompt}]
+            
+            for i, turn in enumerate(conversation):
+                role = "user" if turn["role"] == "student" else "assistant"
+                content = turn.get("content", "").strip()
+                
+                # 初回ターンのユーザー発話に問題文とシステム指示を結合
+                if role == "user" and i == 0:
+                    content = f"問題: {problem_text}\n\n上記の問題を出題しました。生徒の発話を待機し、対応を開始してください。\n\n{content}"
+                
+                # 最終ターンのアシスタント発話に [指導完了] タグを付与
+                elif role == "assistant":
+                    is_last_turn = (i == len(conversation) - 1)
+                    if is_last_turn and "[指導完了]" not in content:
+                        content += "\n\n[指導完了]"
+                        
+                messages.append({"role": role, "content": content})
+            
+            valid_data.append({"messages": messages})
+            
+    # ==========================================
+    # データのシャッフルと 8:2 分割処理
+    # ==========================================
+    valid_count = len(valid_data)
+    if valid_count == 0:
+        print("\n[Error] 有効なデータが1件もありませんでした。", file=sys.stderr)
+        sys.exit(1)
+
+    # ランダムシードを固定して、何度実行しても同じ分割結果になるようにする
+    random.seed(42)
+    random.shuffle(valid_data)
+    
+    # 8割のインデックスを計算
+    split_idx = int(valid_count * 0.8)
+    
+    train_data = valid_data[:split_idx]
+    val_data = valid_data[split_idx:]
+    
+    # トレーニング用データの書き込み (80%)
+    with train_output_path.open("w", encoding="utf-8") as f_out:
+        for item in train_data:
+            f_out.write(json.dumps(item, ensure_ascii=False) + "\n")
+            
+    # 検証用データの書き込み (20%)
+    with val_output_path.open("w", encoding="utf-8") as f_out:
+        for item in val_data:
+            f_out.write(json.dumps(item, ensure_ascii=False) + "\n")
+            
+    print(f"\n✅ 変換・分割完了!")
+    print(f" - 全データ数: {total_count} 件")
+    print(f" - 抽出された高品質データ: {valid_count} 件")
+    print(f"   => トレーニング用 (80%): {len(train_data)} 件 -> {train_output_path.name}")
+    print(f"   => 検証用 (20%): {len(val_data)} 件 -> {val_output_path.name}")
 
 if __name__ == "__main__":
-    prepare_sft_data()
+    main()

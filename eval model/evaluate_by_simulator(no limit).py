@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# APIキーとクライアントの初期化
 api_key = os.getenv('GPT_API_KEY')
 openai_client = OpenAI(api_key=api_key)
 
@@ -22,7 +23,7 @@ TEACHER_SYSTEM = load_prompt_file("teacher_system.txt")
 STUDENT_SYSTEM_TEMPLATE = load_prompt_file("eval_student_system.txt")
 JUDGE_SYSTEM = load_prompt_file("eval_judge_system.txt")
 
-MODEL_NAME = "tokyo-tech-nlp/Swallow-70b-instruct-v0.1"
+MODEL_NAME = "tokyotech-llm/Llama-3.1-Swallow-70B-Instruct-v0.3"
 
 judge_response_schema = {
     "type": "json_schema",
@@ -51,6 +52,18 @@ def load_jsonl(filename):
                 item_id = item.get("id") or item.get("source_id")
                 data[item_id] = item
     return data
+
+# =========================================================
+# ヘルパー: ロールの連続を防ぐ（全履歴を安全に結合する処理）
+# =========================================================
+def normalize_messages(messages):
+    fixed_messages = []
+    for msg in messages:
+        if fixed_messages and fixed_messages[-1]["role"] == msg["role"]:
+            fixed_messages[-1]["content"] += "\n\n" + msg["content"]
+        else:
+            fixed_messages.append({"role": msg["role"], "content": msg["content"]})
+    return fixed_messages
 
 def run_evaluation():
     print("評価用データセットとプロファイルを読み込んでいます...")
@@ -88,7 +101,7 @@ def run_evaluation():
         phase1_student_sys = STUDENT_SYSTEM_TEMPLATE.replace("{STUDENT_PROFILE}", formatted_profile)
         phase1_student_sys = phase1_student_sys.replace("{CURRENT_MODE}", "対話学習（Phase 1）")
 
-        # Phase 1: 対話学習
+        # Phase 1: 対話学習 (初期コンテキスト)
         teacher_context = [
             {"role": "system", "content": TEACHER_SYSTEM},
             {"role": "user", "content": f"問題: {orig_q}\n\n上記の問題を出題しました。生徒の発話を待機し、対応を開始してください。"}
@@ -103,34 +116,42 @@ def run_evaluation():
         is_completed = False
 
         for turn in range(15):
-            # 生徒（Simulator）の発話: ローカルの Swallow を使用
+            # ---------------------------------------------------------
+            # 生徒（Simulator）の発話
+            # 全コンテキスト (student_context) をそのまま渡す
+            # ---------------------------------------------------------
             try:
                 res_student = local_client.chat.completions.create(
                     model=MODEL_NAME,
-                    messages=student_context,
-                    temperature=0.8
+                    messages=normalize_messages(student_context),
+                    temperature=0.8,
+                    max_tokens=512
                 )
                 student_msg = res_student.choices[0].message.content.strip()
             except Exception as e:
                 print(f"\n[Error] Student Generation Error on {q_id}: {e}")
                 break
                 
+            # 大元のログと、双方のコンテキストへ最新の発話を追加
             dialogue_log.append({"role": "student", "content": student_msg})
-            
-            teacher_context.append({"role": "user", "content": student_msg})
             student_context.append({"role": "assistant", "content": student_msg})
+            teacher_context.append({"role": "user", "content": student_msg})
 
-            # 教師（評価対象モデル）の発話: ローカルの Swallow を使用
+            # ---------------------------------------------------------
+            # 教師（評価対象モデル）の発話
+            # 全コンテキスト (teacher_context) をそのまま渡す
+            # ---------------------------------------------------------
             try:
                 res_teacher = local_client.chat.completions.create(
                     model=MODEL_NAME,
-                    messages=teacher_context,
-                    temperature=0.2
+                    messages=normalize_messages(teacher_context),
+                    temperature=0.2,
+                    max_tokens=512
                 )
                 
                 teacher_response_str = res_teacher.choices[0].message.content
                 
-                # 思考ログなどのJSONパース（ローカルモデルが崩した場合のフォールバック付き）
+                # JSONパース（ローカルモデルが崩した場合のフォールバック付き）
                 try:
                     if "{" in teacher_response_str:
                         json_str = teacher_response_str[teacher_response_str.find("{"):teacher_response_str.rfind("}")+1]
@@ -149,6 +170,7 @@ def run_evaluation():
                 print(f"\n[Error] Teacher Generation Error on {q_id}: {e}")
                 break
 
+            # 大元のログと、双方のコンテキストへ最新の発話を追加
             dialogue_log.append({"role": "teacher", "content": teacher_msg})
             student_context.append({"role": "user", "content": teacher_msg})
             teacher_context.append({"role": "assistant", "content": teacher_response_str})
@@ -156,7 +178,9 @@ def run_evaluation():
             if is_completed:
                 break
 
+        # =========================================================
         # Phase 2: 転移テスト（コンテキスト分離）
+        # =========================================================
         phase2_student_sys = STUDENT_SYSTEM_TEMPLATE.replace("{STUDENT_PROFILE}", formatted_profile)
         phase2_student_sys = phase2_student_sys.replace("{CURRENT_MODE}", "類似問題テスト（Phase 2）")
 
@@ -167,28 +191,29 @@ def run_evaluation():
             f"【新しい出題（類似問題）】\n{sim_q}"
         )
 
-        # Phase 2のテスト解答: ローカルの Swallow を使用
         try:
             res_phase2 = local_client.chat.completions.create(
                 model=MODEL_NAME,
-                messages=[
+                messages=normalize_messages([
                     {"role": "system", "content": phase2_student_sys},
                     {"role": "user", "content": phase2_prompt}
-                ],
-                temperature=0.2 
+                ]),
+                temperature=0.2,
+                max_tokens=512
             )
             student_final_answer = res_phase2.choices[0].message.content.strip()
         except Exception as e:
             print(f"\n[Error] Phase 2 Generation Error on {q_id}: {e}")
             student_final_answer = "Error during generation"
 
+        # =========================================================
         # Judge: 解答の自動採点
+        # =========================================================
         judge_prompt = (
             f"【生徒の解答プロセスと最終的な答え】\n{student_final_answer}\n\n"
             f"【模範解答】\n{sim_a}"
         )
         
-        # Judgeの自動採点: 外部の OpenAI API (gpt-4o) を使用
         try:
             res_judge = openai_client.chat.completions.create(
                 model="gpt-5.4", 

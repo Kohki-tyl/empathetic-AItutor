@@ -1,35 +1,84 @@
 import os
 import json
+from pathlib import Path
 from openai import OpenAI
 from tqdm import tqdm
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# ==========================================
+# 1. 基本設定と初期化
+# ==========================================
+BASE_DIR = Path(__file__).resolve().parent
 
-# 1. クライアントの初期化
-# 自動採点用（OpenAI API）
-api_key = os.getenv('GPT_API_KEY')
+# 定数
+MODEL_NAME = "tokyotech-llm/Llama-3.1-Swallow-70B-Instruct-v0.3"
+JUDGE_MODEL_NAME = "gpt-5.4"
+MAX_TURNS = 10  # Phase 1の最大対話ターン数
+
+# クライアントの初期化
+api_key = os.environ.get('GPT_API_KEY')
 openai_client = OpenAI(api_key=api_key)
 
-# 先生役 ＆ 生徒役
 local_client = OpenAI(
     api_key="EMPTY", 
     base_url="http://localhost:8000/v1" 
 )
 
-# 2. プロンプトと設定の読み込み
-def load_prompt_file(filename):
-    path = os.path.join(BASE_DIR, "prompts", filename)
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+# ==========================================
+# 2. ヘルパー関数群
+# ==========================================
+def load_prompt_file(filename: str) -> str:
+    """プロンプトファイルを読み込む"""
+    path = BASE_DIR / "prompts" / filename
+    return path.read_text(encoding="utf-8")
 
+def load_jsonl(filename: str) -> dict:
+    """JSONLファイルを読み込み、IDをキーとした辞書を返す"""
+    data = {}
+    path = BASE_DIR / "questions" / filename
+    if not path.exists():
+        return data
+    
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                item = json.loads(line)
+                item_id = item.get("id") or item.get("source_id")
+                data[item_id] = item
+    return data
+
+def normalize_messages(messages: list) -> list:
+    """ロールの連続を防ぐメッセージ結合関数"""
+    fixed_messages = []
+    for msg in messages:
+        if fixed_messages and fixed_messages[-1]["role"] == msg["role"]:
+            fixed_messages[-1]["content"] += "\n\n" + msg["content"]
+        else:
+            fixed_messages.append({"role": msg["role"], "content": msg["content"]})
+    return fixed_messages
+
+def generate_llm_response(client: OpenAI, model: str, messages: list, temperature: float, max_tokens: int = None, response_format: dict = None) -> str:
+    """LLMAPI呼び出しをラップし、エラーハンドリングを共通化する"""
+    kwargs = {
+        "model": model,
+        "messages": normalize_messages(messages),
+        "temperature": temperature
+    }
+    if max_tokens:
+        kwargs["max_tokens"] = max_tokens
+    if response_format:
+        kwargs["response_format"] = response_format
+
+    response = client.chat.completions.create(**kwargs)
+    return response.choices[0].message.content.strip()
+
+# ==========================================
+# 3. プロンプトとスキーマの読み込み
+# ==========================================
 TEACHER_SYSTEM = load_prompt_file("sft_teacher_system.txt")
 STUDENT_SYSTEM_TEMPLATE = load_prompt_file("eval_student_system.txt")
 JUDGE_SYSTEM = load_prompt_file("eval_judge_system.txt")
 EMPATHY_JUDGE_SYSTEM = load_prompt_file("eval_empathy_judge_system.txt")
 
-MODEL_NAME = "tokyotech-llm/Llama-3.1-Swallow-70B-Instruct-v0.3"
-
-# 3. Judge用JSONスキーマの定義
 math_judge_response_schema = {
     "type": "json_schema",
     "json_schema": {
@@ -73,42 +122,19 @@ empathy_judge_response_schema = {
     }
 }
 
-# 4. データ読み込み関数
-def load_jsonl(filename):
-    data = {}
-    path = os.path.join(BASE_DIR, "questions", filename)
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.strip():
-                item = json.loads(line)
-                item_id = item.get("id") or item.get("source_id")
-                data[item_id] = item
-    return data
-
-# ======== 追加: ロールの連続を防ぐ魔法のヘルパー関数 ========
-def normalize_messages(messages):
-    fixed_messages = []
-    for msg in messages:
-        if fixed_messages and fixed_messages[-1]["role"] == msg["role"]:
-            fixed_messages[-1]["content"] += "\n\n" + msg["content"]
-        else:
-            fixed_messages.append({"role": msg["role"], "content": msg["content"]})
-    return fixed_messages
-# =========================================================
-
-# 5. メインの評価シミュレーション
+# ==========================================
+# 4. メインの評価シミュレーション
+# ==========================================
 def run_evaluation():
-    print("評価用データセットとプロファイルを読み込んでいます")
+    print("評価用データセットとプロファイルを読み込んでいます...")
     original_tests = load_jsonl("test_math_questions.jsonl")
     similar_tests = load_jsonl("similar_test_math_questions.jsonl")
     
-    profile_path = os.path.join(BASE_DIR, "prompts", "eval_student_profile.json")
-    with open(profile_path, "r", encoding="utf-8") as f:
-        student_profiles = json.load(f)
+    profile_path = BASE_DIR / "prompts" / "eval_student_profile.json"
+    student_profiles = json.loads(profile_path.read_text(encoding="utf-8"))
     
-    output_path = os.path.join(BASE_DIR, "evaluation_results.jsonl")
-    with open(output_path, "w", encoding="utf-8") as f:
-        pass
+    output_path = BASE_DIR / "evaluation_results.jsonl"
+    output_path.write_text("", encoding="utf-8")  # ファイルの初期化
 
     profile_idx = 0
 
@@ -131,11 +157,9 @@ def run_evaluation():
             f"【苦手な範囲】: {current_profile.get('weak_area', '不明')}"
         )
 
-        # Phase 1用の生徒プロンプト構築
-        phase1_student_sys = STUDENT_SYSTEM_TEMPLATE.replace("{STUDENT_PROFILE}", formatted_profile)
-        phase1_student_sys = phase1_student_sys.replace("{CURRENT_MODE}", "対話学習（Phase 1）")
+        phase1_student_sys = STUDENT_SYSTEM_TEMPLATE.replace("{STUDENT_PROFILE}", formatted_profile).replace("{CURRENT_MODE}", "対話学習（Phase 1）")
 
-        # Phase 1: 対話学習セッション（最大10ターン）
+        # コンテキストの初期化
         teacher_context = [
             {"role": "system", "content": TEACHER_SYSTEM},
             {"role": "user", "content": f"問題: {orig_q}\n\n上記の問題を出題しました。生徒の発話を待機し、対応を開始してください。"}
@@ -149,50 +173,37 @@ def run_evaluation():
         dialogue_log = []
         is_completed = False
 
-        for turn in range(10):
-            # 生徒（Simulator）の発話
+        # ----------------------------------------
+        # Phase 1: 対話学習セッション
+        # ----------------------------------------
+        for turn in range(MAX_TURNS):
+            # 生徒の発話
             try:
-                res_student = local_client.chat.completions.create(
-                    model=MODEL_NAME,
-                    messages=normalize_messages(student_context),
-                    temperature=0.8,
-                    max_tokens=512
-                )
-                student_msg = res_student.choices[0].message.content.strip()
+                student_msg = generate_llm_response(local_client, MODEL_NAME, student_context, temperature=0.8, max_tokens=512)
             except Exception as e:
-                print(f"\n[Error] Student Generation Error on {q_id}: {e}")
+                tqdm.write(f"\n[Error] Student Generation Error on {q_id}: {e}")
                 break
                 
-            # 大元のログと両者のコンテキストに生徒の発話を追加
             dialogue_log.append({"role": "student", "content": student_msg})
             student_context.append({"role": "assistant", "content": student_msg})
             teacher_context.append({"role": "user", "content": student_msg})
 
-            # 教師（評価対象モデル）の発話
+            # 教師の発話
             try:
-                res_teacher = local_client.chat.completions.create(
-                    model=MODEL_NAME,
-                    messages=normalize_messages(teacher_context),
-                    temperature=0.2,
-                    max_tokens=512
-                )
+                teacher_response_str = generate_llm_response(local_client, MODEL_NAME, teacher_context, temperature=0.2, max_tokens=512)
                 
-                teacher_response_str = res_teacher.choices[0].message.content
-                
-                # [指導完了] タグの検知による指導終了判定
+                # 指導完了タグの検知とクリーンアップ
                 if "[指導完了]" in teacher_response_str:
                     is_completed = True
-                    # ログにはタグを含めないようにクリーンアップ
                     teacher_msg = teacher_response_str.replace("[指導完了]", "").strip()
                 else:
                     is_completed = False
                     teacher_msg = teacher_response_str
 
             except Exception as e:
-                print(f"\n[Error] Teacher Generation Error on {q_id}: {e}")
+                tqdm.write(f"\n[Error] Teacher Generation Error on {q_id}: {e}")
                 break
 
-            # 大元のログと、双方のコンテキストへ最新の発話を追加
             dialogue_log.append({"role": "teacher", "content": teacher_msg})
             student_context.append({"role": "user", "content": teacher_msg})
             teacher_context.append({"role": "assistant", "content": teacher_response_str})
@@ -200,76 +211,61 @@ def run_evaluation():
             if is_completed:
                 break
 
-        # Judge 1: 共感レベルの自動採点 (Phase 1のログを使用)
+        # ----------------------------------------
+        # Judge 1: 共感レベルの自動採点
+        # ----------------------------------------
         full_dialogue_text = "\n".join([f"{d['role']}: {d['content']}" for d in dialogue_log])
-        
         try:
-            res_empathy = openai_client.chat.completions.create(
-                model="gpt-5.4",
-                messages=[
+            empathy_raw = generate_llm_response(
+                openai_client, JUDGE_MODEL_NAME,
+                [
                     {"role": "system", "content": EMPATHY_JUDGE_SYSTEM},
                     {"role": "user", "content": f"【Phase 1の対話ログ】\n{full_dialogue_text}\n\nこの対話ログを基に、教師の共感レベルと指導戦略を評価し、100点満点でスコアリングしてください。"}
                 ],
-                response_format=empathy_judge_response_schema,
-                temperature=0.0
+                temperature=0.0, response_format=empathy_judge_response_schema
             )
-            empathy_result = json.loads(res_empathy.choices[0].message.content)
+            empathy_result = json.loads(empathy_raw)
         except Exception as e:
-            print(f"\n[Error] Empathy Judge Error on {q_id}: {e}")
+            tqdm.write(f"\n[Error] Empathy Judge Error on {q_id}: {e}")
             empathy_result = {
-                "emotion_alignment_score": 0, 
-                "pedagogical_empathy_score": 0, 
-                "length_control_score": 0, 
-                "total_score": 0, 
-                "empathy_reason": f"API Error: {e}"
+                "emotion_alignment_score": 0, "pedagogical_empathy_score": 0, 
+                "length_control_score": 0, "total_score": 0, "empathy_reason": f"API Error: {e}"
             }
 
-        # Phase 2: 転移テスト（コンテキスト分離）
-        phase2_student_sys = STUDENT_SYSTEM_TEMPLATE.replace("{STUDENT_PROFILE}", formatted_profile)
-        phase2_student_sys = phase2_student_sys.replace("{CURRENT_MODE}", "類似問題テスト（Phase 2）")
+        # ----------------------------------------
+        # Phase 2: 転移テスト（類似問題）
+        # ----------------------------------------
+        phase2_student_sys = STUDENT_SYSTEM_TEMPLATE.replace("{STUDENT_PROFILE}", formatted_profile).replace("{CURRENT_MODE}", "類似問題テスト（Phase 2）")
+        phase2_prompt = f"【先ほどの学習の振り返り（参考）】\n{full_dialogue_text}\n\n【新しい出題（類似問題）】\n{sim_q}"
 
-        phase2_prompt = (
-            f"【先ほどの学習の振り返り（参考）】\n{full_dialogue_text}\n\n"
-            f"【新しい出題（類似問題）】\n{sim_q}"
-        )
-
-        # Phase 2のテスト解答
         try:
-            res_phase2 = local_client.chat.completions.create(
-                model=MODEL_NAME,
-                messages=normalize_messages([
-                    {"role": "system", "content": phase2_student_sys},
-                    {"role": "user", "content": phase2_prompt}
-                ]),
-                temperature=0.2 
+            student_final_answer = generate_llm_response(
+                local_client, MODEL_NAME,
+                [{"role": "system", "content": phase2_student_sys}, {"role": "user", "content": phase2_prompt}],
+                temperature=0.2
             )
-            student_final_answer = res_phase2.choices[0].message.content.strip()
         except Exception as e:
-            print(f"\n[Error] Phase 2 Generation Error on {q_id}: {e}")
+            tqdm.write(f"\n[Error] Phase 2 Generation Error on {q_id}: {e}")
             student_final_answer = "Error during generation"
 
-        # Judge 2: 数学解答の自動採点 (Phase 2の結果を使用)
-        judge_prompt = (
-            f"【生徒の解答プロセスと最終的な答え】\n{student_final_answer}\n\n"
-            f"【模範解答】\n{sim_a}"
-        )
-        
+        # ----------------------------------------
+        # Judge 2: 数学解答の自動採点
+        # ----------------------------------------
+        judge_prompt = f"【生徒の解答プロセスと最終的な答え】\n{student_final_answer}\n\n【模範解答】\n{sim_a}"
         try:
-            res_math_judge = openai_client.chat.completions.create(
-                model="gpt-5.4", 
-                messages=[
-                    {"role": "system", "content": JUDGE_SYSTEM},
-                    {"role": "user", "content": judge_prompt}
-                ],
-                response_format=math_judge_response_schema,
-                temperature=0.0
+            math_judge_raw = generate_llm_response(
+                openai_client, JUDGE_MODEL_NAME,
+                [{"role": "system", "content": JUDGE_SYSTEM}, {"role": "user", "content": judge_prompt}],
+                temperature=0.0, response_format=math_judge_response_schema
             )
-            math_judge_result = json.loads(res_math_judge.choices[0].message.content)
+            math_judge_result = json.loads(math_judge_raw)
         except Exception as e:
-            print(f"\n[Error] Math Judge Error on {q_id}: {e}")
+            tqdm.write(f"\n[Error] Math Judge Error on {q_id}: {e}")
             math_judge_result = {"is_correct": False, "judge_reason": f"API Error: {e}"}
 
+        # ----------------------------------------
         # 結果の保存
+        # ----------------------------------------
         session_result = {
             "source_id": q_id,
             "student_profile_used": current_profile,
@@ -282,10 +278,10 @@ def run_evaluation():
             "dialogue_log": dialogue_log
         }
 
-        with open(output_path, "a", encoding="utf-8") as f:
+        with output_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(session_result, ensure_ascii=False) + "\n")
 
-    print(f"\n評価シミュレーション完了 結果は {output_path} に保存されました。")
+    print(f"\n評価シミュレーション完了！ 結果は {output_path.name} に保存されました。")
 
 if __name__ == "__main__":
     run_evaluation()

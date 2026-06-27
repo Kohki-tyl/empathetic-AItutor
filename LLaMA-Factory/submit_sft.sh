@@ -1,35 +1,34 @@
 #!/bin/bash
-#$ -l rt_HF=1           # 【必須】H200ノードを1台（GPU 4基）要求
-#$ -l h_rt=24:00:00     # ジョブの最大実行時間 (24時間)
-#$ -j y                 # 標準出力と標準エラー出力を同じログファイルに結合
-#$ -cwd                 # 現在のディレクトリを作業ディレクトリとして実行
-#$ -N QLoRA_Swallow     # ジョブの名前（qstatで表示されます）
+#PBS -P gcc50435
+#PBS -q rt_HF
+#PBS -l select=1
+#PBS -l walltime=24:00:00
+#PBS -j oe
+#PBS -N QLoRA_Swallow
 
 # ==========================================
-# 1. 環境のセットアップ
+# ABCI 3.0 (PBS) の環境設定
 # ==========================================
+# PBSでは実行開始時ホームディレクトリに飛ばされるため、ジョブを投入したディレクトリに戻る
+cd $PBS_O_WORKDIR
+
 # ABCIのモジュールシステムを読み込み
 source /etc/profile.d/modules.sh
-
-# 必要なモジュールをロード (※環境に合わせてバージョンは調整してください)
 module load python/3.12/3.12.9
 module load cuda/12.1/12.1.1
 module load cudnn/8.9/8.9.2
 
-# 仮想環境の有効化（パスはご自身の環境に合わせてください）
-# プロジェクトルートに .venv がある想定の相対パスです
+# 仮想環境の有効化
 source ../.venv/bin/activate
 
 # ==========================================
-# 2. 学習の実行
+# 学習の実行
 # ==========================================
 echo "====================================="
-echo "Starting QLoRA Fine-tuning on H200x4"
+echo "Starting QLoRA Fine-tuning on H200x4 (ABCI 3.0)"
 echo "Date: $(date)"
 echo "====================================="
 
-# LLaMA-FactoryのマルチGPU学習コマンド
-# FORCE_TORCHRUN=1 を付けることで、1ノード内の4つのGPUに自動で処理が分散されます
 FORCE_TORCHRUN=1 llamafactory-cli train qlora_sft.yaml
 
 echo "====================================="

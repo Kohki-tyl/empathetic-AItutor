@@ -1,5 +1,5 @@
 # ===== Model & Template =====
-model_name_or_path: tokyotech-llm/Llama-3.1-Swallow-70B-Instruct-v0.3
+model_name_or_path: tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.1
 template: chatml        # ChatML形式を用いることで、特殊トークンによる構造的境界を明確にします[cite: 8]。
 quantization_bit: 4     # QLoRAによる4ビット量子化（NF4）でメモリ消費を抜本的に削減します[cite: 8]。
 
@@ -40,4 +40,4 @@ plot_loss: true
 overwrite_output_dir: true
 
 # ===== Output =====
-output_dir: saves/Swallow-70B/lora/sft
+output_dir: saves/Swallow-70B/lora/sftupcast_layernorm: true

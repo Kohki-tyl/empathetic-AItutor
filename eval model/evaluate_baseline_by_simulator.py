@@ -10,13 +10,16 @@ from tqdm import tqdm
 BASE_DIR = Path(__file__).resolve().parent
 
 # 定数
-MODEL_NAME = "tokyotech-llm/Llama-3.1-Swallow-70B-Instruct-v0.3"
+MODEL_NAME = "tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5"
 JUDGE_MODEL_NAME = "gpt-5.4"
 MAX_TURNS = 10  # Phase 1の最大対話ターン数
 
 # クライアントの初期化
 api_key = os.environ.get('GPT_API_KEY')
-openai_client = OpenAI(api_key=api_key)
+openai_client = OpenAI(
+    api_key=api_key,
+    http_client=httpx.Client(proxy="http://proxy.abci.local:3128")
+)
 
 local_client = OpenAI(
     api_key="EMPTY", 

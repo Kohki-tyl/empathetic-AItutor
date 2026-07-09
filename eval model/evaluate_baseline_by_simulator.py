@@ -1,5 +1,6 @@
 import os
 import json
+import httpx
 from pathlib import Path
 from openai import OpenAI
 from tqdm import tqdm

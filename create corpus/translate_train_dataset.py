@@ -39,7 +39,7 @@ def is_text_only_problem(problem_text):
     return True
 
 
-def translate_dataset(limit=200):
+def translate_dataset(limit=1000):
     print("Hugging FaceからMATHデータセットを読み込み中...")
 
     dataset = load_dataset("nlile/hendrycks-MATH-benchmark")
@@ -104,7 +104,7 @@ def translate_dataset(limit=200):
             continue
 
     pbar.close()
-    output_filename = os.path.join(BASE_DIR, "translated_math.jsonl")
+    output_filename = os.path.join(BASE_DIR, "translated_1000_math.jsonl")
     
     with open(output_filename, "w", encoding="utf-8") as f:
         for res in translated_results:
@@ -114,4 +114,4 @@ def translate_dataset(limit=200):
 
 
 if __name__ == "__main__":
-    translate_dataset(limit=200)
+    translate_dataset(limit=1000)

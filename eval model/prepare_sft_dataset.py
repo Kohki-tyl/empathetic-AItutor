@@ -15,12 +15,11 @@ def load_system_prompt() -> str:
     return path.read_text(encoding="utf-8").strip()
 
 def main():
-    print("コーパス (empathetic_dialogues.jsonl) から学習用・検証用データを作成します...")
+    print("コーパス (empathetic_dialogues.jsonl) から学習用データを作成します...")
     
     system_prompt = load_system_prompt()
     input_path = BASE_DIR / "empathetic_dialogues.jsonl"
     train_output_path = BASE_DIR / "sft_train.jsonl"
-    val_output_path = BASE_DIR / "sft_val.jsonl"
     
     if not input_path.exists():
         print(f"\n[Error] 入力ファイルが見つかりません: {input_path}", file=sys.stderr)
@@ -64,38 +63,29 @@ def main():
             valid_data.append({"messages": messages})
             
     # ==========================================
-    # データのシャッフルと 8:2 分割処理
+    # データのシャッフルと全件保存処理
     # ==========================================
     valid_count = len(valid_data)
     if valid_count == 0:
         print("\n[Error] 有効なデータが1件もありませんでした。", file=sys.stderr)
         sys.exit(1)
 
-    # ランダムシードを固定して、何度実行しても同じ分割結果になるようにする
+    # ランダムシードを固定してシャッフル（学習の偏りを防ぐためシャッフル自体は残しています）
     random.seed(42)
     random.shuffle(valid_data)
     
-    # 8割のインデックスを計算
-    split_idx = int(valid_count * 0.8)
+    # 全データをトレーニング用として扱う
+    train_data = valid_data
     
-    train_data = valid_data[:split_idx]
-    val_data = valid_data[split_idx:]
-    
-    # トレーニング用データの書き込み (80%)
+    # トレーニング用データの書き込み (100%)
     with train_output_path.open("w", encoding="utf-8") as f_out:
         for item in train_data:
             f_out.write(json.dumps(item, ensure_ascii=False) + "\n")
             
-    # 検証用データの書き込み (20%)
-    with val_output_path.open("w", encoding="utf-8") as f_out:
-        for item in val_data:
-            f_out.write(json.dumps(item, ensure_ascii=False) + "\n")
-            
-    print(f"\n✅ 変換・分割完了!")
+    print(f"\n✅ 変換完了!")
     print(f" - 全データ数: {total_count} 件")
     print(f" - 抽出された高品質データ: {valid_count} 件")
-    print(f"   => トレーニング用 (80%): {len(train_data)} 件 -> {train_output_path.name}")
-    print(f"   => 検証用 (20%): {len(val_data)} 件 -> {val_output_path.name}")
+    print(f"   => トレーニング用 (100%): {len(train_data)} 件 -> {train_output_path.name}")
 
 if __name__ == "__main__":
     main()

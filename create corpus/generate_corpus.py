@@ -158,7 +158,7 @@ if __name__ == "__main__":
             if line.strip():
                 problems_list.append(json.loads(line))
                 
-    LIMIT = 200
+    LIMIT = 800
     target_problems = problems_list[:LIMIT]
     
     condition_presets = [

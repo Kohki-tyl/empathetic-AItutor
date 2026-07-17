@@ -15,10 +15,10 @@ def load_system_prompt() -> str:
     return path.read_text(encoding="utf-8").strip()
 
 def main():
-    print("コーパス (empathetic_dialogues.jsonl) から学習用データを作成します...")
+    print("コーパスから学習用データを作成します...")
     
     system_prompt = load_system_prompt()
-    input_path = BASE_DIR / "empathetic_dialogues.jsonl"
+    input_path = BASE_DIR / "math_tutor_corpus.jsonl"
     train_output_path = BASE_DIR / "sft_train.jsonl"
     
     if not input_path.exists():

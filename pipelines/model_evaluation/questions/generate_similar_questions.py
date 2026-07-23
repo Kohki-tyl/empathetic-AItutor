@@ -8,9 +8,10 @@ api_key = os.getenv('GPT_API_KEY')
 client = OpenAI(api_key=api_key)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PIPELINE_DIR = os.path.dirname(BASE_DIR)
 
 def load_prompt_file(filename):
-    path = os.path.join(BASE_DIR, filename)
+    path = os.path.join(PIPELINE_DIR, filename)
     if not os.path.exists(path):
         raise FileNotFoundError(f"Required prompt file not found: {path}")
     with open(path, "r", encoding="utf-8") as f:
@@ -60,8 +61,8 @@ def is_text_only_problem(problem_text):
     return True
 
 def generate_similar_dataset():
-    input_path = os.path.join(BASE_DIR, "questions", "test_math_questions.jsonl")
-    output_path = os.path.join(BASE_DIR, "questions", "similar_math_questions.jsonl")
+    input_path = os.path.join(BASE_DIR, "test_math_questions.jsonl")
+    output_path = os.path.join(BASE_DIR, "similar_test_math_questions.jsonl")
     
     if not os.path.exists(input_path):
         print(f"Error: 評価用元問題ファイルが見つかりません: {input_path}")

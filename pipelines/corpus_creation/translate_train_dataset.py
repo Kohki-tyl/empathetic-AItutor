@@ -104,7 +104,8 @@ def translate_dataset(limit=200):
             continue
 
     pbar.close()
-    output_filename = os.path.join(BASE_DIR, "translated_math.jsonl")
+    output_filename = os.path.join(BASE_DIR, "questions", "translated_math.jsonl")
+    os.makedirs(os.path.dirname(output_filename), exist_ok=True)
     
     with open(output_filename, "w", encoding="utf-8") as f:
         for res in translated_results:

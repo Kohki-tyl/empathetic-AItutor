@@ -74,38 +74,29 @@ APIキーをソースコードやコミット対象のファイルへ保存し�
    python pipelines/corpus_creation/translate_train_dataset.py
    ```
 
-   出力: `pipelines/corpus_creation/questions/translated_math.jsonl`
+   出力: `pipelines/corpus_creation/questions/translated_1000_math.jsonl`
 
-2. 図形参照など、テキストだけでは完結しない問題を除外します。
-
-   ```bash
-   python pipelines/corpus_creation/questions/clean_dataset.py
-   ```
-
-   出力: `pipelines/corpus_creation/questions/translated_math_filtered.jsonl`
-
-3. 生徒シミュレータと教師モデルの対話を生成します。
+2. 生徒シミュレータと教師モデルの対話を生成します。
 
    ```bash
    python pipelines/corpus_creation/generate_corpus.py
    ```
 
-   出力: `pipelines/corpus_creation/empathetic_dialogues.jsonl`
+   出力: `pipelines/corpus_creation/500_empathetic_dialogues.jsonl`
 
 各スクリプトの件数、モデル名、温度、最大ターン数は、現時点ではファイル内の定数として管理されています。API呼び出しを伴うため、実行前に設定と想定コストを確認してください。
 
 ## SFTデータの作成
 
-生成済み対話を `pipelines/model_evaluation/empathetic_dialogues.jsonl` に配置し、次を実行します。
+生成済み対話を `pipelines/model_evaluation/math_tutor_corpus.jsonl` に配置し、次を実行します。
 
 ```bash
 python pipelines/model_evaluation/prepare_sft_dataset.py
 ```
 
-`is_completed: true` の対話だけを抽出し、固定シードで訓練用80%・検証用20%に分割します。
+`is_completed: true` の対話だけを抽出し、固定シードでシャッフルして全件を訓練用データへ変換します。
 
 - `pipelines/model_evaluation/sft_train.jsonl`
-- `pipelines/model_evaluation/sft_val.jsonl`
 
 現在のSFT方針は [docs/SFT_Strategy.md](docs/SFT_Strategy.md) を参照してください。
 

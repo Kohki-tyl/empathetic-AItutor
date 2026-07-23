@@ -146,8 +146,8 @@ def generate_dialogue(problem: str, profile_dict: dict, initial_condition: str, 
 
 if __name__ == "__main__":
     profile_filename = os.path.join(BASE_DIR, "prompts", "student_profile.json")
-    output_filename = os.path.join(BASE_DIR, "empathetic_dialogues.jsonl")
-    input_filename = os.path.join(BASE_DIR, "questions", "translated_math_filtered.jsonl")
+    output_filename = os.path.join(BASE_DIR, "500_empathetic_dialogues.jsonl")
+    input_filename = os.path.join(BASE_DIR, "questions", "translated_1000_math.jsonl")
     
     with open(profile_filename, "r", encoding="utf-8") as f:
         student_presets = json.load(f)
@@ -158,7 +158,7 @@ if __name__ == "__main__":
             if line.strip():
                 problems_list.append(json.loads(line))
                 
-    LIMIT = 200
+    LIMIT = 500
     target_problems = problems_list[:LIMIT]
     
     condition_presets = [
@@ -167,18 +167,35 @@ if __name__ == "__main__":
         "あなたは現在【Engaged】状態です。前向きに解く意欲があり、集中して取り組み始めます。"
     ]
     
-    with open(output_filename, "w", encoding="utf-8") as f:
-        pass
-    
-    for index, item in enumerate(tqdm(target_problems)):
+    # --- レジューム機能 ---
+    start_index = 0
+    if os.path.exists(output_filename):
+        with open(output_filename, "r", encoding="utf-8") as f:
+            start_index = sum(1 for line in f if line.strip())
+        print(f"\n既存のデータを {start_index} 件検出しました。続きから生成を再開します...")
+    else:
+        with open(output_filename, "w", encoding="utf-8") as f:
+            pass
+
+    remaining_problems = target_problems[start_index:]
+
+    # 生成ループ
+    for i, item in enumerate(tqdm(remaining_problems, initial=start_index, total=LIMIT)):
+        real_index = start_index + i
+
         problem_text = item.get("translated_question")
         if not problem_text:
             continue
-            
-        profile_item = student_presets[index % len(student_presets)]
-        selected_condition = condition_presets[index % len(condition_presets)]
+
+        profile_item = student_presets[real_index % len(student_presets)]
+        selected_condition = condition_presets[real_index % len(condition_presets)]
+
+        # 1. 対話を生成
         dialogue_result = generate_dialogue(problem_text, profile_item, selected_condition, max_turns=15)
-        dialogue_result["source_id"] = item.get("id", f"unknown_{index}")
-        
+
+        # 2. 元のソースコード通りに source_id を付与
+        dialogue_result["source_id"] = item.get("id", f"unknown_{real_index}")
+
+        # 3. 元のフォーマットのまま追記保存
         with open(output_filename, "a", encoding="utf-8") as f:
             f.write(json.dumps(dialogue_result, ensure_ascii=False) + "\n")

@@ -5,6 +5,8 @@ from pathlib import Path
 # 1. 基本設定
 # ==========================================
 BASE_DIR = Path(__file__).resolve().parent
+RESULTS_FILENAME = "FT_evaluated_results.jsonl"
+REPORT_FILENAME = "analysis_report.md"
 
 def load_results(filename: str) -> dict:
     data = {}
@@ -25,7 +27,7 @@ def analyze():
     print("データを読み込んで分析を開始します...\n")
     
     # ★ FTモデルの結果ファイルのみを読み込む
-    ft_data = load_results("evaluated_results.jsonl")
+    ft_data = load_results(RESULTS_FILENAME)
 
     if not ft_data:
         print("エラー: ファイル が見つからないか、データが空です。")
@@ -87,6 +89,7 @@ def analyze():
         print(f"有効対話数: {valid_total_count}問")
         print(f"正答率    : {acc:.1f}% ({valid_correct_count}問正解)")
     else:
+        acc = None
         print("  有効な対話（2ターン以上）が行われたセッションがありませんでした。")
 
     # --------------------------------------------------
@@ -101,7 +104,76 @@ def analyze():
         print(f"合計スコア平均 (Total Score)       : {total_sum / valid_empathy_count:.1f} 点")
     else:
         print("  共感スコアのデータが見つかりませんでした。")
-        
+
+    report_lines = [
+        "# 分析結果レポート",
+        "",
+        f"- 入力ファイル: `{RESULTS_FILENAME}`",
+        f"- 対象問題数: {total_questions}問",
+        "",
+        "## 指標1: 対話放棄の割合",
+        "",
+        "Phase 1が1ターン以内で終了したセッションを対話放棄として集計しています。",
+        "",
+        "| 該当数 | 全問題数 | 割合 |",
+        "| ---: | ---: | ---: |",
+        f"| {one_turn_count}問 | {total_questions}問 | {one_turn_ratio:.1f}% |",
+        "",
+    ]
+
+    if one_turn_ratio > 30:
+        report_lines.extend([
+            "> **注意:** 1ターン終了が多く、モデルが対話を通じた指導を早期に諦めている可能性があります。",
+            "",
+        ])
+
+    report_lines.extend([
+        "## 指標2: 実質的な転移テスト正答率",
+        "",
+        f"1ターン以内で終了した{one_turn_count}問を除外して集計しています。",
+        "",
+    ])
+
+    if acc is not None:
+        report_lines.extend([
+            "| 有効対話数 | 正解数 | 正答率 |",
+            "| ---: | ---: | ---: |",
+            f"| {valid_total_count}問 | {valid_correct_count}問 | {acc:.1f}% |",
+            "",
+        ])
+    else:
+        report_lines.extend([
+            "有効な対話（2ターン以上）が行われたセッションはありませんでした。",
+            "",
+        ])
+
+    report_lines.extend([
+        "## 指標3: 共感スコア",
+        "",
+    ])
+
+    if valid_empathy_count > 0:
+        report_lines.extend([
+            f"共感評価データがある{valid_empathy_count}問の平均です。",
+            "",
+            "| 評価項目 | 平均点 |",
+            "| --- | ---: |",
+            f"| Emotion Alignment | {emotion_sum / valid_empathy_count:.1f}点 |",
+            f"| Pedagogical Empathy | {pedagogy_sum / valid_empathy_count:.1f}点 |",
+            f"| Length Control | {length_sum / valid_empathy_count:.1f}点 |",
+            f"| **Total Score** | **{total_sum / valid_empathy_count:.1f}点** |",
+            "",
+        ])
+    else:
+        report_lines.extend([
+            "共感スコアのデータは見つかりませんでした。",
+            "",
+        ])
+
+    report_path = BASE_DIR / REPORT_FILENAME
+    report_path.write_text("\n".join(report_lines), encoding="utf-8")
+    print(f"Markdownレポートを出力しました: {report_path}")
+
     print("\n")
 
 if __name__ == "__main__":

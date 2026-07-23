@@ -23,11 +23,15 @@
 │   └── model_evaluation/      # SFTデータ整形、評価問題生成、シミュレーション評価
 │       ├── prompts/
 │       └── questions/
-├── experiments/               # モデル・バージョン別の評価結果と分析コード
-│   ├── v0_baseline_swallow_70b_v0.3/
-│   ├── v0_baseline_swallow_8b_v0.5/
-│   ├── v0_sft_swallow_8b_v0.5/
-│   └── v1_sft_swallow_8b_v0.5/
+├── experiments/               # テスト版別の質問、評価結果、分析コード
+│   ├── v0_test/               # 40問で実施したv0テスト
+│   │   ├── questions/
+│   │   ├── baseline_swallow_70b_v0.3/
+│   │   ├── baseline_swallow_8b_v0.5/
+│   │   └── sft_swallow_8b_v0.5/
+│   └── v1_test/               # 200問で実施したv1テスト
+│       ├── questions/
+│       └── sft_swallow_8b_v0.5/
 ├── docs/                      # SFT方針と関連資料
 └── TODO.md                    # 今後の作業
 ```
@@ -132,13 +136,19 @@ python pipelines/model_evaluation/analyze_model.py
 
 ## 実験結果
 
-モデルごとの評価ログ、分析スクリプト、レポートは `experiments/` 以下に保存しています。ディレクトリ名は次の形式です。
+評価ログ、分析スクリプト、レポートは `experiments/` 以下にテスト版ごとに保存しています。各テストフォルダーの `questions/` は、そのテストで使用した元問題と類似問題のスナップショットです。
 
 ```text
-<データ版>_<条件>_<モデル規模>_<モデル版>
+experiments/
+├── v0_test/
+│   ├── questions/                    # v0の元問題・類似問題（40問）
+│   └── <条件>_<モデル規模>_<モデル版>/
+└── v1_test/
+    ├── questions/                    # v1の元問題・類似問題（200問）
+    └── <条件>_<モデル規模>_<モデル版>/
 ```
 
-例: `v0_baseline_swallow_8b_v0.5`、`v1_sft_swallow_8b_v0.5`
+例: `experiments/v0_test/baseline_swallow_8b_v0.5`、`experiments/v1_test/sft_swallow_8b_v0.5`
 
 比較時は、データ版、モデル規模、ベースライン/SFTの条件が一致しているかを確認してください。
 

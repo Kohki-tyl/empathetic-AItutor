@@ -8,6 +8,7 @@ from tqdm import tqdm
 # 1. 基本設定と初期化
 # ==========================================
 BASE_DIR = Path(__file__).resolve().parent
+QUESTIONS_DIR = BASE_DIR.parent / "questions"
 
 # 定数
 MODEL_NAME = "tokyotech-llm/Llama-3.1-Swallow-70B-Instruct-v0.3"
@@ -34,7 +35,7 @@ def load_prompt_file(filename: str) -> str:
 def load_jsonl(filename: str) -> dict:
     """JSONLファイルを読み込み、IDをキーとした辞書を返す"""
     data = {}
-    path = BASE_DIR / "questions" / filename
+    path = QUESTIONS_DIR / filename
     if not path.exists():
         return data
     

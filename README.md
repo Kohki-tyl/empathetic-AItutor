@@ -102,11 +102,42 @@ python pipelines/model_evaluation/prepare_sft_dataset.py
 
 - `pipelines/model_evaluation/sft_train.jsonl`
 
+### v2 Keep-only SFTデータの作成
+
+500件のコーパス品質評価で `recommendation: keep` と判定され、かつ指導完了している対話だけをv2学習データへ変換します。
+
+```bash
+python pipelines/model_evaluation/prepare_keep_only_sft_dataset.py
+```
+
+出力:
+
+- `pipelines/model_evaluation/v2_keep_only_sft_train.jsonl`
+- `pipelines/model_evaluation/v2_keep_only_sft_manifest.json`
+
+Manifestにはフィルタ条件、シャッフルシード、採用件数、出力順の`source_id`を保存します。
+
 現在のSFT方針は [docs/SFT_Strategy.md](docs/SFT_Strategy.md) を参照してください。
 
 ## 評価
 
 評価は、元問題での対話学習と、会話履歴を消去した後の類似問題テストで構成されます。
+
+### 学習コーパスの品質評価
+
+500件の生成対話を、感情認識、教育的共感、数学的正確性、エラー回復、適応的足場かけ、発話長の6軸で評価します。まず少数件で出力を確認できます。
+
+```bash
+python pipelines/corpus_creation/evaluate_corpus.py --limit 5
+```
+
+全件を評価する場合は次を実行します。
+
+```bash
+python pipelines/corpus_creation/evaluate_corpus.py
+```
+
+結果は `pipelines/corpus_creation/500_dialogue_evaluations.jsonl` に逐次保存されます。再実行時は評価済みの `source_id` をスキップするため、中断した位置から再開できます。最初から評価し直す場合のみ `--overwrite` を指定してください。
 
 ### 評価問題の準備
 
@@ -125,6 +156,24 @@ python pipelines/model_evaluation/analyze_model.py
 ```
 
 評価スクリプトは、既定ではOpenAI互換APIを `http://localhost:8000/v1` で提供しているローカルモデルを利用し、JudgeにはOpenAI APIを利用します。モデル名、エンドポイント、最大ターン数は実行前にスクリプト先頭の設定を確認してください。
+
+### v2 分離型評価
+
+v2では評価対象の教師と固定した生徒シミュレーターを、別モデル・別エンドポイントで実行します。Phase 2には対話全文ではなく、Phase 1終了時の生徒の学習状態だけを引き継ぎます。
+
+接続確認はJudgeを呼ばずに実行できます。
+
+```bash
+python pipelines/model_evaluation/evaluate_v2_by_simulator.py \
+  --teacher-model teacher-under-test \
+  --student-model fixed-student-v2 \
+  --limit 2 \
+  --skip-judges \
+  --output experiments/v2_test/pilot/dialogues.jsonl \
+  --overwrite
+```
+
+ABCIでのサーバー構成、20問パイロット、主実験の固定条件は [v2 SFT・分離型評価設計](docs/v2_sft_evaluation_design.md) を参照してください。
 
 主な評価指標は次のとおりです。
 
@@ -174,5 +223,8 @@ experiments/
 
 ## 関連資料
 
+- [研究の現状・実施内容・ToDo](docs/research_status_and_todo.md)
 - [SFT戦略](docs/SFT_Strategy.md)
+- [500件コーパス品質評価レポート](docs/corpus_quality_report.md)
+- [v2 SFT・分離型評価設計](docs/v2_sft_evaluation_design.md)
 - [今後の作業](TODO.md)

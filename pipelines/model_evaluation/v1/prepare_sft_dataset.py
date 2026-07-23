@@ -6,7 +6,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 def load_system_prompt() -> str:
-    path = BASE_DIR / "prompts" / "sft_teacher_system.txt"
+    path = BASE_DIR.parent / "shared" / "prompts" / "sft_teacher_system.txt"
     if not path.exists():
         # プロンプトが読み込めない場合はエラーを出力して強制終了
         print(f"\n[Error] システムプロンプトファイルが見つかりません！\nパスを確認してください: {path}", file=sys.stderr)
@@ -18,8 +18,8 @@ def main():
     print("コーパスから学習用データを作成します...")
     
     system_prompt = load_system_prompt()
-    input_path = BASE_DIR / "math_tutor_corpus.jsonl"
-    train_output_path = BASE_DIR / "sft_train.jsonl"
+    input_path = BASE_DIR / "data" / "math_tutor_corpus.jsonl"
+    train_output_path = BASE_DIR / "data" / "sft_train.jsonl"
     
     if not input_path.exists():
         print(f"\n[Error] 入力ファイルが見つかりません: {input_path}", file=sys.stderr)
@@ -82,7 +82,7 @@ def main():
         for item in train_data:
             f_out.write(json.dumps(item, ensure_ascii=False) + "\n")
             
-    print(f"\n✅ 変換完了!")
+    print("\n変換完了!")
     print(f" - 全データ数: {total_count} 件")
     print(f" - 抽出された高品質データ: {valid_count} 件")
     print(f"   => トレーニング用 (100%): {len(train_data)} 件 -> {train_output_path.name}")

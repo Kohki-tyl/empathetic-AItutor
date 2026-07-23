@@ -8,7 +8,7 @@ def main():
     print("ベースライン評価結果の分析を開始します...\n")
     
     # 読み込むファイル名（先ほどアップロードいただいたファイル）
-    input_file = BASE_DIR / "evaluation_swallow_baseline_results.jsonl"
+    input_file = BASE_DIR / "data" / "evaluation_results.jsonl"
     
     if not input_file.exists():
         print(f"[エラー] ファイルが見つかりません: {input_file}")
@@ -71,7 +71,7 @@ def main():
     print("="*40)
 
     # 分析結果をテキストファイルにも保存
-    output_txt = BASE_DIR / "baseline_summary_report.txt"
+    output_txt = BASE_DIR / "data" / "baseline_summary_report.txt"
     with output_txt.open("w", encoding="utf-8") as f:
         f.write("ベースライン評価サマリー (Swallow-70B)\n")
         f.write(f"総セッション数: {total_sessions}\n")

@@ -21,8 +21,9 @@
 │   │   ├── prompts/
 │   │   └── questions/
 │   └── model_evaluation/      # SFTデータ整形、評価問題生成、シミュレーション評価
-│       ├── prompts/
-│       └── questions/
+│       ├── v1/                # v1 SFT・旧評価
+│       ├── v2/                # Keep-only/CoT SFT・分離型評価
+│       └── shared/            # 共通質問セット・Judgeプロンプト
 ├── experiments/               # テスト版別の質問、評価結果、分析コード
 │   ├── v0_test/               # 40問で実施したv0テスト
 │   │   ├── questions/
@@ -92,30 +93,43 @@ APIキーをソースコードやコミット対象のファイルへ保存し�
 
 ## SFTデータの作成
 
-生成済み対話を `pipelines/model_evaluation/math_tutor_corpus.jsonl` に配置し、次を実行します。
+生成済み対話を `pipelines/model_evaluation/v1/data/math_tutor_corpus.jsonl` に配置し、次を実行します。
 
 ```bash
-python pipelines/model_evaluation/prepare_sft_dataset.py
+python pipelines/model_evaluation/v1/prepare_sft_dataset.py
 ```
 
 `is_completed: true` の対話だけを抽出し、固定シードでシャッフルして全件を訓練用データへ変換します。
 
-- `pipelines/model_evaluation/sft_train.jsonl`
+- `pipelines/model_evaluation/v1/data/sft_train.jsonl`
 
 ### v2 Keep-only SFTデータの作成
 
 500件のコーパス品質評価で `recommendation: keep` と判定され、かつ指導完了している対話だけをv2学習データへ変換します。
 
 ```bash
-python pipelines/model_evaluation/prepare_keep_only_sft_dataset.py
+python pipelines/model_evaluation/v2/prepare_keep_only_sft_dataset.py
 ```
 
 出力:
 
-- `pipelines/model_evaluation/v2_keep_only_sft_train.jsonl`
-- `pipelines/model_evaluation/v2_keep_only_sft_manifest.json`
+- `pipelines/model_evaluation/v2/data/v2_keep_only_sft_train.jsonl`
+- `pipelines/model_evaluation/v2/data/v2_keep_only_sft_manifest.json`
 
 Manifestにはフィルタ条件、シャッフルシード、採用件数、出力順の`source_id`を保存します。
+
+CoTを含めて学習する場合は、教師ターンを `<analysis>` と `<final>` に分離したデータを作成します。
+
+```bash
+python pipelines/model_evaluation/v2/prepare_v2_cot_sft_dataset.py
+```
+
+出力:
+
+- `pipelines/model_evaluation/v2/data/v2_keep_only_cot_sft_train.jsonl`
+- `pipelines/model_evaluation/v2/data/v2_keep_only_cot_sft_manifest.json`
+
+`<analysis>`には認知状態、感情状態、次の一歩を収録し、`<final>`には生徒へ提示する短い発話だけを収録します。CoTなし版は比較実験用に残します。
 
 現在のSFT方針は [docs/SFT_Strategy.md](docs/SFT_Strategy.md) を参照してください。
 
@@ -142,34 +156,44 @@ python pipelines/corpus_creation/evaluate_corpus.py
 ### 評価問題の準備
 
 ```bash
-python pipelines/model_evaluation/translate_test_dataset.py
-python pipelines/model_evaluation/questions/generate_similar_questions.py
+python pipelines/model_evaluation/shared/translate_test_dataset.py
+python pipelines/model_evaluation/shared/questions/generate_similar_questions.py
 ```
 
-生成物は `pipelines/model_evaluation/questions/` に保存されます。
+生成物は `pipelines/model_evaluation/shared/questions/` に保存されます。
 
 ### ベースライン評価
 
 ```bash
-python pipelines/model_evaluation/evaluate_baseline_by_simulator.py
-python pipelines/model_evaluation/analyze_model.py
+python pipelines/model_evaluation/v1/evaluate_baseline_by_simulator.py
+python pipelines/model_evaluation/v1/analyze_model.py
 ```
 
 評価スクリプトは、既定ではOpenAI互換APIを `http://localhost:8000/v1` で提供しているローカルモデルを利用し、JudgeにはOpenAI APIを利用します。モデル名、エンドポイント、最大ターン数は実行前にスクリプト先頭の設定を確認してください。
 
 ### v2 分離型評価
 
-v2では評価対象の教師と固定した生徒シミュレーターを、別モデル・別エンドポイントで実行します。Phase 2には対話全文ではなく、Phase 1終了時の生徒の学習状態だけを引き継ぎます。
+v2では評価対象の教師と固定した生徒シミュレーターを、別モデル・別エンドポイントで実行します。Phase 2には対話全文ではなく、Phase 1終了時の生徒の学習状態だけを引き継ぎます。対話生成とJudge評価は別スクリプトで実行します。
 
 接続確認はJudgeを呼ばずに実行できます。
 
 ```bash
-python pipelines/model_evaluation/evaluate_v2_by_simulator.py \
+python pipelines/model_evaluation/v2/generate_v2_dialogues.py \
   --teacher-model teacher-under-test \
-  --student-model fixed-student-v2 \
+  --teacher-system-prompt pipelines/model_evaluation/v2/prompts/v2_cot_teacher_system.txt \
   --limit 2 \
-  --skip-judges \
   --output experiments/v2_test/pilot/dialogues.jsonl \
+  --overwrite
+```
+
+生徒には既定で、SFTしていない`tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5`を使用します。全教師条件で同じcheckpoint、プロンプト、temperature、seedを固定します。
+
+生成後にJudge評価を実行します。
+
+```bash
+python pipelines/model_evaluation/v2/evaluate_v2_dialogues.py \
+  --input experiments/v2_test/pilot/dialogues.jsonl \
+  --output experiments/v2_test/pilot/evaluated_results.jsonl \
   --overwrite
 ```
 

@@ -4,7 +4,7 @@ __pycache__/
 
 .env
 
-data/
+/data/
 sample_log
 
 .DS_Store

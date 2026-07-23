@@ -1,6 +1,6 @@
-"""Teacher/student分離型のv2対話評価。
+"""Teacher/student分離型のv2対話・Phase 2解答生成。
 
-教師だけを評価条件間で変更し、生徒シミュレーター、Judge、問題、profile、seedを固定する。
+教師だけを実験条件間で変更し、生徒モデル、問題、profile、seedを固定する。
 Phase 2へは対話全文ではなく、生徒モデルが更新した学習状態だけを渡す。
 """
 
@@ -15,12 +15,13 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-import httpx
 from openai import OpenAI
 from tqdm import tqdm
 
 
 BASE_DIR = Path(__file__).resolve().parent
+SHARED_DIR = BASE_DIR.parent / "shared"
+DEFAULT_STUDENT_MODEL = "tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5"
 
 
 @dataclass(frozen=True)
@@ -29,7 +30,6 @@ class Config:
     teacher_model: str
     student_base_url: str
     student_model: str
-    judge_model: str
     max_turns: int
     student_temperature: float
     teacher_temperature: float
@@ -73,78 +73,25 @@ STUDENT_TURN_SCHEMA = {
     },
 }
 
-MATH_JUDGE_SCHEMA = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "math_judge",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {"is_correct": {"type": "boolean"}, "judge_reason": {"type": "string"}},
-            "required": ["is_correct", "judge_reason"],
-            "additionalProperties": False,
-        },
-    },
-}
-
-EMPATHY_JUDGE_SCHEMA = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "empathy_judge",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {
-                "emotion_alignment_score": {"type": "integer"},
-                "pedagogical_empathy_score": {"type": "integer"},
-                "length_control_score": {"type": "integer"},
-                "total_score": {"type": "integer"},
-                "empathy_reason": {"type": "string"},
-            },
-            "required": ["emotion_alignment_score", "pedagogical_empathy_score", "length_control_score", "total_score", "empathy_reason"],
-            "additionalProperties": False,
-        },
-    },
-}
-
-REALISM_JUDGE_SCHEMA = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "student_realism_judge",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {
-                "realism_score": {"type": "integer", "minimum": 0, "maximum": 10},
-                "tutor_leak_count": {"type": "integer", "minimum": 0},
-                "knowledge_violation_count": {"type": "integer", "minimum": 0},
-                "style_violation_count": {"type": "integer", "minimum": 0},
-                "implausible_update_count": {"type": "integer", "minimum": 0},
-                "blind_agreement_count": {"type": "integer", "minimum": 0},
-                "judge_reason": {"type": "string"},
-            },
-            "required": [
-                "realism_score", "tutor_leak_count", "knowledge_violation_count",
-                "style_violation_count", "implausible_update_count", "blind_agreement_count", "judge_reason",
-            ],
-            "additionalProperties": False,
-        },
-    },
-}
-
-
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="分離した教師・生徒モデルでv2評価を実行する")
+    parser = argparse.ArgumentParser(description="分離した教師・生徒モデルでv2対話を生成する")
     parser.add_argument("--teacher-model", default=os.getenv("TEACHER_MODEL_NAME"), required=os.getenv("TEACHER_MODEL_NAME") is None)
     parser.add_argument("--teacher-base-url", default=os.getenv("TEACHER_BASE_URL", "http://localhost:8000/v1"))
-    parser.add_argument("--student-model", default=os.getenv("STUDENT_MODEL_NAME"), required=os.getenv("STUDENT_MODEL_NAME") is None)
+    parser.add_argument(
+        "--student-model",
+        default=os.getenv("STUDENT_MODEL_NAME", DEFAULT_STUDENT_MODEL),
+        help=f"固定生徒モデル（既定: {DEFAULT_STUDENT_MODEL}）",
+    )
     parser.add_argument("--student-base-url", default=os.getenv("STUDENT_BASE_URL", "http://localhost:8001/v1"))
-    parser.add_argument("--judge-model", default=os.getenv("JUDGE_MODEL_NAME", "gpt-5.4"))
-    parser.add_argument("--judge-proxy", default=os.getenv("JUDGE_PROXY"))
-    parser.add_argument("--questions", type=Path, default=BASE_DIR / "questions" / "test_math_questions.jsonl")
-    parser.add_argument("--similar-questions", type=Path, default=BASE_DIR / "questions" / "similar_test_math_questions.jsonl")
+    parser.add_argument("--questions", type=Path, default=SHARED_DIR / "questions" / "test_math_questions.jsonl")
+    parser.add_argument("--similar-questions", type=Path, default=SHARED_DIR / "questions" / "similar_test_math_questions.jsonl")
     parser.add_argument("--profiles", type=Path, default=BASE_DIR / "prompts" / "v2_student_profiles.json")
-    parser.add_argument("--output", type=Path, default=BASE_DIR / "v2_evaluation_results.jsonl")
+    parser.add_argument(
+        "--teacher-system-prompt", type=Path,
+        default=BASE_DIR / "prompts" / "v2_teacher_system.txt",
+        help="CoTモデルでは prompts/v2_cot_teacher_system.txt を指定する",
+    )
+    parser.add_argument("--output", type=Path, default=BASE_DIR / "data" / "v2_dialogues.jsonl")
     parser.add_argument("--limit", type=int, help="先頭から実行する問題数。パイロットでは20を推奨")
     parser.add_argument("--max-turns", type=int, default=10)
     parser.add_argument("--seed", type=int, default=42)
@@ -152,12 +99,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--teacher-temperature", type=float, default=0.2)
     parser.add_argument("--phase2-temperature", type=float, default=0.0)
     parser.add_argument("--overwrite", action="store_true", help="既存出力を消して最初から実行")
-    parser.add_argument("--skip-judges", action="store_true", help="対話生成だけを検証する")
     return parser.parse_args()
 
 
-def read_text(name: str) -> str:
-    return (BASE_DIR / "prompts" / name).read_text(encoding="utf-8")
+def read_text(name: str, shared: bool = False) -> str:
+    prompt_dir = SHARED_DIR / "prompts" if shared else BASE_DIR / "prompts"
+    return (prompt_dir / name).read_text(encoding="utf-8")
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -195,19 +142,39 @@ def parse_json_response(raw: str) -> dict[str, Any]:
         return json.loads(match.group(0))
 
 
+def parse_teacher_response(raw: str) -> tuple[str, str | None, bool]:
+    """CoT形式から生徒向け発話だけを取り出す。通常形式も受け付ける。"""
+    analysis_match = re.search(r"<analysis>\s*(.*?)\s*</analysis>", raw, flags=re.DOTALL | re.IGNORECASE)
+    final_match = re.search(r"<final>\s*(.*?)\s*</final>", raw, flags=re.DOTALL | re.IGNORECASE)
+    analysis = analysis_match.group(1).strip() if analysis_match else None
+    final = final_match.group(1).strip() if final_match else raw.strip()
+    completed = "[指導完了]" in final
+    return final.replace("[指導完了]", "").strip(), analysis, completed
+
+
 def profile_text(profile: dict[str, Any]) -> str:
-    return "\n".join(f"- {key}: {value}" for key, value in profile.items())
+    lines = []
+    for key, value in profile.items():
+        if isinstance(value, list):
+            lines.append(f"- {key}:")
+            lines.extend(f"  - {item}" for item in value)
+        else:
+            lines.append(f"- {key}: {value}")
+    return "\n".join(lines)
 
 
 def initial_state(profile: dict[str, Any]) -> dict[str, Any]:
     confidence = 0.35 if profile.get("confidence_bias") == "underconfident" else 0.55
+    unknown_knowledge = profile["unknown_knowledge"]
+    if isinstance(unknown_knowledge, str):
+        unknown_knowledge = [unknown_knowledge]
     return {
         "understanding_level": max(0, min(4, int(profile["ability_level"]) - 1)),
         "confidence": confidence,
         "active_misconception": profile["target_misconception"],
         "emotion": "anxious" if profile.get("emotional_reactivity") == "high" else "neutral",
         "acquired_knowledge": [],
-        "remaining_unknowns": [profile["unknown_knowledge"]],
+        "remaining_unknowns": list(unknown_knowledge),
     }
 
 
@@ -223,39 +190,22 @@ def append_jsonl(path: Path, record: dict[str, Any]) -> None:
         stream.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
-def judge_or_error(client: OpenAI, model: str, system: str, user: str, schema: dict[str, Any], seed: int) -> dict[str, Any]:
-    try:
-        raw = call_model(client, model, [{"role": "system", "content": system}, {"role": "user", "content": user}], 0.0, 1024, schema, seed)
-        return parse_json_response(raw)
-    except Exception as exc:  # 評価を中断せず、失敗をログへ残す
-        return {"error": f"{type(exc).__name__}: {exc}"}
-
-
 def main() -> None:
     args = parse_args()
     config = Config(
         args.teacher_base_url, args.teacher_model, args.student_base_url, args.student_model,
-        args.judge_model, args.max_turns, args.student_temperature, args.teacher_temperature,
+        args.max_turns, args.student_temperature, args.teacher_temperature,
         args.phase2_temperature, args.seed,
     )
     if config.teacher_base_url == config.student_base_url and config.teacher_model == config.student_model:
         raise SystemExit("教師と生徒が同じURL・モデルです。比較の交絡を避けるため別モデルを指定してください。")
 
-    api_key = os.getenv("GPT_API_KEY") or os.getenv("OPENAI_API_KEY")
-    if not args.skip_judges and not api_key:
-        raise SystemExit("Judge用に GPT_API_KEY または OPENAI_API_KEY を設定してください。")
-
     teacher_client = OpenAI(api_key="EMPTY", base_url=config.teacher_base_url)
     student_client = OpenAI(api_key="EMPTY", base_url=config.student_base_url)
-    judge_http = httpx.Client(proxy=args.judge_proxy) if args.judge_proxy else httpx.Client()
-    judge_client = OpenAI(api_key=api_key or "SKIPPED", http_client=judge_http)
 
-    teacher_system = read_text("v2_teacher_system.txt")
+    teacher_system = args.teacher_system_prompt.read_text(encoding="utf-8").strip()
     student_template = read_text("v2_student_system.txt")
     phase2_template = read_text("v2_phase2_student_system.txt")
-    empathy_system = read_text("eval_empathy_judge_system.txt")
-    math_system = read_text("eval_judge_system.txt")
-    realism_system = read_text("v2_student_realism_judge_system.txt")
     profiles = json.loads(args.profiles.read_text(encoding="utf-8"))
 
     originals = read_jsonl(args.questions)
@@ -273,12 +223,13 @@ def main() -> None:
     manifest_path.write_text(json.dumps({
         "config": asdict(config),
         "questions": str(args.questions), "similar_questions": str(args.similar_questions),
-        "profiles": str(args.profiles), "planned_runs": len(pairs), "skip_judges": args.skip_judges,
+        "profiles": str(args.profiles), "teacher_system_prompt": str(args.teacher_system_prompt),
+        "phase": "generation", "planned_runs": len(pairs),
     }, ensure_ascii=False, indent=2), encoding="utf-8")
 
     rng = random.Random(config.seed)
     profile_offset = rng.randrange(len(profiles))
-    for index, (original, similar) in enumerate(tqdm(pairs, desc="v2 evaluation")):
+    for index, (original, similar) in enumerate(tqdm(pairs, desc="v2 generation")):
         source_id = str(original.get("id") or original.get("source_id"))
         run_id = f"{source_id}:seed-{config.seed}"
         if run_id in done:
@@ -323,9 +274,11 @@ def main() -> None:
                     teacher_client, config.teacher_model, teacher_history,
                     config.teacher_temperature, seed=run_seed + turn * 2 + 1,
                 )
-                is_completed = "[指導完了]" in teacher_raw
-                last_teacher = teacher_raw.replace("[指導完了]", "").strip()
-                dialogue.append({"role": "teacher", "content": last_teacher})
+                last_teacher, teacher_analysis, is_completed = parse_teacher_response(teacher_raw)
+                teacher_log = {"role": "teacher", "content": last_teacher}
+                if teacher_analysis is not None:
+                    teacher_log["analysis"] = teacher_analysis
+                dialogue.append(teacher_log)
                 teacher_history.append({"role": "assistant", "content": teacher_raw})
                 if is_completed:
                     break
@@ -348,30 +301,17 @@ def main() -> None:
             phase2_answer = ""
             generation_error = generation_error or f"Phase2 {type(exc).__name__}: {exc}"
 
-        dialogue_text = "\n".join(f"{item['role']}: {item['content']}" for item in dialogue)
-        if args.skip_judges:
-            empathy, realism, math_result = {}, {}, {}
-        else:
-            empathy = judge_or_error(judge_client, config.judge_model, empathy_system, f"【対話ログ】\n{dialogue_text}", EMPATHY_JUDGE_SCHEMA, run_seed + 91)
-            realism_payload = json.dumps({"student_profile": profile, "initial_state": initial_state(profile), "dialogue": dialogue}, ensure_ascii=False)
-            realism = judge_or_error(judge_client, config.judge_model, realism_system, realism_payload, REALISM_JUDGE_SCHEMA, run_seed + 92)
-            math_result = judge_or_error(
-                judge_client, config.judge_model, math_system,
-                f"【生徒の最終解答】\n{phase2_answer}\n\n【模範解答】\n{similar['similar_solution']}", MATH_JUDGE_SCHEMA, run_seed + 93,
-            )
-
         append_jsonl(args.output, {
             "run_id": run_id, "source_id": source_id, "seed": config.seed,
             "teacher_model": config.teacher_model, "student_model": config.student_model,
             "student_profile_used": profile, "initial_student_state": initial_state(profile),
             "final_student_state": state, "phase1_turns": sum(item["role"] == "student" for item in dialogue),
             "phase1_is_completed": is_completed, "phase2_student_answer": phase2_answer,
-            "phase2_is_correct": math_result.get("is_correct"), "math_judge": math_result,
-            "empathy_evaluation": empathy, "student_realism_evaluation": realism,
+            "similar_question": similar["similar_question"],
+            "similar_solution": similar["similar_solution"],
             "dialogue_log": dialogue, "generation_error": generation_error,
         })
 
-    judge_http.close()
     print(f"完了: {args.output}")
     print(f"設定: {manifest_path}")
 

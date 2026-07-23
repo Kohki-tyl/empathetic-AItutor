@@ -80,8 +80,9 @@ Keepは、評価と指導が正常に完了し、JudgeがそのままSFTに利�
 ### v2 SFT
 
 - [ ] ABCIでv2 Keep-only SFTを実行
+- [ ] CoTなしv2とCoT付きv2を別checkpointとして学習
 - [ ] 20問のパイロット評価を実施し、生徒発話と状態更新を確認
-- [ ] Base、v1 SFT、v2 SFTを同一条件で200問評価
+- [ ] Base、v1 SFT、v2 SFT、v2 SFT + CoTを同一条件で200問評価
 - [ ] 必要に応じて複数seedで再評価
 
 ### 他LLMとの比較

@@ -9,6 +9,7 @@ api_key = os.getenv('GPT_API_KEY')
 client = OpenAI(api_key=api_key)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(BASE_DIR)))
 
 def load_prompt_file(filename):
     path = os.path.join(BASE_DIR, filename)
@@ -18,7 +19,9 @@ def load_prompt_file(filename):
         return f.read()
 
 try:
-    TRANSLATOR_SYSTEM = load_prompt_file(os.path.join("prompts", "translator_system.txt"))
+    TRANSLATOR_SYSTEM = load_prompt_file(
+        os.path.join(REPO_ROOT, "pipelines", "corpus_creation", "prompts", "translator_system.txt")
+    )
     print("翻訳用システムプロンプトの読み込みに成功")
 except Exception as e:
     print(f"プロンプト読込エラー: {e}")

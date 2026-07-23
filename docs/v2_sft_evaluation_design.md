@@ -8,22 +8,23 @@ v2では、品質評価が `keep` の教師対話だけでSFTを行う。また�
 
 | 条件 | 教師モデル | 生徒モデル |
 | --- | --- | --- |
-| Base | SFT前モデル | 固定Student Simulator v2 |
-| v1 | v1 SFTモデル | 固定Student Simulator v2 |
-| v2 | Keep-only SFTモデル | 固定Student Simulator v2 |
+| Base | SFT前モデル | 未SFT Swallow 8B |
+| v1 | v1 SFTモデル | 未SFT Swallow 8B |
+| v2 | Keep-only SFTモデル | 未SFT Swallow 8B |
 
 問題、類似問題、Student Simulatorのcheckpoint、プロンプト、profile割当、seed、temperature、最大ターン数、Judgeを全条件で固定し、教師checkpointだけを変更する。
 
 ## ファイル
 
-- `v2_keep_only_sft_train.jsonl`: v2の教師SFTデータ
-- `v2_keep_only_sft_manifest.json`: 抽出条件と採用ID
-- `evaluate_v2_by_simulator.py`: 分離型評価スクリプト
-- `prompts/v2_teacher_system.txt`: 評価時の教師プロンプト
-- `prompts/v2_student_system.txt`: Phase 1の状態駆動型生徒プロンプト
-- `prompts/v2_phase2_student_system.txt`: Phase 2の生徒プロンプト
-- `prompts/v2_student_profiles.json`: 固定生徒profile
-- `prompts/v2_student_realism_judge_system.txt`: 生徒らしさの評価基準
+- `v2/data/v2_keep_only_sft_train.jsonl`: v2の教師SFTデータ
+- `v2/data/v2_keep_only_sft_manifest.json`: 抽出条件と採用ID
+- `v2/generate_v2_dialogues.py`: 教師・生徒による対話とPhase 2解答の生成
+- `v2/evaluate_v2_dialogues.py`: 保存済み対話のJudge評価
+- `v2/prompts/v2_teacher_system.txt`: 評価時の教師プロンプト
+- `v2/prompts/v2_student_system.txt`: Phase 1の状態駆動型生徒プロンプト
+- `v2/prompts/v2_phase2_student_system.txt`: Phase 2の生徒プロンプト
+- `v2/prompts/v2_student_profiles.json`: 固定生徒profile
+- `v2/prompts/v2_student_realism_judge_system.txt`: 生徒らしさの評価基準
 
 ## Student Simulator v2
 
@@ -40,15 +41,29 @@ v2では、品質評価が `keep` の教師対話だけでSFTを行う。また�
 
 Phase 2にはPhase 1の対話全文を渡さない。最終内部状態だけを渡すことで、会話のコピーではなく、状態として保持された学習内容の転移を測る。
 
+## CoT付きv2 SFT
+
+CoT付き条件では、元コーパスの教師ターンから次の3項目を学習する。
+
+- 認知状態: 生徒の理解、つまずき、誤概念
+- 感情状態: 10種類の感情ラベルと判断根拠
+- 次の一歩: 今回提示する足場かけ
+
+教師出力は `<analysis>...</analysis><final>...</final>` とし、評価時に生徒へ渡すのは `<final>`だけとする。CoTなしv2とCoT付きv2は別checkpointとして学習し、CoTの有無による効果を比較する。
+
+```bash
+python pipelines/model_evaluation/v2/prepare_v2_cot_sft_dataset.py
+```
+
 ## ABCIでの実行
 
 ### 1. v2 SFTデータの再生成と確認
 
 ```bash
-python pipelines/model_evaluation/prepare_keep_only_sft_dataset.py
+python pipelines/model_evaluation/v2/prepare_keep_only_sft_dataset.py
 ```
 
-v2の学習には `pipelines/model_evaluation/v2_keep_only_sft_train.jsonl` を指定する。
+v2の学習には `pipelines/model_evaluation/v2/data/v2_keep_only_sft_train.jsonl` を指定する。
 
 ### 2. 推論サーバー
 
@@ -63,23 +78,22 @@ python -m vllm.entrypoints.openai.api_server \
 
 ```bash
 python -m vllm.entrypoints.openai.api_server \
-  --model /path/to/frozen-student-model \
-  --served-model-name fixed-student-v2 \
+  --model tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5 \
+  --served-model-name tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5 \
   --port 8001
 ```
 
-Student Simulatorには教師用SFT checkpointを使わない。全教師条件で、同一の固定checkpointを使う。
+Student Simulatorには未SFTの`tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5`を使用する。教師用SFT checkpointは使わず、全教師条件で同一のcheckpointを使う。
 
 ### 3. 接続確認用パイロット
 
 Judge APIを呼ばず、2問だけで対話形式を確認する。
 
 ```bash
-python pipelines/model_evaluation/evaluate_v2_by_simulator.py \
+python pipelines/model_evaluation/v2/generate_v2_dialogues.py \
   --teacher-model teacher-under-test \
-  --student-model fixed-student-v2 \
+  --teacher-system-prompt pipelines/model_evaluation/v2/prompts/v2_cot_teacher_system.txt \
   --limit 2 \
-  --skip-judges \
   --output experiments/v2_test/pilot/dialogues.jsonl \
   --overwrite
 ```
@@ -92,12 +106,20 @@ ABCIの外部接続でproxyが必要な場合は、`JUDGE_PROXY`を設定する�
 export GPT_API_KEY="..."
 export JUDGE_PROXY="http://proxy.abci.local:3128"
 
-python pipelines/model_evaluation/evaluate_v2_by_simulator.py \
+python pipelines/model_evaluation/v2/generate_v2_dialogues.py \
   --teacher-model teacher-under-test \
-  --student-model fixed-student-v2 \
   --limit 20 \
   --seed 42 \
-  --output experiments/v2_test/pilot/evaluation_results.jsonl \
+  --output experiments/v2_test/pilot/dialogues.jsonl \
+  --overwrite
+```
+
+生成ログを確認した後、Judge評価を別に実行する。
+
+```bash
+python pipelines/model_evaluation/v2/evaluate_v2_dialogues.py \
+  --input experiments/v2_test/pilot/dialogues.jsonl \
+  --output experiments/v2_test/pilot/evaluated_results.jsonl \
   --overwrite
 ```
 
@@ -106,11 +128,16 @@ python pipelines/model_evaluation/evaluate_v2_by_simulator.py \
 各教師条件で出力先だけを変え、同一seedで実行する。
 
 ```bash
-python pipelines/model_evaluation/evaluate_v2_by_simulator.py \
+python pipelines/model_evaluation/v2/generate_v2_dialogues.py \
   --teacher-model base-teacher \
-  --student-model fixed-student-v2 \
   --seed 42 \
-  --output experiments/v2_test/base/evaluation_results.jsonl
+  --output experiments/v2_test/base/dialogues.jsonl
+```
+
+```bash
+python pipelines/model_evaluation/v2/evaluate_v2_dialogues.py \
+  --input experiments/v2_test/base/dialogues.jsonl \
+  --output experiments/v2_test/base/evaluated_results.jsonl
 ```
 
 中断時は同じコマンドを再実行すれば、既存の`run_id`を読み取り完了済み問題をスキップする。最初からやり直す場合だけ`--overwrite`を付ける。各出力の隣に`.manifest.json`が作成され、モデル名、URL、temperature、seedなどが保存される。

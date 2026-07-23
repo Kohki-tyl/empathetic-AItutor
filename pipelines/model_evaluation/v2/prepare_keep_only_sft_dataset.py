@@ -5,12 +5,12 @@ from pathlib import Path
 
 
 BASE_DIR = Path(__file__).resolve().parent
-REPO_ROOT = BASE_DIR.parents[1]
+REPO_ROOT = BASE_DIR.parents[2]
 DEFAULT_CORPUS = REPO_ROOT / "pipelines" / "corpus_creation" / "500_empathetic_dialogues.jsonl"
 DEFAULT_EVALUATIONS = REPO_ROOT / "pipelines" / "corpus_creation" / "500_dialogue_evaluations.jsonl"
-DEFAULT_OUTPUT = BASE_DIR / "v2_keep_only_sft_train.jsonl"
-DEFAULT_MANIFEST = BASE_DIR / "v2_keep_only_sft_manifest.json"
-DEFAULT_SYSTEM_PROMPT = BASE_DIR / "prompts" / "sft_teacher_system.txt"
+DEFAULT_OUTPUT = BASE_DIR / "data" / "v2_keep_only_sft_train.jsonl"
+DEFAULT_MANIFEST = BASE_DIR / "data" / "v2_keep_only_sft_manifest.json"
+DEFAULT_SYSTEM_PROMPT = BASE_DIR.parent / "shared" / "prompts" / "sft_teacher_system.txt"
 
 
 def parse_args() -> argparse.Namespace:

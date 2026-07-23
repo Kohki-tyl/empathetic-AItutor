@@ -9,6 +9,7 @@ from tqdm import tqdm
 # 1. 基本設定と初期化
 # ==========================================
 BASE_DIR = Path(__file__).resolve().parent
+SHARED_DIR = BASE_DIR.parent / "shared"
 
 # 定数
 MODEL_NAME = "tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5"
@@ -30,15 +31,16 @@ local_client = OpenAI(
 # ==========================================
 # 2. ヘルパー関数群
 # ==========================================
-def load_prompt_file(filename: str) -> str:
+def load_prompt_file(filename: str, shared: bool = False) -> str:
     """プロンプトファイルを読み込む"""
-    path = BASE_DIR / "prompts" / filename
+    prompt_dir = SHARED_DIR / "prompts" if shared else BASE_DIR / "prompts"
+    path = prompt_dir / filename
     return path.read_text(encoding="utf-8")
 
 def load_jsonl(filename: str) -> dict:
     """JSONLファイルを読み込み、IDをキーとした辞書を返す"""
     data = {}
-    path = BASE_DIR / "questions" / filename
+    path = SHARED_DIR / "questions" / filename
     if not path.exists():
         return data
     
@@ -78,10 +80,10 @@ def generate_llm_response(client: OpenAI, model: str, messages: list, temperatur
 # ==========================================
 # 3. プロンプトとスキーマの読み込み
 # ==========================================
-TEACHER_SYSTEM = load_prompt_file("sft_teacher_system.txt")
+TEACHER_SYSTEM = load_prompt_file("sft_teacher_system.txt", shared=True)
 STUDENT_SYSTEM_TEMPLATE = load_prompt_file("eval_student_system.txt")
-JUDGE_SYSTEM = load_prompt_file("eval_judge_system.txt")
-EMPATHY_JUDGE_SYSTEM = load_prompt_file("eval_empathy_judge_system.txt")
+JUDGE_SYSTEM = load_prompt_file("eval_judge_system.txt", shared=True)
+EMPATHY_JUDGE_SYSTEM = load_prompt_file("eval_empathy_judge_system.txt", shared=True)
 
 math_judge_response_schema = {
     "type": "json_schema",
@@ -137,7 +139,7 @@ def run_evaluation():
     profile_path = BASE_DIR / "prompts" / "eval_student_profile.json"
     student_profiles = json.loads(profile_path.read_text(encoding="utf-8"))
     
-    output_path = BASE_DIR / "evaluation_results.jsonl"
+    output_path = BASE_DIR / "data" / "evaluation_results.jsonl"
     output_path.write_text("", encoding="utf-8")  # ファイルの初期化
 
     profile_idx = 0

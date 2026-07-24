@@ -1,0 +1,122 @@
+{
+  "input_questions": "/home/aci18753zq/empathetic-AItutor/SFT_abci/test/shared/questions/test_math_questions.jsonl",
+  "input_similar_questions": "/home/aci18753zq/empathetic-AItutor/SFT_abci/test/shared/questions/similar_test_math_questions.jsonl",
+  "input_count": 200,
+  "valid_count": 182,
+  "excluded_count": 18,
+  "excluded": [
+    {
+      "source_id": "math_train_1000",
+      "issues": [
+        "solution_changes_setting",
+        "solution_rejects_structure"
+      ]
+    },
+    {
+      "source_id": "math_train_1007",
+      "issues": [
+        "solution_has_no_boxed_answer"
+      ]
+    },
+    {
+      "source_id": "math_train_1024",
+      "issues": [
+        "solution_has_no_boxed_answer"
+      ]
+    },
+    {
+      "source_id": "math_train_1026",
+      "issues": [
+        "solution_admits_invalid_problem",
+        "solution_changes_setting",
+        "solution_has_no_boxed_answer"
+      ]
+    },
+    {
+      "source_id": "math_train_1039",
+      "issues": [
+        "solution_changes_setting",
+        "solution_rejects_structure"
+      ]
+    },
+    {
+      "source_id": "math_train_1041",
+      "issues": [
+        "solution_has_no_boxed_answer"
+      ]
+    },
+    {
+      "source_id": "math_train_1055",
+      "issues": [
+        "solution_has_no_boxed_answer"
+      ]
+    },
+    {
+      "source_id": "math_train_1080",
+      "issues": [
+        "solution_changes_requested_expression"
+      ]
+    },
+    {
+      "source_id": "math_train_1081",
+      "issues": [
+        "solution_rewrites_question"
+      ]
+    },
+    {
+      "source_id": "math_train_898",
+      "issues": [
+        "solution_has_no_boxed_answer"
+      ]
+    },
+    {
+      "source_id": "math_train_900",
+      "issues": [
+        "solution_has_no_boxed_answer"
+      ]
+    },
+    {
+      "source_id": "math_train_934",
+      "issues": [
+        "solution_rejects_structure"
+      ]
+    },
+    {
+      "source_id": "math_train_938",
+      "issues": [
+        "solution_has_no_boxed_answer"
+      ]
+    },
+    {
+      "source_id": "math_train_945",
+      "issues": [
+        "solution_has_no_boxed_answer"
+      ]
+    },
+    {
+      "source_id": "math_train_954",
+      "issues": [
+        "solution_has_no_boxed_answer"
+      ]
+    },
+    {
+      "source_id": "math_train_959",
+      "issues": [
+        "solution_has_no_boxed_answer"
+      ]
+    },
+    {
+      "source_id": "math_train_962",
+      "issues": [
+        "solution_has_no_boxed_answer"
+      ]
+    },
+    {
+      "source_id": "math_train_992",
+      "issues": [
+        "solution_has_no_boxed_answer"
+      ]
+    }
+  ],
+  "validation_scope": "structural checks and explicit inconsistency markers; not a proof of mathematical correctness"
+}

@@ -1,0 +1,22 @@
+{
+  "target_dialogues": 100,
+  "max_candidates": 120,
+  "max_turns": 10,
+  "seed": 42,
+  "teacher_model": "gpt-5.6-terra",
+  "teacher_reasoning_effort": "medium",
+  "student_model": "tokyotech-llm/Qwen3-Swallow-8B-SFT-v0.2",
+  "student_model_revision": "496cd5558fef4af1d426e96327d7a74681063280",
+  "vllm_version": "0.25.1",
+  "student_temperature": 0.6,
+  "student_top_p": 0.95,
+  "student_top_k": 20,
+  "student_min_p": 0.0,
+  "student_max_tokens": 4096,
+  "judge_model": "gpt-5.6-terra",
+  "judge_reasoning_effort": "high",
+  "repair_model": "gpt-5.6-terra",
+  "repair_reasoning_effort": "medium",
+  "questions": "../questions/translated_1000_math.jsonl",
+  "output_dir": "data/run_100"
+}

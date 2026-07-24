@@ -1,0 +1,18 @@
+{
+  "sampling_method": "seeded_stratified_balanced",
+  "independent_of_student_profile": true,
+  "emotions": [
+    {"name": "neutral", "weight": 1},
+    {"name": "engaged", "weight": 1},
+    {"name": "curious", "weight": 1},
+    {"name": "confused", "weight": 1},
+    {"name": "frustrated", "weight": 1},
+    {"name": "anxious", "weight": 1}
+  ],
+  "excluded_as_initial_state": [
+    {"name": "bored", "reason": "対話中にフラストレーションが放置された後の離脱状態として扱う"},
+    {"name": "eureka", "reason": "対話中に重要な関係へ気づいた後の感情として扱う"},
+    {"name": "relieved", "reason": "対話中の困難が解消された後の感情として扱う"},
+    {"name": "proud", "reason": "対話中の達成後の感情として扱う"}
+  ]
+}

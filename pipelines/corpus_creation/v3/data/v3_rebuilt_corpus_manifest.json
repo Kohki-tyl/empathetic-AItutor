@@ -1,0 +1,209 @@
+{
+  "dataset_name": "v3_turn_audited_rebuilt_corpus",
+  "source": "E:\\github\\empathetic-AItutor\\pipelines\\corpus_creation\\500_empathetic_dialogues.jsonl",
+  "judge_model": "gpt-5.4",
+  "repair_model": "gpt-5.4",
+  "input_dialogues": 500,
+  "accepted_dialogues": 452,
+  "rejected_dialogues": 48,
+  "completed_dialogues": 397,
+  "turn_decisions": {
+    "keep": 1923,
+    "repair": 190,
+    "reject": 25
+  },
+  "rejected": [
+    {
+      "source_id": "math_train_2",
+      "reason": "turn_rejected:math_train_2:teacher:12"
+    },
+    {
+      "source_id": "math_train_28",
+      "reason": "repair_missing:math_train_28:teacher:7"
+    },
+    {
+      "source_id": "math_train_59",
+      "reason": "turn_rejected:math_train_59:teacher:3"
+    },
+    {
+      "source_id": "math_train_88",
+      "reason": "turn_rejected:math_train_88:teacher:3"
+    },
+    {
+      "source_id": "math_train_109",
+      "reason": "repair_missing:math_train_109:teacher:11"
+    },
+    {
+      "source_id": "math_train_117",
+      "reason": "repair_missing:math_train_117:teacher:11"
+    },
+    {
+      "source_id": "math_train_134",
+      "reason": "repair_missing:math_train_134:teacher:2"
+    },
+    {
+      "source_id": "math_train_139",
+      "reason": "turn_rejected:math_train_139:teacher:6"
+    },
+    {
+      "source_id": "math_train_147",
+      "reason": "repair_missing:math_train_147:teacher:1"
+    },
+    {
+      "source_id": "math_train_169",
+      "reason": "turn_rejected:math_train_169:teacher:5"
+    },
+    {
+      "source_id": "math_train_172",
+      "reason": "turn_rejected:math_train_172:teacher:1"
+    },
+    {
+      "source_id": "math_train_174",
+      "reason": "turn_rejected:math_train_174:teacher:2"
+    },
+    {
+      "source_id": "math_train_178",
+      "reason": "repair_missing:math_train_178:teacher:3"
+    },
+    {
+      "source_id": "math_train_182",
+      "reason": "turn_rejected:math_train_182:teacher:9"
+    },
+    {
+      "source_id": "math_train_184",
+      "reason": "turn_rejected:math_train_184:teacher:1"
+    },
+    {
+      "source_id": "math_train_190",
+      "reason": "turn_rejected:math_train_190:teacher:10"
+    },
+    {
+      "source_id": "math_train_201",
+      "reason": "turn_rejected:math_train_201:teacher:3"
+    },
+    {
+      "source_id": "math_train_217",
+      "reason": "turn_rejected:math_train_217:teacher:2"
+    },
+    {
+      "source_id": "math_train_220",
+      "reason": "repair_missing:math_train_220:teacher:2"
+    },
+    {
+      "source_id": "math_train_223",
+      "reason": "repair_missing:math_train_223:teacher:2"
+    },
+    {
+      "source_id": "math_train_227",
+      "reason": "repair_missing:math_train_227:teacher:2"
+    },
+    {
+      "source_id": "math_train_242",
+      "reason": "turn_rejected:math_train_242:teacher:1"
+    },
+    {
+      "source_id": "math_train_246",
+      "reason": "turn_rejected:math_train_246:teacher:6"
+    },
+    {
+      "source_id": "math_train_253",
+      "reason": "repair_missing:math_train_253:teacher:2"
+    },
+    {
+      "source_id": "math_train_258",
+      "reason": "turn_rejected:math_train_258:teacher:2"
+    },
+    {
+      "source_id": "math_train_263",
+      "reason": "repair_missing:math_train_263:teacher:4"
+    },
+    {
+      "source_id": "math_train_281",
+      "reason": "repair_missing:math_train_281:teacher:3"
+    },
+    {
+      "source_id": "math_train_286",
+      "reason": "turn_rejected:math_train_286:teacher:4"
+    },
+    {
+      "source_id": "math_train_295",
+      "reason": "repair_missing:math_train_295:teacher:4"
+    },
+    {
+      "source_id": "math_train_325",
+      "reason": "turn_rejected:math_train_325:teacher:5"
+    },
+    {
+      "source_id": "math_train_346",
+      "reason": "repair_missing:math_train_346:teacher:6"
+    },
+    {
+      "source_id": "math_train_379",
+      "reason": "turn_rejected:math_train_379:teacher:8"
+    },
+    {
+      "source_id": "math_train_385",
+      "reason": "turn_rejected:math_train_385:teacher:4"
+    },
+    {
+      "source_id": "math_train_390",
+      "reason": "repair_missing:math_train_390:teacher:3"
+    },
+    {
+      "source_id": "math_train_393",
+      "reason": "repair_missing:math_train_393:teacher:4"
+    },
+    {
+      "source_id": "math_train_420",
+      "reason": "turn_rejected:math_train_420:teacher:3"
+    },
+    {
+      "source_id": "math_train_443",
+      "reason": "repair_missing:math_train_443:teacher:4"
+    },
+    {
+      "source_id": "math_train_447",
+      "reason": "turn_rejected:math_train_447:teacher:7"
+    },
+    {
+      "source_id": "math_train_450",
+      "reason": "turn_rejected:math_train_450:teacher:3"
+    },
+    {
+      "source_id": "math_train_458",
+      "reason": "turn_rejected:math_train_458:teacher:1"
+    },
+    {
+      "source_id": "math_train_474",
+      "reason": "repair_missing:math_train_474:teacher:5"
+    },
+    {
+      "source_id": "math_train_490",
+      "reason": "repair_missing:math_train_490:teacher:9"
+    },
+    {
+      "source_id": "math_train_492",
+      "reason": "repair_missing:math_train_492:teacher:5"
+    },
+    {
+      "source_id": "math_train_505",
+      "reason": "repair_missing:math_train_505:teacher:2"
+    },
+    {
+      "source_id": "math_train_516",
+      "reason": "turn_rejected:math_train_516:teacher:11"
+    },
+    {
+      "source_id": "math_train_521",
+      "reason": "repair_missing:math_train_521:teacher:3"
+    },
+    {
+      "source_id": "math_train_531",
+      "reason": "repair_missing:math_train_531:teacher:7"
+    },
+    {
+      "source_id": "math_train_542",
+      "reason": "turn_rejected:math_train_542:teacher:12"
+    }
+  ]
+}

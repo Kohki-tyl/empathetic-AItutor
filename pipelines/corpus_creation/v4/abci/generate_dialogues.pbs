@@ -1,0 +1,54 @@
+#!/bin/bash
+#PBS -q rt_HG
+#PBS -l select=1
+#PBS -l walltime=24:00:00
+#PBS -P CHANGE_TO_YOUR_ABCI_GROUP
+#PBS -N v4-corpus-generate
+#PBS -j oe
+
+set -eu
+
+cd "${PBS_O_WORKDIR}"
+source .venv/bin/activate
+
+export STUDENT_BASE_URL="${STUDENT_BASE_URL:-http://127.0.0.1:8001/v1}"
+export STUDENT_API_KEY="${STUDENT_API_KEY:-EMPTY}"
+
+STUDENT_MODEL=$(python -c 'import json; print(json.load(open("config.json", encoding="utf-8"))["student_model"])')
+STUDENT_REVISION=$(python -c 'import json; print(json.load(open("config.json", encoding="utf-8"))["student_model_revision"])')
+EXPECTED_VLLM=$(python -c 'import json; print(json.load(open("config.json", encoding="utf-8"))["vllm_version"])')
+INSTALLED_VLLM=$(python -c 'import importlib.metadata; print(importlib.metadata.version("vllm"))')
+if [ "${INSTALLED_VLLM}" != "${EXPECTED_VLLM}" ]; then
+  echo "vLLM version mismatch: installed=${INSTALLED_VLLM}, config=${EXPECTED_VLLM}"
+  exit 1
+fi
+
+mkdir -p data
+vllm serve "${STUDENT_MODEL}" \
+  --revision "${STUDENT_REVISION}" \
+  --served-model-name "${STUDENT_MODEL}" \
+  --reasoning-parser qwen3 \
+  --host 127.0.0.1 \
+  --port 8001 \
+  --dtype bfloat16 \
+  --max-model-len 16384 \
+  > data/vllm_student.log 2>&1 &
+VLLM_PID=$!
+trap 'kill ${VLLM_PID} 2>/dev/null || true' EXIT
+
+READY=0
+for _ in $(seq 1 120); do
+  if curl -fsS http://127.0.0.1:8001/v1/models >/dev/null; then
+    READY=1
+    break
+  fi
+  sleep 10
+done
+
+if [ "${READY}" -ne 1 ]; then
+  echo "Student Simulator did not become ready. Check data/vllm_student.log."
+  exit 1
+fi
+
+python run_v4.py generate --config config.json
+python run_v4.py status --config config.json

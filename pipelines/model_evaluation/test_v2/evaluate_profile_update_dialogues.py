@@ -16,6 +16,8 @@ from tqdm import tqdm
 
 BASE_DIR = Path(__file__).resolve().parent
 SHARED_DIR = BASE_DIR.parent / "shared"
+REPO_ROOT = BASE_DIR.parents[2]
+TRANSFER_MODE = "profile_update"
 
 MATH_JUDGE_SCHEMA = {
     "type": "json_schema",
@@ -31,23 +33,52 @@ MATH_JUDGE_SCHEMA = {
     },
 }
 
-EMPATHY_JUDGE_SCHEMA = {
+EMPATHIC_INSTRUCTION_SCHEMA = {
     "type": "json_schema",
     "json_schema": {
-        "name": "empathy_judge",
+        "name": "empathic_instruction_judge",
         "strict": True,
         "schema": {
             "type": "object",
             "properties": {
-                "emotion_alignment_score": {"type": "integer"},
-                "pedagogical_empathy_score": {"type": "integer"},
-                "length_control_score": {"type": "integer"},
-                "total_score": {"type": "integer"},
-                "empathy_reason": {"type": "string"},
+                "emotion_recognition_score": {"type": "integer", "minimum": 0, "maximum": 10},
+                "cognitive_empathy_score": {"type": "integer", "minimum": 0, "maximum": 10},
+                "emotional_support_score": {"type": "integer", "minimum": 0, "maximum": 10},
+                "total_score": {"type": "integer", "minimum": 0, "maximum": 30},
+                "judge_reason": {"type": "string"},
             },
             "required": [
-                "emotion_alignment_score", "pedagogical_empathy_score",
-                "length_control_score", "total_score", "empathy_reason",
+                "emotion_recognition_score", "cognitive_empathy_score",
+                "emotional_support_score", "total_score", "judge_reason",
+            ],
+            "additionalProperties": False,
+        },
+    },
+}
+
+MATHEMATICAL_INSTRUCTION_SCHEMA = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "mathematical_instruction_judge",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "mathematical_correctness_score": {"type": "integer", "minimum": 0, "maximum": 10},
+                "error_diagnosis_score": {"type": "integer", "minimum": 0, "maximum": 10},
+                "adaptive_scaffolding_score": {"type": "integer", "minimum": 0, "maximum": 10},
+                "learning_verification_score": {"type": "integer", "minimum": 0, "maximum": 10},
+                "cognitive_load_control_score": {"type": "integer", "minimum": 0, "maximum": 10},
+                "total_score": {"type": "integer", "minimum": 0, "maximum": 50},
+                "false_affirmation_count": {"type": "integer", "minimum": 0},
+                "direct_answer_count": {"type": "integer", "minimum": 0},
+                "judge_reason": {"type": "string"},
+            },
+            "required": [
+                "mathematical_correctness_score", "error_diagnosis_score",
+                "adaptive_scaffolding_score", "learning_verification_score",
+                "cognitive_load_control_score", "total_score",
+                "false_affirmation_count", "direct_answer_count", "judge_reason",
             ],
             "additionalProperties": False,
         },
@@ -83,8 +114,8 @@ REALISM_JUDGE_SCHEMA = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="生成済みv2対話をJudge APIで評価する")
-    parser.add_argument("--input", type=Path, default=BASE_DIR / "data" / "v2_dialogues.jsonl")
-    parser.add_argument("--output", type=Path, default=BASE_DIR / "data" / "v2_evaluated_results.jsonl")
+    parser.add_argument("--input", type=Path, default=REPO_ROOT / "experiments" / "test_v2" / "dialogues.jsonl")
+    parser.add_argument("--output", type=Path, default=REPO_ROOT / "experiments" / "test_v2" / "evaluated_results.jsonl")
     parser.add_argument("--similar-questions", type=Path, default=SHARED_DIR / "questions" / "similar_test_math_questions.jsonl")
     parser.add_argument("--judge-model", default=os.getenv("JUDGE_MODEL_NAME", "gpt-5.4"))
     parser.add_argument("--judge-proxy", default=os.getenv("JUDGE_PROXY"))
@@ -149,6 +180,13 @@ def dialogue_text(dialogue: list[dict[str, Any]]) -> str:
     return "\n".join(blocks)
 
 
+def recompute_total(result: dict[str, Any], score_fields: list[str]) -> dict[str, Any]:
+    if all(isinstance(result.get(field), int) for field in score_fields):
+        result = dict(result)
+        result["total_score"] = sum(result[field] for field in score_fields)
+    return result
+
+
 def main() -> None:
     args = parse_args()
     api_key = os.getenv("GPT_API_KEY") or os.getenv("OPENAI_API_KEY")
@@ -158,13 +196,20 @@ def main() -> None:
         raise SystemExit("生成ログを保持するため、--inputと--outputには別ファイルを指定してください。")
 
     rows = read_jsonl(args.input)
+    mismatched = [
+        row.get("run_id") for row in rows
+        if row.get("transfer_mode") not in (None, TRANSFER_MODE)
+    ]
+    if mismatched:
+        raise ValueError(f"テストv2と異なる生成ログが{len(mismatched)}件あります。")
     if args.limit is not None:
         rows = rows[:args.limit]
     similar_by_id = {
         str(row.get("source_id") or row.get("id")): row
         for row in read_jsonl(args.similar_questions)
     }
-    empathy_system = (SHARED_DIR / "prompts" / "eval_empathy_judge_system.txt").read_text(encoding="utf-8")
+    empathic_instruction_system = (SHARED_DIR / "prompts" / "eval_empathic_instruction_judge_system.txt").read_text(encoding="utf-8")
+    mathematical_instruction_system = (SHARED_DIR / "prompts" / "eval_mathematical_instruction_judge_system.txt").read_text(encoding="utf-8")
     math_system = (SHARED_DIR / "prompts" / "eval_judge_system.txt").read_text(encoding="utf-8")
     realism_system = (BASE_DIR / "prompts" / "v2_student_realism_judge_system.txt").read_text(encoding="utf-8")
 
@@ -178,10 +223,11 @@ def main() -> None:
     manifest_path = args.output.with_suffix(".manifest.json")
     manifest_path.write_text(json.dumps({
         "phase": "evaluation", "input": str(args.input), "output": str(args.output),
-        "judge_model": args.judge_model, "planned_runs": len(rows),
+        "judge_model": args.judge_model, "transfer_mode": TRANSFER_MODE,
+        "planned_runs": len(rows),
     }, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    for index, row in enumerate(tqdm(rows, desc="v2 judging")):
+    for index, row in enumerate(tqdm(rows, desc="test v2 judging")):
         run_id = str(row["run_id"])
         if run_id in done:
             continue
@@ -193,10 +239,22 @@ def main() -> None:
         run_seed = int(row.get("seed", 42)) + index * 100
         log_text = dialogue_text(row.get("dialogue_log", []))
 
-        empathy = call_judge(
-            client, args.judge_model, empathy_system,
-            f"【対話ログ】\n{log_text}", EMPATHY_JUDGE_SCHEMA, run_seed + 91,
+        empathic_instruction = call_judge(
+            client, args.judge_model, empathic_instruction_system,
+            f"【対話ログ】\n{log_text}", EMPATHIC_INSTRUCTION_SCHEMA, run_seed + 91,
         )
+        mathematical_instruction = call_judge(
+            client, args.judge_model, mathematical_instruction_system,
+            f"【対話ログ】\n{log_text}", MATHEMATICAL_INSTRUCTION_SCHEMA, run_seed + 92,
+        )
+        empathic_instruction = recompute_total(empathic_instruction, [
+            "emotion_recognition_score", "cognitive_empathy_score", "emotional_support_score",
+        ])
+        mathematical_instruction = recompute_total(mathematical_instruction, [
+            "mathematical_correctness_score", "error_diagnosis_score",
+            "adaptive_scaffolding_score", "learning_verification_score",
+            "cognitive_load_control_score",
+        ])
         realism_payload = json.dumps({
             "student_profile": row.get("student_profile_used"),
             "initial_state": row.get("initial_student_state"),
@@ -204,12 +262,12 @@ def main() -> None:
         }, ensure_ascii=False)
         realism = call_judge(
             client, args.judge_model, realism_system,
-            realism_payload, REALISM_JUDGE_SCHEMA, run_seed + 92,
+            realism_payload, REALISM_JUDGE_SCHEMA, run_seed + 93,
         )
         math_result = call_judge(
             client, args.judge_model, math_system,
             f"【生徒の最終解答】\n{row.get('phase2_student_answer', '')}\n\n【模範解答】\n{solution}",
-            MATH_JUDGE_SCHEMA, run_seed + 93,
+            MATH_JUDGE_SCHEMA, run_seed + 94,
         )
 
         evaluated = dict(row)
@@ -217,7 +275,18 @@ def main() -> None:
             "judge_model": args.judge_model,
             "phase2_is_correct": math_result.get("is_correct"),
             "math_judge": math_result,
-            "empathy_evaluation": empathy,
+            "empathic_instruction_evaluation": empathic_instruction,
+            "mathematical_instruction_evaluation": mathematical_instruction,
+            "instruction_evaluation_summary": {
+                "empathic_instruction_total": empathic_instruction.get("total_score"),
+                "mathematical_instruction_total": mathematical_instruction.get("total_score"),
+                "combined_total": (
+                    empathic_instruction["total_score"] + mathematical_instruction["total_score"]
+                    if "total_score" in empathic_instruction and "total_score" in mathematical_instruction
+                    else None
+                ),
+                "maximum_score": 80,
+            },
             "student_realism_evaluation": realism,
         })
         append_jsonl(args.output, evaluated)

@@ -1,4 +1,4 @@
-# v2 SFT・分離型評価設計
+# SFT v2・テストv2/v3分離型評価設計
 
 ## 目的
 
@@ -16,17 +16,12 @@ v2では、品質評価が `keep` の教師対話だけでSFTを行う。また�
 
 ## ファイル
 
-- `v2/data/v2_keep_only_sft_train.jsonl`: v2の教師SFTデータ
-- `v2/data/v2_keep_only_sft_manifest.json`: 抽出条件と採用ID
-- `v2/generate_v2_dialogues.py`: 教師・生徒による対話とPhase 2解答の生成
-- `v2/evaluate_v2_dialogues.py`: 保存済み対話のJudge評価
-- `v2/prompts/v2_teacher_system.txt`: 評価時の教師プロンプト
-- `v2/prompts/v2_student_system.txt`: Phase 1の状態駆動型生徒プロンプト
-- `v2/prompts/v2_phase2_student_system.txt`: Phase 2の生徒プロンプト
-- `v2/prompts/v2_student_profiles.json`: 固定生徒profile
-- `v2/prompts/v2_student_realism_judge_system.txt`: 生徒らしさの評価基準
+- `pipelines/sft/v2/data/`: SFT v2の学習データとManifest
+- `pipelines/sft/v2/prompts/`: SFT v2のCoT教師プロンプト
+- `pipelines/model_evaluation/test_v2/`: プロファイル更新テストのスクリプトとプロンプト
+- `pipelines/model_evaluation/test_v3/`: インコンテキスト学習テストのスクリプトとプロンプト
 
-## Student Simulator v2
+## Student Simulator
 
 各ターンで生徒モデルは、`state_after`、`state_update_reason`、`utterance`をJSONで返す。評価スクリプトは教師へ`utterance`だけを渡し、内部状態は次の生徒ターンまで保持する。
 
@@ -39,7 +34,14 @@ v2では、品質評価が `keep` の教師対話だけでSFTを行う。また�
 - 獲得した知識
 - 未解決事項
 
-Phase 2にはPhase 1の対話全文を渡さない。最終内部状態だけを渡すことで、会話のコピーではなく、状態として保持された学習内容の転移を測る。
+Phase 2は別々のテストバージョンとして実施する。
+
+| テスト | 引き継ぐ情報 | 測定対象 |
+| --- | --- | --- |
+| テストv2 | 元プロファイルとPhase 1終了時の学習状態 | 明示的に更新された生徒状態による転移 |
+| テストv3 | 元問題とPhase 1の対話全文 | 対話例からのインコンテキスト学習 |
+
+テストv2では対話全文を渡さず、テストv3では更新後の内部状態を明示的に渡さない。教師モデル、固定生徒モデル、問題、profile割当、seed、生成パラメータを揃えて比較する。
 
 ## CoT付きv2 SFT
 
@@ -52,7 +54,7 @@ CoT付き条件では、元コーパスの教師ターンから次の3項目を�
 教師出力は `<analysis>...</analysis><final>...</final>` とし、評価時に生徒へ渡すのは `<final>`だけとする。CoTなしv2とCoT付きv2は別checkpointとして学習し、CoTの有無による効果を比較する。
 
 ```bash
-python pipelines/model_evaluation/v2/prepare_v2_cot_sft_dataset.py
+python pipelines/sft/v2/prepare_v2_cot_sft_dataset.py
 ```
 
 ## ABCIでの実行
@@ -60,10 +62,10 @@ python pipelines/model_evaluation/v2/prepare_v2_cot_sft_dataset.py
 ### 1. v2 SFTデータの再生成と確認
 
 ```bash
-python pipelines/model_evaluation/v2/prepare_keep_only_sft_dataset.py
+python pipelines/sft/v2/prepare_keep_only_sft_dataset.py
 ```
 
-v2の学習には `pipelines/model_evaluation/v2/data/v2_keep_only_sft_train.jsonl` を指定する。
+SFT v2の学習には `pipelines/sft/v2/data/v2_keep_only_sft_train.jsonl` を指定する。
 
 ### 2. 推論サーバー
 
@@ -90,11 +92,18 @@ Student Simulatorには未SFTの`tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.
 Judge APIを呼ばず、2問だけで対話形式を確認する。
 
 ```bash
-python pipelines/model_evaluation/v2/generate_v2_dialogues.py \
+python pipelines/model_evaluation/test_v2/generate_profile_update_dialogues.py \
   --teacher-model teacher-under-test \
-  --teacher-system-prompt pipelines/model_evaluation/v2/prompts/v2_cot_teacher_system.txt \
+  --teacher-system-prompt pipelines/sft/v2/prompts/v2_cot_teacher_system.txt \
   --limit 2 \
-  --output experiments/v2_test/pilot/dialogues.jsonl \
+  --overwrite
+```
+
+```bash
+python pipelines/model_evaluation/test_v3/generate_in_context_dialogues.py \
+  --teacher-model teacher-under-test \
+  --teacher-system-prompt pipelines/sft/v2/prompts/v2_cot_teacher_system.txt \
+  --limit 2 \
   --overwrite
 ```
 
@@ -106,38 +115,44 @@ ABCIの外部接続でproxyが必要な場合は、`JUDGE_PROXY`を設定する�
 export GPT_API_KEY="..."
 export JUDGE_PROXY="http://proxy.abci.local:3128"
 
-python pipelines/model_evaluation/v2/generate_v2_dialogues.py \
+python pipelines/model_evaluation/test_v2/generate_profile_update_dialogues.py \
   --teacher-model teacher-under-test \
   --limit 20 \
   --seed 42 \
-  --output experiments/v2_test/pilot/dialogues.jsonl \
   --overwrite
 ```
 
 生成ログを確認した後、Judge評価を別に実行する。
 
 ```bash
-python pipelines/model_evaluation/v2/evaluate_v2_dialogues.py \
-  --input experiments/v2_test/pilot/dialogues.jsonl \
-  --output experiments/v2_test/pilot/evaluated_results.jsonl \
+python pipelines/model_evaluation/test_v2/evaluate_profile_update_dialogues.py \
   --overwrite
 ```
+
+テストv3も`generate_in_context_dialogues.py`と`evaluate_in_context_dialogues.py`で同様に実行する。
 
 ### 5. 主実験
 
 各教師条件で出力先だけを変え、同一seedで実行する。
 
 ```bash
-python pipelines/model_evaluation/v2/generate_v2_dialogues.py \
+python pipelines/model_evaluation/test_v2/generate_profile_update_dialogues.py \
   --teacher-model base-teacher \
   --seed 42 \
-  --output experiments/v2_test/base/dialogues.jsonl
+  --output experiments/test_v2/base/dialogues.jsonl
 ```
 
 ```bash
-python pipelines/model_evaluation/v2/evaluate_v2_dialogues.py \
-  --input experiments/v2_test/base/dialogues.jsonl \
-  --output experiments/v2_test/base/evaluated_results.jsonl
+python pipelines/model_evaluation/test_v2/evaluate_profile_update_dialogues.py \
+  --input experiments/test_v2/base/dialogues.jsonl \
+  --output experiments/test_v2/base/evaluated_results.jsonl
+```
+
+```bash
+python pipelines/model_evaluation/test_v3/generate_in_context_dialogues.py \
+  --teacher-model base-teacher \
+  --seed 42 \
+  --output experiments/test_v3/base/dialogues.jsonl
 ```
 
 中断時は同じコマンドを再実行すれば、既存の`run_id`を読み取り完了済み問題をスキップする。最初からやり直す場合だけ`--overwrite`を付ける。各出力の隣に`.manifest.json`が作成され、モデル名、URL、temperature、seedなどが保存される。
@@ -153,9 +168,17 @@ python pipelines/model_evaluation/v2/evaluate_v2_dialogues.py \
 - 一度の弱いヒントで不自然に完全理解しない
 - 生徒発話が原則1〜2文で、過度にラフでない
 - `state_after`と実際の発話に矛盾がない
-- Phase 2入力に対話全文が含まれていない
+- テストv2ではPhase 2入力に対話全文が含まれていない
+- テストv3ではPhase 2入力に更新後の内部状態が直接含まれていない
 
-自動評価では、Pedagogical Empathyと数学的正確性に加え、tutor leak、知識違反、文体違反、不自然な状態更新、無条件同意を記録する。
+教師の対話品質は次の2タスクに分けて独立採点する。
+
+| タスク | 評価項目 | 配点 |
+| --- | --- | ---: |
+| 共感指導 | 感情認識、認知的共感、情緒的支援と心理的安全性 | 30点 |
+| 数学的指導 | 数学的正確性、誤りの診断と回復、適応的足場かけ、理解確認、認知負荷制御 | 50点 |
+
+合計80点に加え、誤答追認回数と答えの直接提示回数を診断値として保存する。Phase 2の数学的正答判定と、生徒の教師口調、知識違反、文体違反、不自然な状態更新、無条件同意は別評価として記録する。
 
 ## 解釈上の注意
 

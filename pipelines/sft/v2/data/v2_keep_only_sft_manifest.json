@@ -2,7 +2,7 @@
   "dataset_name": "v2_keep_only_sft",
   "corpus_path": "E:\\github\\empathetic-AItutor\\pipelines\\corpus_creation\\500_empathetic_dialogues.jsonl",
   "evaluations_path": "E:\\github\\empathetic-AItutor\\pipelines\\corpus_creation\\500_dialogue_evaluations.jsonl",
-  "system_prompt_path": "E:\\github\\empathetic-AItutor\\pipelines\\model_evaluation\\shared\\prompts\\sft_teacher_system.txt",
+  "system_prompt_path": "E:\\github\\empathetic-AItutor\\pipelines\\sft\\shared\\prompts\\sft_teacher_system.txt",
   "filter": {
     "evaluation_status": "completed",
     "recommendation": "keep",

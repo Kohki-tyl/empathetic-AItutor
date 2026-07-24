@@ -10,6 +10,7 @@ from tqdm import tqdm
 # ==========================================
 BASE_DIR = Path(__file__).resolve().parent
 SHARED_DIR = BASE_DIR.parent / "shared"
+SFT_SHARED_DIR = BASE_DIR.parents[1] / "sft" / "shared"
 
 # 定数
 MODEL_NAME = "tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5"
@@ -80,7 +81,7 @@ def generate_llm_response(client: OpenAI, model: str, messages: list, temperatur
 # ==========================================
 # 3. プロンプトとスキーマの読み込み
 # ==========================================
-TEACHER_SYSTEM = load_prompt_file("sft_teacher_system.txt", shared=True)
+TEACHER_SYSTEM = (SFT_SHARED_DIR / "prompts" / "sft_teacher_system.txt").read_text(encoding="utf-8")
 STUDENT_SYSTEM_TEMPLATE = load_prompt_file("eval_student_system.txt")
 JUDGE_SYSTEM = load_prompt_file("eval_judge_system.txt", shared=True)
 EMPATHY_JUDGE_SYSTEM = load_prompt_file("eval_empathy_judge_system.txt", shared=True)

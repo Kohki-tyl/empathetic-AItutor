@@ -20,19 +20,26 @@
 │   ├── corpus_creation/       # 翻訳、フィルタリング、対話コーパス生成
 │   │   ├── prompts/
 │   │   └── questions/
-│   └── model_evaluation/      # SFTデータ整形、評価問題生成、シミュレーション評価
-│       ├── v1/                # v1 SFT・旧評価
-│       ├── v2/                # Keep-only/CoT SFT・分離型評価
-│       └── shared/            # 共通質問セット・Judgeプロンプト
+│   ├── sft/                   # SFTバージョン別の学習データ作成
+│   │   ├── v1/
+│   │   ├── v2/
+│   │   └── shared/
+│   └── model_evaluation/      # テストバージョン別のモデル評価
+│       ├── test_v1/
+│       ├── test_v2/
+│       ├── test_v3/
+│       └── shared/
 ├── experiments/               # テスト版別の質問、評価結果、分析コード
-│   ├── v0_test/               # 40問で実施したv0テスト
+│   ├── test_v0/               # 40問で実施したテストv0
 │   │   ├── questions/
 │   │   ├── baseline_swallow_70b_v0.3/
 │   │   ├── baseline_swallow_8b_v0.5/
-│   │   └── sft_swallow_8b_v0.5/
-│   └── v1_test/               # 200問で実施したv1テスト
-│       ├── questions/
-│       └── sft_swallow_8b_v0.5/
+│   │   └── sft_v0_swallow_8b_v0.5/
+│   ├── test_v1/               # 200問で実施したテストv1
+│   │   ├── questions/
+│   │   └── sft_v1_swallow_8b_v0.5/
+│   ├── test_v2/               # プロファイル更新による転移テスト
+│   └── test_v3/               # インコンテキスト学習テスト
 ├── docs/                      # SFT方針と関連資料
 └── TODO.md                    # 今後の作業
 ```
@@ -93,41 +100,41 @@ APIキーをソースコードやコミット対象のファイルへ保存し�
 
 ## SFTデータの作成
 
-生成済み対話を `pipelines/model_evaluation/v1/data/math_tutor_corpus.jsonl` に配置し、次を実行します。
+生成済み対話を `pipelines/sft/v1/data/math_tutor_corpus.jsonl` に配置し、次を実行します。
 
 ```bash
-python pipelines/model_evaluation/v1/prepare_sft_dataset.py
+python pipelines/sft/v1/prepare_sft_dataset.py
 ```
 
 `is_completed: true` の対話だけを抽出し、固定シードでシャッフルして全件を訓練用データへ変換します。
 
-- `pipelines/model_evaluation/v1/data/sft_train.jsonl`
+- `pipelines/sft/v1/data/sft_train.jsonl`
 
 ### v2 Keep-only SFTデータの作成
 
 500件のコーパス品質評価で `recommendation: keep` と判定され、かつ指導完了している対話だけをv2学習データへ変換します。
 
 ```bash
-python pipelines/model_evaluation/v2/prepare_keep_only_sft_dataset.py
+python pipelines/sft/v2/prepare_keep_only_sft_dataset.py
 ```
 
 出力:
 
-- `pipelines/model_evaluation/v2/data/v2_keep_only_sft_train.jsonl`
-- `pipelines/model_evaluation/v2/data/v2_keep_only_sft_manifest.json`
+- `pipelines/sft/v2/data/v2_keep_only_sft_train.jsonl`
+- `pipelines/sft/v2/data/v2_keep_only_sft_manifest.json`
 
 Manifestにはフィルタ条件、シャッフルシード、採用件数、出力順の`source_id`を保存します。
 
 CoTを含めて学習する場合は、教師ターンを `<analysis>` と `<final>` に分離したデータを作成します。
 
 ```bash
-python pipelines/model_evaluation/v2/prepare_v2_cot_sft_dataset.py
+python pipelines/sft/v2/prepare_v2_cot_sft_dataset.py
 ```
 
 出力:
 
-- `pipelines/model_evaluation/v2/data/v2_keep_only_cot_sft_train.jsonl`
-- `pipelines/model_evaluation/v2/data/v2_keep_only_cot_sft_manifest.json`
+- `pipelines/sft/v2/data/v2_keep_only_cot_sft_train.jsonl`
+- `pipelines/sft/v2/data/v2_keep_only_cot_sft_manifest.json`
 
 `<analysis>`には認知状態、感情状態、次の一歩を収録し、`<final>`には生徒へ提示する短い発話だけを収録します。CoTなし版は比較実験用に残します。
 
@@ -165,47 +172,55 @@ python pipelines/model_evaluation/shared/questions/generate_similar_questions.py
 ### ベースライン評価
 
 ```bash
-python pipelines/model_evaluation/v1/evaluate_baseline_by_simulator.py
-python pipelines/model_evaluation/v1/analyze_model.py
+python pipelines/model_evaluation/test_v1/evaluate_baseline_by_simulator.py
+python pipelines/model_evaluation/test_v1/analyze_model.py
 ```
 
 評価スクリプトは、既定ではOpenAI互換APIを `http://localhost:8000/v1` で提供しているローカルモデルを利用し、JudgeにはOpenAI APIを利用します。モデル名、エンドポイント、最大ターン数は実行前にスクリプト先頭の設定を確認してください。
 
-### v2 分離型評価
+### テストv2：プロファイル更新
 
-v2では評価対象の教師と固定した生徒シミュレーターを、別モデル・別エンドポイントで実行します。Phase 2には対話全文ではなく、Phase 1終了時の生徒の学習状態だけを引き継ぎます。対話生成とJudge評価は別スクリプトで実行します。
-
-接続確認はJudgeを呼ばずに実行できます。
+Phase 1終了時の学習状態で生徒プロファイルを更新し、対話全文を渡さずにPhase 2の類似問題を解かせます。
 
 ```bash
-python pipelines/model_evaluation/v2/generate_v2_dialogues.py \
+python pipelines/model_evaluation/test_v2/generate_profile_update_dialogues.py \
   --teacher-model teacher-under-test \
-  --teacher-system-prompt pipelines/model_evaluation/v2/prompts/v2_cot_teacher_system.txt \
-  --limit 2 \
-  --output experiments/v2_test/pilot/dialogues.jsonl \
+  --teacher-system-prompt pipelines/sft/v2/prompts/v2_cot_teacher_system.txt \
+  --overwrite
+python pipelines/model_evaluation/test_v2/evaluate_profile_update_dialogues.py \
   --overwrite
 ```
 
-生徒には既定で、SFTしていない`tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5`を使用します。全教師条件で同じcheckpoint、プロンプト、temperature、seedを固定します。
+出力は`experiments/test_v2/`へ保存されます。
 
-生成後にJudge評価を実行します。
+### テストv3：インコンテキスト学習
+
+Phase 1の元問題と対話全文を文脈として渡し、更新後の内部状態を明示せずにPhase 2の類似問題を解かせます。
 
 ```bash
-python pipelines/model_evaluation/v2/evaluate_v2_dialogues.py \
-  --input experiments/v2_test/pilot/dialogues.jsonl \
-  --output experiments/v2_test/pilot/evaluated_results.jsonl \
+python pipelines/model_evaluation/test_v3/generate_in_context_dialogues.py \
+  --teacher-model teacher-under-test \
+  --teacher-system-prompt pipelines/sft/v2/prompts/v2_cot_teacher_system.txt \
+  --overwrite
+python pipelines/model_evaluation/test_v3/evaluate_in_context_dialogues.py \
   --overwrite
 ```
 
-ABCIでのサーバー構成、20問パイロット、主実験の固定条件は [v2 SFT・分離型評価設計](docs/v2_sft_evaluation_design.md) を参照してください。
+出力は`experiments/test_v3/`へ保存されます。
+
+生徒には既定で、SFTしていない`tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5`を使用します。全条件で同じcheckpoint、プロンプト、temperature、seedを固定します。
+
+ABCIでのサーバー構成、20問パイロット、主実験の固定条件は [SFT v2・テストv2/v3設計](docs/sft_v2_test_v2_v3_design.md) を参照してください。
 
 主な評価指標は次のとおりです。
 
 - 指導完了率: 元問題の対話で学習者が正解へ到達した割合
-- Near Transfer Accuracy: 履歴を消した類似問題に正解した割合
-- Emotion Alignment: 生徒の感情状態を適切に捉えたか
-- Pedagogical Empathy: 安心感と適切な足場かけを両立したか
-- Length Control: 生徒への発話が簡潔か
+- 近接転移正答率: Phase 2の類似問題に正解した割合
+- 共感指導（30点）: 感情認識、認知的共感、情緒的支援
+- 数学的指導（50点）: 数学的正確性、誤り診断、適応的足場かけ、理解確認、認知負荷制御
+- 生徒シミュレーター妥当性: 教師口調、知識逸脱、不自然な理解更新など
+
+共感指導と数学的指導は別々のJudgeタスクとして採点し、合計80点も記録します。
 
 ## 実験結果
 
@@ -213,17 +228,19 @@ ABCIでのサーバー構成、20問パイロット、主実験の固定条件�
 
 ```text
 experiments/
-├── v0_test/
+├── test_v0/
 │   ├── questions/                    # v0の元問題・類似問題（40問）
 │   └── <条件>_<モデル規模>_<モデル版>/
-└── v1_test/
+├── test_v1/
     ├── questions/                    # v1の元問題・類似問題（200問）
     └── <条件>_<モデル規模>_<モデル版>/
+├── test_v2/                          # プロファイル更新テスト
+└── test_v3/                          # インコンテキスト学習テスト
 ```
 
-例: `experiments/v0_test/baseline_swallow_8b_v0.5`、`experiments/v1_test/sft_swallow_8b_v0.5`
+例: `experiments/test_v0/baseline_swallow_8b_v0.5`、`experiments/test_v1/sft_v1_swallow_8b_v0.5`
 
-比較時は、データ版、モデル規模、ベースライン/SFTの条件が一致しているかを確認してください。
+`test_vN`は評価手順・質問セットの版、`sft_vM`は教師モデルの学習版を表す。比較時は両方を記録し、モデル規模とベースモデル版も一致しているか確認してください。
 
 ## データ形式
 
@@ -250,5 +267,5 @@ experiments/
 - [研究の現状・実施内容・ToDo](docs/research_status_and_todo.md)
 - [SFT戦略](docs/SFT_Strategy.md)
 - [500件コーパス品質評価レポート](docs/corpus_quality_report.md)
-- [v2 SFT・分離型評価設計](docs/v2_sft_evaluation_design.md)
+- [SFT v2・テストv2/v3設計](docs/sft_v2_test_v2_v3_design.md)
 - [今後の作業](TODO.md)

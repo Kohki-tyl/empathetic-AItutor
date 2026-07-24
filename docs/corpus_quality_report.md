@@ -58,7 +58,7 @@
 | Judge推薦 | `recommendation: keep` | Judgeが対話全体を学習利用可能と判断している |
 | 指導完了 | `is_completed: true` | 対話が途中で終了したデータを除外する |
 
-`v2/prepare_keep_only_sft_dataset.py`は、この3条件をAND条件として適用している。
+`pipelines/sft/v2/prepare_keep_only_sft_dataset.py`は、この3条件をAND条件として適用している。
 
 #### 第2段階: 重大な除外条件
 

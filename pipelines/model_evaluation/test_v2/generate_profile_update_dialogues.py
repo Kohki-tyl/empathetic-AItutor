@@ -21,7 +21,9 @@ from tqdm import tqdm
 
 BASE_DIR = Path(__file__).resolve().parent
 SHARED_DIR = BASE_DIR.parent / "shared"
+REPO_ROOT = BASE_DIR.parents[2]
 DEFAULT_STUDENT_MODEL = "tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5"
+TRANSFER_MODE = "profile_update"
 
 
 @dataclass(frozen=True)
@@ -35,6 +37,7 @@ class Config:
     teacher_temperature: float
     phase2_temperature: float
     seed: int
+    transfer_mode: str
 
 
 STUDENT_TURN_SCHEMA = {
@@ -91,7 +94,7 @@ def parse_args() -> argparse.Namespace:
         default=BASE_DIR / "prompts" / "v2_teacher_system.txt",
         help="CoTモデルでは prompts/v2_cot_teacher_system.txt を指定する",
     )
-    parser.add_argument("--output", type=Path, default=BASE_DIR / "data" / "v2_dialogues.jsonl")
+    parser.add_argument("--output", type=Path, default=REPO_ROOT / "experiments" / "test_v2" / "dialogues.jsonl")
     parser.add_argument("--limit", type=int, help="先頭から実行する問題数。パイロットでは20を推奨")
     parser.add_argument("--max-turns", type=int, default=10)
     parser.add_argument("--seed", type=int, default=42)
@@ -178,6 +181,20 @@ def initial_state(profile: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def build_phase2_input(
+    profile: dict[str, Any],
+    state: dict[str, Any],
+    similar_question: str,
+) -> dict[str, Any]:
+    return {
+        "updated_student_profile": {
+            "base_profile": profile,
+            "learning_state_after_phase1": state,
+        },
+        "new_problem": similar_question,
+    }
+
+
 def completed_ids(path: Path) -> set[str]:
     if not path.exists():
         return set()
@@ -195,7 +212,7 @@ def main() -> None:
     config = Config(
         args.teacher_base_url, args.teacher_model, args.student_base_url, args.student_model,
         args.max_turns, args.student_temperature, args.teacher_temperature,
-        args.phase2_temperature, args.seed,
+        args.phase2_temperature, args.seed, TRANSFER_MODE,
     )
     if config.teacher_base_url == config.student_base_url and config.teacher_model == config.student_model:
         raise SystemExit("教師と生徒が同じURL・モデルです。比較の交絡を避けるため別モデルを指定してください。")
@@ -229,9 +246,9 @@ def main() -> None:
 
     rng = random.Random(config.seed)
     profile_offset = rng.randrange(len(profiles))
-    for index, (original, similar) in enumerate(tqdm(pairs, desc="v2 generation")):
+    for index, (original, similar) in enumerate(tqdm(pairs, desc="test v2 generation")):
         source_id = str(original.get("id") or original.get("source_id"))
-        run_id = f"{source_id}:seed-{config.seed}"
+        run_id = f"{source_id}:{config.transfer_mode}:seed-{config.seed}"
         if run_id in done:
             continue
         profile = profiles[(index + profile_offset) % len(profiles)]
@@ -286,10 +303,9 @@ def main() -> None:
                 generation_error = f"{type(exc).__name__}: {exc}"
                 break
 
-        phase2_input = {
-            "learning_state_after_phase1": state,
-            "new_problem": similar["similar_question"],
-        }
+        phase2_input = build_phase2_input(
+            profile, state, similar["similar_question"],
+        )
         try:
             phase2_answer = call_model(
                 student_client, config.student_model,
@@ -303,6 +319,7 @@ def main() -> None:
 
         append_jsonl(args.output, {
             "run_id": run_id, "source_id": source_id, "seed": config.seed,
+            "transfer_mode": config.transfer_mode,
             "teacher_model": config.teacher_model, "student_model": config.student_model,
             "student_profile_used": profile, "initial_student_state": initial_state(profile),
             "final_student_state": state, "phase1_turns": sum(item["role"] == "student" for item in dialogue),

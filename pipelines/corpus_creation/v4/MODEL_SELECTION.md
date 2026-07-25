@@ -4,13 +4,13 @@
 
 | 役割 | モデル | 実行方法 |
 | --- | --- | --- |
-| 生徒シミュレータ | `tokyotech-llm/Qwen3-Swallow-8B-SFT-v0.2` | ABCI上のvLLM 0.25.1 |
+| 生徒シミュレータ | `gpt-5.4-mini` | Chat Completions、Structured Outputs、reasoning effort `none` |
 | 教師候補生成 | `gpt-5.6-terra` | Chat Completions、reasoning effort `high` |
 | 初回監査 | `gpt-5.6-terra` | Batch Chat Completions、reasoning effort `high` |
 | 文脈整合Repair | `gpt-5.6-terra` | Batch Chat Completions、reasoning effort `medium` |
 | 修正済み対話の全ターン再監査 | `gpt-5.6-terra` | Batch Chat Completions、reasoning effort `high` |
 
-生徒モデルはrevision `496cd5558fef4af1d426e96327d7a74681063280`へ固定する。モデルカードはvLLMで`--reasoning-parser qwen3`を使う構成を示し、Qwen3-Swallowはreasoning ON/OFF切替をサポートしないとしている。このため、現在の生徒起動設定はthinking無効化ではなくQwen3 parserを使う。[Qwen3-Swallow model card](https://huggingface.co/tokyotech-llm/Qwen3-Swallow-8B-SFT-v0.2)
+ユーザー指定により生徒モデルは日付固定snapshotではなく`gpt-5.4-mini`エイリアスを使う。再現時にはmanifestへ実際のモデル指定、provider、SDK版、設定とプロンプトのhashを保存する。生徒は教師より軽い推論設定にし、数学問題を解く能力ではなく、E2/E3プロフィール、知識境界、感情サイクルに沿ったロールプレイを優先する。
 
 ## 役割と工程の分離
 
@@ -30,7 +30,7 @@ Repairは対象ターン単位の独立変換ではない。同一対話のRepai
 
 ## 再現性
 
-manifestへモデル名、reasoning effort、student revision、期待vLLM版、seed、サンプリング設定、prompt SHA-256、Batch IDを保存する。不変設定とprompt hashからfingerprintを作り、再開時に一致しなければ停止する。`target_dialogues`と`max_candidates`の増加だけを許容する。
+manifestへモデル名、provider、reasoning effort、SDK版、seed、prompt SHA-256、問題選択表、Batch IDを保存する。不変設定とprompt・選択表hashからfingerprintを作り、再開時に一致しなければ停止する。変更可能なのは`target_dialogues`の増加だけとし、4範囲関係を各30件に固定する`max_candidates=120`は変更しない。
 
 ## 品質管理
 

@@ -1,5 +1,7 @@
 # v4コーパス設計とSFT有効性の検討
 
+> この文書は設計根拠と実現可能性の検討を記録する。運用中の修正を含む現行の必須要件は[V4_CORPUS_REQUIREMENTS.md](./V4_CORPUS_REQUIREMENTS.md)、採択判定は[ADOPTION_CRITERIA.md](./ADOPTION_CRITERIA.md)を正本とし、記述が競合する場合はそれらを優先する。
+
 ## 1. 目的
 
 v4コーパスは、日本語数学チューターに次の二つを同時に学習させるためのKeep-only SFTコーパスである。
@@ -45,7 +47,7 @@ v4コーパスは、日本語数学チューターに次の二つを同時に学
 
 ### 4.1 モデルとプロフィール
 
-生徒役には`tokyotech-llm/Qwen3-Swallow-8B-SFT-v0.2`を使用する。教師役とモデルを分離し、教師SFTモデルが自分自身を生徒として模倣する構成を避ける。
+生徒役にはOpenAI APIの`gpt-5.4-mini`を使用する。教師役の`gpt-5.6-terra`とモデルを分離し、教師モデルが自分自身を生徒として模倣する構成を避ける。
 
 プロフィールは次の8種類をほぼ同数割り当てる。感情別プロフィールは作らず、教育課程位置と分野別習熟度を安定した属性とする。
 
@@ -73,7 +75,7 @@ v4コーパスは、日本語数学チューターに次の二つを同時に学
 - `frustrated`
 - `anxious`
 
-各問題の必要範囲と対応プロフィールの学習範囲との差、および問題難度から初期感情を事前決定する。`frustrated`は範囲外であるだけでは付与せず、教師との対話前に既習操作を2回試して同じ箇所で停止した`prior_attempt_history`を必須とする。`bored`、`eureka`、`relieved`、`proud`は対話中の結果としてのみ生じる。
+各問題の必要範囲と対応プロフィールの学習範囲との差、および問題難度から初期感情を事前決定する。`frustrated`は範囲外であるだけでは付与しない。`far_beyond`では、教師との対話前に行った異なる2回の既習範囲内の試行と共通の停止箇所を`prior_attempt_history.attempts`へ個別に保存する。各履歴は問題文から抽出した短い固有表現と必要概念を含み、同じ分野でも問題ごとに異なる。初回生徒発話はこの2回の履歴を明示する固定文から開始し、その後に問題固有の援助要請を一つだけ行う。構造検査は固定文が発話先頭にない候補を再生成する。`bored`、`eureka`、`relieved`、`proud`は対話中の結果としてのみ生じる。
 
 ### 4.3 感情サイクル
 
@@ -95,7 +97,7 @@ anxious → relieved / engaged
 
 問題選定LLMは使用せず、`math_train_0`以降をIDの数値部分の昇順で使用する。事前対応表に問題分野、必要カリキュラム段階、プロフィール、範囲関係、初期感情、E3誤概念を保存し、候補indexとの対応を決定的に再現する。
 
-範囲関係の目標比率は`mastered` 40%、`frontier` 35%、`one_step_beyond` 20%、`far_beyond` 5%とする。各問題で実現可能な範囲関係のうち、累積件数が目標比率に最も遅れている関係を選び、その関係を満たすプロフィールの割当件数が均等になるよう決定する。問題順は変更しない。
+全1000問は数値順の先頭800件をコーパス候補、後半200件をテスト専用候補として分割する。各分割内で4種類の範囲関係を可能な限り均等に割り当てた後、それぞれから`mastered`、`frontier`、`one_step_beyond`、`far_beyond`をseed 42で30件ずつ固定抽出する。コーパス用120件とテスト用120件は問題IDが交差しない。test-v4の共通除外問題は抽出前に除く。
 
 MATHの`level`は学校段階を表さないため、教育課程段階は問題文・参照解答の数学用語から規則ベースで別途推定する。levelは同一範囲内の課題難度として感情と自力到達可能性の調整にだけ用いる。範囲関係が`one_step_beyond`または`far_beyond`の場合、初回応答を`scope_limited_help_seeking`へ強制する。
 
@@ -146,15 +148,15 @@ MATHの`level`は学校段階を表さないため、教育課程段階は問題
 
 | 工程 | モデル | 実行方式 |
 | --- | --- | --- |
-| 生徒生成 | Qwen3-Swallow-8B-SFT-v0.2 | ABCI上のvLLM 0.25.1、revision固定、`qwen3` reasoning parser |
+| 生徒生成 | `gpt-5.4-mini` | Chat Completions、Structured Outputs、reasoning effort `none` |
 | 教師生成 | gpt-5.6-terra | Chat Completions API、reasoning `high` |
 | 初回監査 | gpt-5.6-terra | Batch Chat Completions、reasoning `high` |
 | Repair | gpt-5.6-terra | Batch Chat Completions、reasoning `medium` |
 | 再監査 | gpt-5.6-terra | Batch Chat Completions、reasoning `high` |
 
-教師生成は前ターンへ依存するため逐次実行する。初回監査はターン単位、Repairは対話単位、再監査は修正済み対話の全教師ターンをBatch処理する。設定値、seed、モデル名、reasoning effort、student revision、vLLM版、プロンプトのSHA-256、run fingerprint、Batch IDをmanifestへ保存する。
+教師生成は前ターンへ依存するため逐次実行する。初回監査はターン単位、Repairは対話単位、再監査は修正済み対話の全教師ターンをBatch処理する。設定値、seed、モデル名、provider、reasoning effort、SDK版、プロンプトのSHA-256、run fingerprint、Batch IDをmanifestへ保存する。
 
-Qwen3-Swallowはモデルカード上thinkingのON/OFF切替をサポートしないため、`enable_thinking=False`は指定しない。vLLM起動時に`--reasoning-parser qwen3`を指定する。
+`gpt-5.4-mini`にはreasoning effort `none`を指定し、プロフィール制約へ従う生徒ロールプレイに計算資源を集中させる。temperature、top-k、min-pなどvLLM固有のサンプリング指定は送信しない。
 
 ### 6.1 Chat Completionsとreasoning
 
@@ -208,7 +210,7 @@ Keepには次のすべてを要求する。
 
 ## 8. SFT形式
 
-採択対話は、教師用system prompt、生徒発話を`user`、教師発話を`assistant`とするmessages形式へ変換する。問題と最初の生徒発話は一つの`user`へ結合し、roleを`system → user → assistant`以降交互にする。教師assistant出力は次の形式を持つ。
+採択対話は、教師用system prompt、生徒発話を`user`、教師発話を`assistant`とするmessages形式へ変換する。問題、初期感情ラベル、最初の生徒発話は一つの`user`へ結合し、roleを`system → user → assistant`以降交互にする。現在感情は明示せず、対話履歴から推定させる。教師assistant出力は次の形式を持つ。
 
 ```text
 <analysis>

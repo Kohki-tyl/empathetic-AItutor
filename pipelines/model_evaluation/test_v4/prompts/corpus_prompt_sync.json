@@ -1,0 +1,25 @@
+{
+  "policy_version": "v4-corpus-prompt-sync-v1",
+  "files": [
+    {
+      "corpus_name": "student_profiles.json",
+      "test_name": "student_profiles.json",
+      "canonical_sha256": "f768bc78c2629d2bbad9e8aad18154a31166230dd25751cf5402b239ac72825f"
+    },
+    {
+      "corpus_name": "initial_emotions.json",
+      "test_name": "initial_emotions.json",
+      "canonical_sha256": "7b672041253e74738b72ef42fed06bf0a2a5368ed8b03cd7ba91a8b9cd13e37d"
+    },
+    {
+      "corpus_name": "student_system.txt",
+      "test_name": "student_system.txt",
+      "canonical_sha256": "c8eb7fc474bd740ba4bc50231d7d6e88465a943b4171a6fd64ea647d2e566d0b"
+    },
+    {
+      "corpus_name": "sft_teacher_system.txt",
+      "test_name": "teacher_system.txt",
+      "canonical_sha256": "177e0303ba4a5634707d6593cef08e6938a46a70b28299f2df3ea739d0b93522"
+    }
+  ]
+}

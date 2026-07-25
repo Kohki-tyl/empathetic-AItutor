@@ -20,6 +20,6 @@
 - Phase 2の正答がプロフィールの既習知識またはPhase 1教師発話から実際に導けるかを確認する。`knowledge_sources`へ許可された出所を形式的に列挙していても、そこから導けない未習公式・飛躍・完成解答を使っていればknowledge violationとする
 - 問題固有の`problem_profile_assignment`を確認し、E2のcurriculum_annotation・scope_relationを超えた知識使用、E3のmisconception_modelと無関係な作為的誤答、repair_criterion前の誤概念消失を違反として数える
 - 初期感情は性格からランダムに仮定せず、問題とプロフィールの学習範囲差から事前決定された`initial_emotion`との整合を評価する
-- `initial_emotion=frustrated`では、`prior_attempt_history`に記録された複数回の試行と同じ停止箇所が初回発話へ自然に反映されているかを確認する
+- `scope_relation=far_beyond`では、初回発話が`prior_attempt_history.required_initial_disclosure`から始まり、1回目と2回目の試行、共通の停止箇所、その後の問題固有の援助要請を明示しているかを確認する。欠落は初期感情・プロフィール不整合として扱う
 
 指定されたJSONスキーマだけを返してください。

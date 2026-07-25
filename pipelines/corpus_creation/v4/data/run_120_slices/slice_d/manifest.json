@@ -1,0 +1,58 @@
+{
+  "version": "v4",
+  "selection_policy": "keep_or_contextual_repair_with_full_dialogue_reaudit",
+  "run_config": {
+    "generation_validation_attempts": 3,
+    "judge_model": "gpt-5.6-terra",
+    "judge_reasoning_effort": "high",
+    "max_candidates": 120,
+    "max_turns": 10,
+    "output_dir": "E:\\github\\empathetic-AItutor\\pipelines\\corpus_creation\\v4\\data\\run_120_slices\\slice_d",
+    "problem_profile_assignments": "E:\\github\\empathetic-AItutor\\pipelines\\corpus_creation\\v4\\assignments\\problem_profile_assignments.jsonl",
+    "problem_selection": "E:\\github\\empathetic-AItutor\\pipelines\\corpus_creation\\v4\\assignments\\corpus_120_selection.json",
+    "questions": "E:\\github\\empathetic-AItutor\\pipelines\\corpus_creation\\v4\\questions\\translated_1000_math.jsonl",
+    "repair_model": "gpt-5.6-terra",
+    "repair_reasoning_effort": "medium",
+    "seed": 42,
+    "student_max_tokens": 4096,
+    "student_model": "gpt-5.4-mini",
+    "student_provider": "openai",
+    "student_reasoning_effort": "none",
+    "teacher_model": "gpt-5.6-terra",
+    "teacher_reasoning_effort": "high"
+  },
+  "current_limits": {
+    "target_dialogues": 100
+  },
+  "limit_history": [
+    {
+      "target_dialogues": 100
+    }
+  ],
+  "prompt_sha256": {
+    "teacher_system.txt": "ac59de6995b4409a34f9ff6f38bf32c0fbae732a5c73cadfa93ab5e8230c4c5d",
+    "student_system.txt": "d00e864d056d33866bc2ed489136b25357ca6273f6902cc9e2c76c3e3ff4b534",
+    "student_profiles.json": "430003259eec6a77b3983d9efc5016ca63e42802af3006454667befb74f51f35",
+    "initial_emotions.json": "b7f5b66ba4f6c01098ef74e4e5664af6b8e49866746f6b48b9990c1997ec1fd1",
+    "turn_quality_judge_system.txt": "d26c46db7f630741d9ec2b9245d2ff65970429191c147edca1d3b802536f20e0",
+    "sft_teacher_system.txt": "8d966c0791172559374caaaaff1e7ffffbdfb7b46bcbc6b740422bcd848137cd",
+    "turn_repair_system.txt": "d4942a82ff27e2d5d2a32482943b6b50dc1ad76caf0a1fbc1b7b39e55005dd91"
+  },
+  "source_sha256": {
+    "questions": "fe371a28683defa8a61c46b3c311a576dbb1120b019976ab635a90a14ff23e45",
+    "problem_profile_assignments": "f625a3760b6625a496f403404e3375e72ad4e8057096f50980a6899f2c7d1837",
+    "problem_selection": "087bf6f02082faf2684682f1bc83a3cf55f8ffea38942212237e5ddb3780600b"
+  },
+  "run_fingerprint": "66efe52fb49d0857dd46f5a169b25192e9b66ae7200d3e7dd85f4d0229fa095b",
+  "environment": {
+    "python": "3.11.4",
+    "openai": "2.40.0",
+    "tqdm": "4.67.3",
+    "installed_vllm": "not-installed",
+    "student_provider": "openai",
+    "configured_vllm": "not-used",
+    "student_model_revision": "alias"
+  },
+  "batch_jobs": {},
+  "generated_candidates": 24
+}

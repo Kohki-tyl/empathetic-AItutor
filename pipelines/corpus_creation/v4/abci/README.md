@@ -1,34 +1,50 @@
 # ABCI 3.0実行補助
 
-`generate_dialogues.pbs`はABCIの`rt_HG`でQwen3-Swallow Student SimulatorをvLLM起動し、教師APIとの候補対話生成を行うPBS例である。
+`generate_dialogues.pbs`はABCIから教師・生徒のOpenAI APIを呼び、候補対話を生成するPBS例である。`student_provider=vllm`の旧構成も分岐として残している。
 
 ## 準備
 
 ```bash
 cd v4
+module load python/3.12/3.12.9
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements-abci.txt
+python -m pip install -r requirements.txt
 cp .env.example .env
 ```
 
-`.env`へ`OPENAI_API_KEY`を設定し、PBSの`CHANGE_TO_YOUR_ABCI_GROUP`を実際のグループ名へ変更する。
+`.env`へ`OPENAI_API_KEY`を設定する。`.venv`と`.env`は秘密情報や環境依存ファイルなのでリポジトリへ含めず、ABCIへコピーした`v4/`直下で作成する。
 
-`requirements-abci.txt`はvLLMを0.25.1へ固定する。PBSは`config.json`のモデル、Hugging Face revision、vLLM版を読み、版不一致なら生成前に停止する。Qwen3-Swallowは`--reasoning-parser qwen3`で起動する。
+現在の`config.json`は`student_provider=openai`と`student_model=gpt-5.4-mini`を指定する。この場合、PBSはCUDAとvLLMを起動しない。旧vLLM構成を明示的に選んだ場合だけ、CUDA 13.0.1をロードして`requirements-abci.txt`のvLLM 0.25.1との一致を検証する。
+
+`questions/`、コーパス用・test-v4用の選択表、対応表はv4内に同梱している。リポジトリ外の`../questions`や`model_evaluation`は参照しない。投入前検査は次で実行できる。
+
+```bash
+python run_v4.py preflight --config config.json
+python -m unittest discover -s tests -p 'test_*.py'
+```
 
 ## 候補生成
 
 ```bash
-qsub abci/generate_dialogues.pbs
+export ABCI_GROUP=YOUR_ABCI_GROUP
+qsub -P "${ABCI_GROUP}" abci/generate_dialogues.pbs
 qstat
 ```
+
+ABCIグループはPBSファイルへ埋め込まず、`qsub -P`で指定する。OpenAI生徒ではTCPポートを使わない。旧vLLM構成だけ空きポートを実行時に選ぶ。
 
 ## Batch工程
 
 候補生成後、次を順に実行する。
 
 ```bash
+module load python/3.12/3.12.9
+module load cuda/13.0/13.0.1
 source .venv/bin/activate
+set -a
+source .env
+set +a
 python run_v4.py submit-audit
 ```
 

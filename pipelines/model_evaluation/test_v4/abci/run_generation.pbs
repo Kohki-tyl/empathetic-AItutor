@@ -1,0 +1,133 @@
+#!/bin/bash
+#PBS -q rt_HF
+#PBS -l select=1
+#PBS -l walltime=24:00:00
+#PBS -N test-v4-generate
+#PBS -j oe
+
+set -euo pipefail
+
+cd "${PBS_O_WORKDIR}"
+if [ ! -f generate_in_context_dialogues.py ]; then
+  echo "Submit this PBS from SFT_abci/test/test_v4: qsub -P GROUP abci/run_generation.pbs"
+  exit 1
+fi
+
+source /etc/profile.d/modules.sh
+module load python/3.12/3.12.9
+module load cuda/13.0/13.0.1
+
+VENV_PATH="${VENV_PATH:-${PBS_O_WORKDIR}/.venv}"
+if [ ! -x "${VENV_PATH}/bin/python" ]; then
+  echo "Missing ${VENV_PATH}/bin/python. Create the environment from requirements-abci.txt first."
+  exit 1
+fi
+source "${VENV_PATH}/bin/activate"
+
+: "${TEACHER_MODEL_PATH:?Set the base or merged teacher checkpoint/HF ID}"
+TEST_CONDITION="${TEST_CONDITION:-lora}"
+TEACHER_SERVED_MODEL="${TEACHER_SERVED_MODEL:-teacher-${TEST_CONDITION}}"
+TEACHER_REVISION="${TEACHER_REVISION:-}"
+if [ -z "${TEACHER_REVISION}" ] && [ "${TEST_CONDITION}" != "merged" ]; then
+  TEACHER_REVISION="b1f8317099a97e790ec872c1225ca155979b4816"
+fi
+STUDENT_MODEL="${STUDENT_MODEL:-tokyotech-llm/Qwen3-Swallow-8B-SFT-v0.2}"
+STUDENT_REVISION="${STUDENT_REVISION:-496cd5558fef4af1d426e96327d7a74681063280}"
+SELECTION_FILE="${SELECTION_FILE:-${PBS_O_WORKDIR}/prompts/test_60_primary_selection.json}"
+OUTPUT_FILE="${OUTPUT_FILE:-${PBS_O_WORKDIR}/data/${TEST_CONDITION}/primary_60/dialogues.jsonl}"
+
+free_port() {
+  python -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()'
+}
+TEACHER_PORT="$(free_port)"
+STUDENT_PORT="$(free_port)"
+while [ "${STUDENT_PORT}" = "${TEACHER_PORT}" ]; do STUDENT_PORT="$(free_port)"; done
+
+mkdir -p logs "$(dirname "${OUTPUT_FILE}")"
+teacher_args=(
+  --model "${TEACHER_MODEL_PATH}"
+  --served-model-name "${TEACHER_SERVED_MODEL}"
+  --dtype bfloat16
+  --port "${TEACHER_PORT}"
+)
+generation_teacher_args=(
+  --teacher-model "${TEACHER_SERVED_MODEL}"
+  --teacher-checkpoint "${TEACHER_MODEL_PATH}"
+  --teacher-serving-mode "${TEST_CONDITION}"
+)
+if [ -n "${TEACHER_REVISION}" ]; then
+  teacher_args+=(--revision "${TEACHER_REVISION}")
+  generation_teacher_args+=(--teacher-revision "${TEACHER_REVISION}")
+fi
+if [ "${TEST_CONDITION}" = "lora" ]; then
+  : "${TEACHER_LORA_PATH:?Set the final_adapter directory for LoRA evaluation}"
+  if [ ! -d "${TEACHER_LORA_PATH}" ]; then
+    echo "Teacher LoRA adapter not found: ${TEACHER_LORA_PATH}"
+    exit 1
+  fi
+  LORA_MODULE_JSON="$(python -c \
+    'import json,sys; print(json.dumps({"name":sys.argv[1],"path":sys.argv[2],"base_model_name":sys.argv[3]}))' \
+    "${TEACHER_SERVED_MODEL}" "${TEACHER_LORA_PATH}" "${TEACHER_MODEL_PATH}")"
+  teacher_args+=(
+    --enable-lora
+    --lora-modules "${LORA_MODULE_JSON}"
+    --max-lora-rank 16
+  )
+  generation_teacher_args+=(--teacher-adapter "${TEACHER_LORA_PATH}")
+elif [ "${TEST_CONDITION}" != "base" ] && [ "${TEST_CONDITION}" != "merged" ]; then
+  echo "TEST_CONDITION must be base, lora, or merged: ${TEST_CONDITION}"
+  exit 1
+fi
+
+cleanup() {
+  kill "${TEACHER_PID:-}" "${STUDENT_PID:-}" 2>/dev/null || true
+  wait "${TEACHER_PID:-}" "${STUDENT_PID:-}" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server \
+  "${teacher_args[@]}" > logs/teacher_${PBS_JOBID}.log 2>&1 &
+TEACHER_PID=$!
+
+CUDA_VISIBLE_DEVICES=1 python -m vllm.entrypoints.openai.api_server \
+  --model "${STUDENT_MODEL}" \
+  --revision "${STUDENT_REVISION}" \
+  --served-model-name "${STUDENT_MODEL}" \
+  --reasoning-parser qwen3 \
+  --dtype bfloat16 \
+  --port "${STUDENT_PORT}" > logs/student_${PBS_JOBID}.log 2>&1 &
+STUDENT_PID=$!
+
+wait_for_server() {
+  local name="$1"
+  local port="$2"
+  local pid="$3"
+  for _ in $(seq 1 180); do
+    if ! kill -0 "${pid}" 2>/dev/null; then
+      echo "${name} vLLM exited before readiness. Check logs."
+      return 1
+    fi
+    if curl --fail --silent "http://127.0.0.1:${port}/v1/models" >/dev/null; then
+      return 0
+    fi
+    sleep 5
+  done
+  echo "Timed out waiting for ${name} vLLM."
+  return 1
+}
+
+wait_for_server teacher "${TEACHER_PORT}" "${TEACHER_PID}"
+wait_for_server student "${STUDENT_PORT}" "${STUDENT_PID}"
+
+python generate_in_context_dialogues.py \
+  "${generation_teacher_args[@]}" \
+  --teacher-base-url "http://127.0.0.1:${TEACHER_PORT}/v1" \
+  --student-model "${STUDENT_MODEL}" \
+  --student-checkpoint "${STUDENT_MODEL}" \
+  --student-revision "${STUDENT_REVISION}" \
+  --student-base-url "http://127.0.0.1:${STUDENT_PORT}/v1" \
+  --problem-selection "${SELECTION_FILE}" \
+  --seed 42 \
+  --output "${OUTPUT_FILE}"
+
+echo "Generation completed: ${OUTPUT_FILE}"

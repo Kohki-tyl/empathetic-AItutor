@@ -22,7 +22,8 @@ sys.modules[SPEC.name] = pipeline
 SPEC.loader.exec_module(pipeline)
 
 RELATIONS = ("mastered", "frontier", "one_step_beyond", "far_beyond")
-DEFAULT_OUTPUT = BASE_DIR / "data" / "openai_scope_pilot" / "results.jsonl"
+DEFAULT_SELECTION = BASE_DIR / "assignments" / "corpus_120_selection.json"
+DEFAULT_OUTPUT = BASE_DIR / "data" / "openai_scope_pilot_v2" / "results.jsonl"
 
 
 def select_examples(assignments: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
@@ -44,6 +45,7 @@ def generate_student(
     state: dict[str, Any],
     profile: dict[str, Any],
     response_mode: str,
+    required_initial_disclosure: str,
     attempts: int,
 ) -> tuple[dict[str, Any], list[str]]:
     validation_errors: list[str] = []
@@ -66,6 +68,7 @@ def generate_student(
                 allowed_knowledge=profile["prior_knowledge"],
                 expected_response_mode=response_mode,
                 latest_teacher_utterance="",
+                required_initial_disclosure=required_initial_disclosure,
             ), validation_errors
         except ValueError as exc:
             validation_errors.append(str(exc))
@@ -76,6 +79,7 @@ def generate_student(
                     "content": (
                         f"前回出力は検証エラーでした: {exc}。"
                         "初期状態、知識境界、指定応答形式を守ってJSONを再生成してください。"
+                        "far_beyondではrequired_initial_disclosureを発話の先頭へ完全一致で置いてください。"
                     ),
                 },
             ]
@@ -121,6 +125,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default="gpt-5.6-terra")
     parser.add_argument("--candidate-limit", type=int, default=120)
+    parser.add_argument("--problem-selection", type=Path, default=DEFAULT_SELECTION)
     parser.add_argument("--attempts", type=int, default=3)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--overwrite", action="store_true")
@@ -145,7 +150,10 @@ def main() -> None:
     assignments = pipeline.load_problem_profile_assignments(
         Path(config["problem_profile_assignments"]), questions, profiles,
     )
-    selected = select_examples(assignments, args.candidate_limit)
+    selected_pool = pipeline.load_problem_selection(
+        args.problem_selection, assignments, int(config["max_candidates"]),
+    )
+    selected = select_examples(selected_pool, min(args.candidate_limit, len(selected_pool)))
 
     client = OpenAI(api_key=api_key)
     student_template = (BASE_DIR / "prompts" / "student_system.txt").read_text(encoding="utf-8")
@@ -196,16 +204,21 @@ def main() -> None:
             {"role": "user", "content": json.dumps(student_payload, ensure_ascii=False)},
         ]
         student, student_errors = generate_student(
-            client, args.model, student_messages, state, profile, response_mode, args.attempts,
+            client, args.model, student_messages, state, profile, response_mode,
+            pipeline.required_initial_disclosure(assignment), args.attempts,
         )
         teacher_messages = [
             {"role": "system", "content": teacher_system},
             {
                 "role": "user",
-                "content": (
-                    f"問題: {problem}\n\n内部検算用の参照解答: {solution}\n"
-                    "参照解答は検算にだけ使い、生徒へそのまま提示しないでください。\n\n"
-                    f"生徒発話: {student['utterance']}"
+                "content": pipeline.teacher_turn_input(
+                    problem=problem,
+                    reference_solution=solution,
+                    student_utterance=student["utterance"],
+                    profile=profile,
+                    epistemic_assignment=assignment,
+                    initial_emotion=emotion,
+                    turn_index=0,
                 ),
             },
         ]

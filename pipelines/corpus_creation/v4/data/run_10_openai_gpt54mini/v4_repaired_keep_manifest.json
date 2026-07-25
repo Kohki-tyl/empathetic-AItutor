@@ -1,0 +1,105 @@
+{
+  "corpus_file": "v4_repaired_keep_corpus.jsonl",
+  "sft_file": "v4_repaired_keep_sft.jsonl",
+  "source_files": {
+    "repaired_dialogues_sft_policy.jsonl": "3fc5664b2b854640339b186186603bcc00d6915a6b283cfddfc63271c2111b8f",
+    "dialogue_reaudits_sft_policy.jsonl": "44143cd60c517451d5a84a82c080a23453f1dedfc4a70631c6149566ffe54ffe",
+    "dialogue_audits_sft_policy.jsonl": "dec3a1972afb3d3eb8af1d498d9891ac966bfcb5405b29fb3a5f4cd7f01afbcc",
+    "sft_teacher_system.txt": "8d966c0791172559374caaaaff1e7ffffbdfb7b46bcbc6b740422bcd848137cd"
+  },
+  "selection": {
+    "rule": "latest completed whole-dialogue reaudit classification == Keep",
+    "selected_dialogues": 24,
+    "candidate_ids": [
+      "v4-0014",
+      "v4-0025",
+      "v4-0030",
+      "v4-0033",
+      "v4-0035",
+      "v4-0037",
+      "v4-0045",
+      "v4-0050",
+      "v4-0055",
+      "v4-0062",
+      "v4-0063",
+      "v4-0065",
+      "v4-0071",
+      "v4-0076",
+      "v4-0081",
+      "v4-0082",
+      "v4-0083",
+      "v4-0088",
+      "v4-0089",
+      "v4-0094",
+      "v4-0095",
+      "v4-0106",
+      "v4-0108",
+      "v4-0119"
+    ]
+  },
+  "integrity": {
+    "unique_candidate_ids": true,
+    "student_dialogues_unchanged": 24,
+    "forbidden_control_characters": 0,
+    "unresolved_issues": 0,
+    "unresolved_repair_instructions": 0
+  },
+  "sft_statistics": {
+    "records": 24,
+    "assistant_targets": 183,
+    "average_teacher_turns": 7.62,
+    "average_record_characters": 6409.21,
+    "maximum_record_characters": 11243,
+    "tokenizer_length_audit_required": true
+  },
+  "evaluation": {
+    "average_total_score": 56.79,
+    "minimum_total_score": 53,
+    "maximum_total_score": 60,
+    "final_field_averages": {
+      "mathematical_accuracy_score": 9.96,
+      "error_diagnosis_recovery_score": 9.62,
+      "cognitive_empathy_score": 9.38,
+      "emotional_support_score": 8.79,
+      "adaptive_scaffolding_score": 9.5,
+      "verification_completion_score": 9.54
+    },
+    "initial_field_averages": {
+      "mathematical_accuracy_score": 8.88,
+      "error_diagnosis_recovery_score": 8.46,
+      "cognitive_empathy_score": 8.83,
+      "emotional_support_score": 8.21,
+      "adaptive_scaffolding_score": 7.54,
+      "verification_completion_score": 6.29
+    },
+    "completed_dialogues": 10,
+    "incomplete_dialogues": 14,
+    "metadata_warning_dialogues": 23,
+    "acceptable_incomplete_dialogues": 14
+  },
+  "distribution": {
+    "profiles": {
+      "V4-S01": 3,
+      "V4-S02": 3,
+      "V4-S03": 2,
+      "V4-S04": 6,
+      "V4-S05": 5,
+      "V4-S06": 1,
+      "V4-S07": 3,
+      "V4-S08": 1
+    },
+    "scope_relations": {
+      "far_beyond": 6,
+      "frontier": 5,
+      "mastered": 5,
+      "one_step_beyond": 8
+    },
+    "initial_emotions": {
+      "anxious": 5,
+      "confused": 6,
+      "curious": 2,
+      "engaged": 5,
+      "frustrated": 6
+    }
+  }
+}

@@ -54,6 +54,9 @@ def row(identifier: str = "D-001") -> dict:
 
 
 class V4SftTests(unittest.TestCase):
+    def test_token_ids_accepts_transformers_5_batch_encoding_shape(self) -> None:
+        self.assertEqual(MODULE._token_ids({"input_ids": [1, 2, 3]}), [1, 2, 3])
+
     def test_validate_messages_accepts_v4_record(self) -> None:
         MODULE.validate_messages([row()], 1)
 
@@ -85,6 +88,12 @@ class V4SftTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "analysis/final形式"):
             MODULE.validate_messages([value], 1)
 
+    def test_validate_messages_rejects_control_character(self) -> None:
+        value = row()
+        value["messages"][1]["content"] += "\x00"
+        with self.assertRaisesRegex(ValueError, "制御文字"):
+            MODULE.validate_messages([value], 1)
+
     def test_validate_messages_rejects_nested_reserved_marker(self) -> None:
         value = row()
         value["messages"][2]["content"] = (
@@ -113,6 +122,7 @@ class V4SftTests(unittest.TestCase):
         value = row()
         encoded = MODULE.encode_with_assistant_mask(tokenizer, value, 4096)
         self.assertEqual(len(encoded.input_ids), len(encoded.labels))
+        self.assertEqual(len(encoded.input_ids), len(encoded.loss_weights))
         target_positions = [
             index for index, label in enumerate(encoded.labels) if label != -100
         ]
@@ -122,6 +132,24 @@ class V4SftTests(unittest.TestCase):
         self.assertEqual(encoded.labels[first_assistant_header], -100)
         first_user_header = encoded.input_ids.index(FakeTokenizer.ROLE["user"])
         self.assertEqual(encoded.labels[first_user_header], -100)
+        self.assertTrue(all(
+            weight == 0.0
+            for label, weight in zip(encoded.labels, encoded.loss_weights)
+            if label == -100
+        ))
+
+    def test_final_tokens_have_stronger_loss_weight(self) -> None:
+        encoded = MODULE.encode_with_assistant_mask(
+            FakeTokenizer(), row(), 4096, analysis_loss_weight=0.25, final_loss_weight=1.0
+        )
+        active = {
+            weight
+            for label, weight in zip(encoded.labels, encoded.loss_weights)
+            if label != -100
+        }
+        self.assertEqual(active, {0.25, 1.0})
+        self.assertGreater(encoded.analysis_tokens, 0)
+        self.assertGreater(encoded.final_tokens, 0)
 
     def test_overlength_aborts_without_truncation(self) -> None:
         with self.assertRaisesRegex(ValueError, "自動切り詰め禁止"):
@@ -135,11 +163,14 @@ class V4SftTests(unittest.TestCase):
     def test_resolve_config_rejects_missing_revision(self) -> None:
         config = {
             "dataset": "data.jsonl",
+            "dataset_sha256": "0" * 64,
             "expected_records": 1,
             "model_name": "model",
             "model_revision": "",
             "output_dir": "out",
             "max_length": 10,
+            "analysis_loss_weight": 0.25,
+            "final_loss_weight": 1.0,
             "validation_ratio": 0.1,
             "seed": 42,
             "num_train_epochs": 1,
@@ -168,6 +199,13 @@ class V4SftTests(unittest.TestCase):
             path.write_text(json.dumps(config), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "model_revision"):
                 MODULE.resolve_config(path)
+
+    def test_assert_dataset_hash_rejects_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "data.jsonl"
+            path.write_text("{}\n", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "SHA-256"):
+                MODULE.assert_dataset_hash(path, "0" * 64)
 
 
 if __name__ == "__main__":

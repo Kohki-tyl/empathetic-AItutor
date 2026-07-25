@@ -2,16 +2,48 @@
 #PBS -q rt_HG
 #PBS -l select=1
 #PBS -l walltime=12:00:00
-#PBS -P CHANGE_TO_YOUR_ABCI_GROUP
 #PBS -N v4-corpus-generate
 #PBS -j oe
 
-set -eu
+set -euo pipefail
 
 cd "${PBS_O_WORKDIR}"
-source .venv/bin/activate
+if [ ! -f run_v4.py ] || [ ! -f config.json ]; then
+  echo "PBS_O_WORKDIR must be the v4 directory: ${PBS_O_WORKDIR}"
+  exit 1
+fi
 
-export STUDENT_BASE_URL="${STUDENT_BASE_URL:-http://127.0.0.1:8001/v1}"
+module load python/3.12/3.12.9
+
+if [ ! -x .venv/bin/python ]; then
+  echo "Missing v4/.venv. Create it according to abci/README.md before qsub."
+  exit 1
+fi
+if [ ! -f .env ]; then
+  echo "Missing v4/.env. Copy .env.example and set OPENAI_API_KEY before qsub."
+  exit 1
+fi
+
+source .venv/bin/activate
+set -a
+source .env
+set +a
+
+STUDENT_PROVIDER=$(python -c 'import json; print(json.load(open("config.json", encoding="utf-8")).get("student_provider", "vllm"))')
+
+if [ "${STUDENT_PROVIDER}" = "openai" ]; then
+  python run_v4.py preflight --config config.json
+  python run_v4.py generate --config config.json
+  python run_v4.py status --config config.json
+  exit 0
+fi
+
+module load cuda/13.0/13.0.1
+python run_v4.py preflight --config config.json
+VLLM_PORT=$(python -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()')
+export VLLM_PORT
+
+export STUDENT_BASE_URL="http://127.0.0.1:${VLLM_PORT}/v1"
 export STUDENT_API_KEY="${STUDENT_API_KEY:-EMPTY}"
 
 STUDENT_MODEL=$(python -c 'import json; print(json.load(open("config.json", encoding="utf-8"))["student_model"])')
@@ -29,7 +61,7 @@ vllm serve "${STUDENT_MODEL}" \
   --served-model-name "${STUDENT_MODEL}" \
   --reasoning-parser qwen3 \
   --host 127.0.0.1 \
-  --port 8001 \
+  --port "${VLLM_PORT}" \
   --dtype bfloat16 \
   --max-model-len 16384 \
   > data/vllm_student.log 2>&1 &
@@ -38,7 +70,7 @@ trap 'kill ${VLLM_PID} 2>/dev/null || true' EXIT
 
 READY=0
 for _ in $(seq 1 120); do
-  if curl -fsS http://127.0.0.1:8001/v1/models >/dev/null; then
+  if curl -fsS "http://127.0.0.1:${VLLM_PORT}/v1/models" >/dev/null; then
     READY=1
     break
   fi

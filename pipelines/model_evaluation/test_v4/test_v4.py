@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
+import os
 import sys
 import unittest
 from pathlib import Path
@@ -23,6 +25,15 @@ generation = load_module("v4_test_generation", "generate_in_context_dialogues.py
 evaluation = load_module("v4_test_evaluation", "evaluate_in_context_dialogues.py")
 
 
+def canonical_prompt_hash(path: Path) -> str:
+    text = path.read_text(encoding="utf-8").replace("\r\n", "\n").rstrip("\n")
+    if path.suffix == ".json":
+        text = json.dumps(
+            json.loads(text), ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+        )
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 class V4StudentAlignmentTest(unittest.TestCase):
     def setUp(self) -> None:
         self.profile = {
@@ -39,6 +50,42 @@ class V4StudentAlignmentTest(unittest.TestCase):
     def test_assigned_initial_emotion_sets_initial_state(self) -> None:
         self.assertEqual(self.state["emotion"], "confused")
         self.assertEqual(self.state["confidence"], 0.35)
+
+    def test_teacher_receives_initial_emotion_label_only_on_first_turn(self) -> None:
+        first = generation.teacher_user_input("1+1は？", "confused", "3かな。", 0)
+        self.assertIn("初期感情ラベル: confused", first)
+        self.assertIn("生徒発話: 3かな。", first)
+        self.assertEqual(
+            generation.teacher_user_input("1+1は？", "confused", "2です。", 1),
+            "2です。",
+        )
+
+    def test_lora_serving_metadata_requires_actual_child_model(self) -> None:
+        evidence = generation.validate_teacher_serving_metadata(
+            [{"id": "v4-sft", "root": "adapter/v4", "parent": "base-swallow"}],
+            "v4-sft", "lora", "adapter/v4", "base-swallow",
+        )
+        self.assertEqual(evidence["serving_mode"], "lora")
+        self.assertEqual(evidence["parent"], "base-swallow")
+        with self.assertRaisesRegex(RuntimeError, "LoRA model card"):
+            generation.validate_teacher_serving_metadata(
+                [{"id": "v4-sft", "root": "base-swallow", "parent": None}],
+                "v4-sft", "lora", "adapter/v4",
+            )
+
+    def test_judge_rejects_incomplete_generation_rows(self) -> None:
+        valid = {
+            "run_id": "run-1",
+            "phase1_turns": 1,
+            "dialogue_log": [{"role": "student", "content": "分かりません"}],
+            "phase2_student_answer": r"\boxed{わからない}",
+            "phase2_student_trace": {"answer": r"\boxed{わからない}"},
+            "generation_error": None,
+        }
+        evaluation.validate_generation_inputs([valid])
+        failed = dict(valid, generation_error="Phase2 timeout", phase2_student_answer="")
+        with self.assertRaisesRegex(ValueError, "Judgeを開始しません"):
+            evaluation.validate_generation_inputs([failed])
 
     def test_initial_emotion_cannot_change_before_teacher_intervention(self) -> None:
         changed = dict(self.state, emotion="engaged")
@@ -76,29 +123,51 @@ class V4StudentAlignmentTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "more than 0.25"):
             generation.validate_student_state(changed, self.state)
 
-    def test_acquired_knowledge_cannot_be_removed(self) -> None:
+    def test_empty_delta_preserves_acquired_knowledge(self) -> None:
         previous = dict(self.state, acquired_knowledge=["移項"])
-        changed = dict(previous, acquired_knowledge=[])
-        with self.assertRaisesRegex(ValueError, "was removed"):
-            generation.validate_student_state(changed, previous)
+        model_state = {
+            key: value for key, value in previous.items()
+            if key != "acquired_knowledge"
+        }
+        normalized, _ = generation.validate_student_state(
+            model_state, previous, newly_acquired_knowledge=[],
+        )
+        self.assertEqual(normalized["acquired_knowledge"], ["移項"])
+
+    def test_student_schema_uses_knowledge_delta(self) -> None:
+        schema = generation.STUDENT_TURN_SCHEMA["json_schema"]["schema"]
+        self.assertNotIn(
+            "acquired_knowledge",
+            schema["properties"]["state_after"]["properties"],
+        )
+        self.assertIn("newly_acquired_knowledge", schema["properties"])
 
     def test_corpus_prompts_and_profiles_are_synced(self) -> None:
-        corpus_prompt_dir = BASE_DIR.parent.parent / "corpus_creation" / "v4" / "prompts"
-        if not corpus_prompt_dir.exists():
-            self.skipTest("コーパス作成フォルダーを同時にコピーしていない環境")
-        pairs = {
-            "student_profiles.json": "student_profiles.json",
-            "initial_emotions.json": "initial_emotions.json",
-            "student_system.txt": "student_system.txt",
-            "sft_teacher_system.txt": "teacher_system.txt",
-        }
-        for corpus_name, test_name in pairs.items():
-            corpus_text = (corpus_prompt_dir / corpus_name).read_text(encoding="utf-8").replace("\r\n", "\n").rstrip("\n")
-            test_text = (BASE_DIR / "prompts" / test_name).read_text(encoding="utf-8").replace("\r\n", "\n").rstrip("\n")
-            if corpus_name.endswith(".json"):
-                self.assertEqual(json.loads(corpus_text), json.loads(test_text), f"同期が必要です: {test_name}")
-            else:
-                self.assertEqual(corpus_text, test_text, f"同期が必要です: {test_name}")
+        sync_manifest = json.loads(
+            (BASE_DIR / "prompts" / "corpus_prompt_sync.json").read_text(encoding="utf-8")
+        )
+        configured = os.getenv("V4_CORPUS_PROMPT_DIR")
+        candidates = [
+            Path(configured) if configured else None,
+            BASE_DIR.parent.parent / "corpus_creation" / "v4" / "prompts",
+            BASE_DIR.parents[2] / "v4" / "prompts",
+        ]
+        corpus_prompt_dir = next(
+            (candidate for candidate in candidates if candidate and candidate.is_dir()), None,
+        )
+        for entry in sync_manifest["files"]:
+            test_path = BASE_DIR / "prompts" / entry["test_name"]
+            self.assertEqual(
+                canonical_prompt_hash(test_path), entry["canonical_sha256"],
+                f"同梱promptが同期manifestと不一致です: {entry['test_name']}",
+            )
+            if corpus_prompt_dir is not None:
+                corpus_path = corpus_prompt_dir / entry["corpus_name"]
+                self.assertTrue(corpus_path.is_file(), f"コーパスpromptがありません: {corpus_path}")
+                self.assertEqual(
+                    canonical_prompt_hash(corpus_path), entry["canonical_sha256"],
+                    f"コーパスとtest-v4の同期が必要です: {entry['test_name']}",
+                )
 
     def test_out_of_scope_problem_forces_scope_limited_response(self) -> None:
         self.assertEqual(
@@ -114,6 +183,67 @@ class V4StudentAlignmentTest(unittest.TestCase):
             }),
             "plausible_incorrect",
         )
+
+    def test_staged_test_selections_are_balanced_disjoint_parent_partition(self) -> None:
+        assignments = generation.load_epistemic_assignments(
+            BASE_DIR / "prompts" / "problem_profile_assignments.jsonl",
+        )
+        excluded = generation.read_excluded_ids(
+            BASE_DIR.parent / "shared" / "questions" / "excluded_test_question_ids.json",
+        )
+        parent_ids = set(generation.load_problem_selection(
+            BASE_DIR / "prompts" / "test_120_selection.json", assignments, excluded,
+        ))
+        primary_ids = set(generation.load_problem_selection(
+            BASE_DIR / "prompts" / "test_60_primary_selection.json", assignments, excluded,
+        ))
+        confirmation_ids = set(generation.load_problem_selection(
+            BASE_DIR / "prompts" / "test_60_confirmation_selection.json", assignments, excluded,
+        ))
+        self.assertEqual(len(parent_ids), 120)
+        self.assertEqual(len(primary_ids), 60)
+        self.assertEqual(len(confirmation_ids), 60)
+        self.assertFalse(primary_ids & confirmation_ids)
+        self.assertEqual(primary_ids | confirmation_ids, parent_ids)
+        for source_ids, expected in ((primary_ids, 15), (confirmation_ids, 15)):
+            counts = {
+                relation: sum(
+                    assignments[source_id]["scope_relation"] == relation
+                    for source_id in source_ids
+                )
+                for relation in ("mastered", "frontier", "one_step_beyond", "far_beyond")
+            }
+            self.assertEqual(set(counts.values()), {expected})
+
+    def test_far_beyond_initial_utterance_requires_explicit_two_attempt_prefix(self) -> None:
+        disclosure = (
+            "1回目は問題文の条件を書き出しました。"
+            "2回目は既習の方法で式を作ろうとしました。"
+            "2回とも、未習の関係が必要な箇所で止まりました。"
+        )
+        value = {
+            "state_after": self.state,
+            "newly_acquired_knowledge": [],
+            "response_stage": "help_seeking",
+            "knowledge_used": [],
+            "state_update_reason": "同じ箇所で二度停止しているため",
+            "utterance": "次にどの関係を使えばよいですか。",
+        }
+        with self.assertRaisesRegex(ValueError, "2回の試行履歴"):
+            generation.parse_student_turn(
+                json.dumps(value, ensure_ascii=False), self.state,
+                allow_emotion_change=False,
+                expected_response_mode="scope_limited_help_seeking",
+                required_initial_disclosure=disclosure,
+            )
+        value["utterance"] = disclosure + "次にどの関係を使えばよいですか。"
+        accepted = generation.parse_student_turn(
+            json.dumps(value, ensure_ascii=False), self.state,
+            allow_emotion_change=False,
+            expected_response_mode="scope_limited_help_seeking",
+            required_initial_disclosure=disclosure,
+        )
+        self.assertTrue(accepted["utterance"].startswith(disclosure))
 
     def test_phase2_receives_natural_dialogue_only(self) -> None:
         dialogue = [

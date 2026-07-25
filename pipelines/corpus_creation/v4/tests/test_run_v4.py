@@ -61,6 +61,53 @@ def valid_teacher_turn(**updates):
 
 
 class PipelineLogicTests(unittest.TestCase):
+    def test_checked_in_config_uses_bundled_questions(self):
+        config_path = MODULE_PATH.parent / "config.json"
+        config = run_v4.load_config(config_path)
+        questions = Path(config["questions"])
+        self.assertTrue(questions.is_file())
+        self.assertEqual(questions.parent, MODULE_PATH.parent / "questions")
+
+    def test_teacher_turn_input_exposes_only_initial_fixed_context(self):
+        profile = {
+            "prior_knowledge": ["整数の加法"],
+            "unknown_knowledge": ["指数法則"],
+            "max_independent_math_level": "中学1年相当",
+        }
+        assignment = {
+            "scope_relation": "far_beyond",
+            "prior_attempt_history": {
+                "attempt_count": 2,
+                "attempts": ["1回目", "2回目"],
+                "repeated_stuck_point": "指数記法",
+            },
+        }
+        content = run_v4.teacher_turn_input(
+            problem="x²とは何か", reference_solution="xを2回掛ける",
+            student_utterance="2回試したけれど分かりません。",
+            profile=profile, epistemic_assignment=assignment,
+            initial_emotion="frustrated", turn_index=0,
+        )
+        self.assertIn("内部検算用の参照解答", content)
+        self.assertIn('"scope_relation": "far_beyond"', content)
+        self.assertIn('"prior_knowledge": ["整数の加法"]', content)
+        self.assertIn('"unknown_knowledge": ["指数法則"]', content)
+        self.assertIn('"attempt_count": 2', content)
+        self.assertIn('"initial_emotion": "frustrated"', content)
+        self.assertNotIn("current_emotion", content)
+        self.assertNotIn("acquired_knowledge", content)
+        self.assertIn("生徒発話: 2回試したけれど分かりません。", content)
+
+        later = run_v4.teacher_turn_input(
+            problem="x²とは何か", reference_solution="xを2回掛ける",
+            student_utterance="文字は使えます。",
+            profile=profile, epistemic_assignment=assignment,
+            initial_emotion="frustrated", turn_index=1,
+        )
+        self.assertNotIn("内部検算用の参照解答", later)
+        self.assertNotIn("学習者条件", later)
+        self.assertEqual(later, "文字は使えます。")
+
     def test_student_vllm_call_uses_model_card_max_tokens_parameter(self):
         captured = {}
 
@@ -91,6 +138,42 @@ class PipelineLogicTests(unittest.TestCase):
 
     def test_keep_threshold(self):
         self.assertEqual(run_v4.classify_audit(audit_with(score=8)), "Keep")
+
+    def test_dialogue_keep_ignores_metadata_only_warnings(self):
+        audit = audit_with(score=8)
+        audit["metadata_warnings"] = [
+            "knowledge_usedが実使用知識より広い",
+            "active_misconceptionの更新が遅れている",
+        ]
+        self.assertEqual(run_v4.classify_dialogue_audit(audit), "Keep")
+
+    def test_dialogue_rejects_observable_student_profile_violation(self):
+        audit = audit_with(score=8, student_profile_consistent=False)
+        audit["metadata_warnings"] = []
+        self.assertEqual(run_v4.classify_dialogue_audit(audit), "Reject")
+
+    def test_dialogue_keep_allows_accurate_empathetic_max_turn_incompletion(self):
+        audit = audit_with(
+            score=8,
+            adaptive_scaffolding_score=6,
+            verification_completion_score=2,
+            completion_decision_appropriate=False,
+        )
+        audit["metadata_warnings"] = []
+        audit["acceptable_incompleteness"] = [
+            "最大10ターンで最終解と理由説明に未到達",
+            "高難度問題で足場を細かく提示中に上限へ到達",
+        ]
+        self.assertEqual(run_v4.classify_dialogue_audit(audit), "Keep")
+
+    def test_acceptable_incompleteness_never_hides_math_error(self):
+        audit = audit_with(
+            score=8, mathematically_correct=False, critical_failure=True,
+            context_repairable=True, repair_instructions=["数学的誤りを修正する"],
+        )
+        audit["metadata_warnings"] = []
+        audit["acceptable_incompleteness"] = ["最大ターン到達"]
+        self.assertEqual(run_v4.classify_dialogue_audit(audit), "Repair")
 
     def test_keep_cannot_contain_unresolved_issue_or_repair_instruction(self):
         self.assertEqual(run_v4.classify_audit(audit_with(
@@ -270,7 +353,51 @@ class PipelineLogicTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "initial confidence"):
             run_v4.validate_student_turn(value, previous, allow_emotion_change=False)
 
-    def test_student_cannot_report_out_of_boundary_knowledge(self):
+    def test_far_beyond_initial_turn_adds_two_attempt_disclosure_prefix(self):
+        previous = {
+            "understanding_level": 0, "confidence": 0.35,
+            "active_misconception": "未習概念で停止する", "emotion": "frustrated",
+            "acquired_knowledge": [], "remaining_unknowns": ["高校数学"],
+        }
+        disclosure = (
+            "1回目は問題文の条件を書き出しました。"
+            "2回目は既習の方法で式を作ろうとしました。"
+            "2回とも、未習の関係が必要な箇所で止まりました。"
+        )
+        value = {
+            "state_after": previous,
+            "response_stage": "help_seeking", "knowledge_used": [],
+            "state_update_reason": "同じ箇所で二度停止しているため",
+            "utterance": "中心と半径は分かりますが、次に何を使いますか。",
+        }
+        accepted = run_v4.validate_student_turn(
+            value, previous, allow_emotion_change=False,
+            expected_response_mode="scope_limited_help_seeking",
+            required_initial_disclosure=disclosure,
+        )
+        self.assertTrue(accepted["utterance"].startswith(disclosure))
+        self.assertIn("required_attempt_history_prefixed", accepted["state_normalizations"])
+
+    def test_blank_active_misconception_is_preserved(self):
+        previous = {
+            "understanding_level": 1, "confidence": 0.5,
+            "active_misconception": "符号を反転し忘れる", "emotion": "neutral",
+            "acquired_knowledge": [], "remaining_unknowns": ["x"],
+        }
+        value = {
+            "state_after": {**previous, "active_misconception": ""},
+            "newly_acquired_knowledge": [], "response_stage": "attempt",
+            "knowledge_used": [], "state_update_reason": "まだ誤りが残っている",
+            "utterance": "ここを移項するのかな。",
+        }
+        accepted = run_v4.validate_student_turn(value, previous)
+        self.assertEqual(
+            accepted["state_after"]["active_misconception"],
+            previous["active_misconception"],
+        )
+        self.assertIn("blank_active_misconception_preserved", accepted["state_normalizations"])
+
+    def test_out_of_boundary_knowledge_metadata_is_deferred_to_dialogue_audit(self):
         previous = {
             "understanding_level": 1, "confidence": 0.5,
             "active_misconception": "m", "emotion": "neutral",
@@ -281,10 +408,13 @@ class PipelineLogicTests(unittest.TestCase):
             "response_stage": "attempt", "knowledge_used": ["微分"],
             "state_update_reason": "試した", "utterance": "微分してみます。",
         }
-        with self.assertRaisesRegex(ValueError, "outside the profile boundary"):
-            run_v4.validate_student_turn(
-                value, previous, allowed_knowledge=["一次方程式"],
-            )
+        accepted = run_v4.validate_student_turn(
+            value, previous, allowed_knowledge=["一次方程式"],
+        )
+        self.assertIn(
+            "knowledge_used_outside_boundary_retained_for_audit",
+            accepted["state_normalizations"],
+        )
 
     def test_new_knowledge_must_be_copied_from_latest_teacher(self):
         previous = {
@@ -305,6 +435,55 @@ class PipelineLogicTests(unittest.TestCase):
             value, previous, latest_teacher_utterance="ここでは解の公式を使います。",
         )
         self.assertEqual(accepted["state_after"]["acquired_knowledge"], ["解の公式"])
+
+    def test_new_schema_accumulates_knowledge_delta_without_reoutput(self):
+        previous = {
+            "understanding_level": 1, "confidence": 0.5,
+            "active_misconception": "m", "emotion": "neutral",
+            "acquired_knowledge": ["移項"], "remaining_unknowns": ["x"],
+        }
+        model_state = {
+            key: value for key, value in previous.items()
+            if key != "acquired_knowledge"
+        }
+        value = {
+            "state_after": model_state,
+            "newly_acquired_knowledge": ["両辺を同じ数で割る"],
+            "response_stage": "attempt", "knowledge_used": ["移項"],
+            "state_update_reason": "直前の説明を一段階使った",
+            "utterance": "まず移項してみます。",
+        }
+        accepted = run_v4.validate_student_turn(
+            value, previous,
+            allowed_knowledge=["移項"],
+            latest_teacher_utterance="次は両辺を同じ数で割ると整理できます。",
+        )
+        self.assertEqual(
+            accepted["state_after"]["acquired_knowledge"],
+            ["移項", "両辺を同じ数で割る"],
+        )
+        self.assertEqual(
+            accepted["newly_acquired_knowledge"], ["両辺を同じ数で割る"],
+        )
+
+    def test_student_schema_requests_delta_not_full_acquired_knowledge(self):
+        state_schema = run_v4.STUDENT_SCHEMA["json_schema"]["schema"]["properties"]["state_after"]
+        top_properties = run_v4.STUDENT_SCHEMA["json_schema"]["schema"]["properties"]
+        self.assertNotIn("acquired_knowledge", state_schema["properties"])
+        self.assertIn("newly_acquired_knowledge", top_properties)
+
+    def test_student_turn_schema_constrains_initial_emotion_and_stage(self):
+        previous = {"emotion": "anxious"}
+        schema = run_v4.student_schema_for_turn(
+            previous, "scope_limited_help_seeking", allow_emotion_change=False,
+        )
+        properties = schema["json_schema"]["schema"]["properties"]
+        self.assertEqual(
+            properties["state_after"]["properties"]["emotion"]["enum"], ["anxious"],
+        )
+        self.assertEqual(
+            properties["response_stage"]["enum"], ["observation", "help_seeking"],
+        )
 
     def test_completed_teacher_cannot_add_next_support(self):
         value = valid_teacher_turn(
@@ -333,6 +512,7 @@ class PipelineLogicTests(unittest.TestCase):
             "student_top_k": 20, "student_min_p": 0, "student_max_tokens": 100,
             "repair_model": "r", "repair_reasoning_effort": "medium",
             "questions": "q.jsonl", "problem_profile_assignments": "a.jsonl",
+            "problem_selection": "s.json",
             "output_dir": "out",
         }
         with tempfile.TemporaryDirectory() as directory:
@@ -389,6 +569,7 @@ class PipelineLogicTests(unittest.TestCase):
             messages = sft[0]["messages"]
             self.assertEqual([message["role"] for message in messages], ["system", "user", "assistant"])
             self.assertIn("問題: 1+1は？", messages[1]["content"])
+            self.assertIn("初期感情ラベル: confused", messages[1]["content"])
             self.assertIn("生徒発話: 3かな。", messages[1]["content"])
             self.assertIn("<analysis>", sft[0]["messages"][-1]["content"])
             manifest = run_v4.read_json(file_paths["manifest"])
@@ -399,10 +580,10 @@ class PipelineLogicTests(unittest.TestCase):
             )
             self.assertEqual(manifest["final"]["accepted_repaired_turns"], 0)
 
-    def test_resume_rejects_immutable_config_change_but_allows_limit_extension(self):
+    def test_resume_allows_target_extension_but_rejects_candidate_change(self):
         with tempfile.TemporaryDirectory() as directory:
             config = {
-                "target_dialogues": 1, "max_candidates": 1, "max_turns": 1, "seed": 1,
+                "target_dialogues": 1, "max_candidates": 2, "max_turns": 1, "seed": 1,
                 "teacher_model": "t", "teacher_reasoning_effort": "medium",
                 "student_model": "s", "student_model_revision": "rev",
                 "vllm_version": "0.25.1", "student_temperature": 0.6,
@@ -414,14 +595,18 @@ class PipelineLogicTests(unittest.TestCase):
             file_paths = run_v4.paths(config)
             run_v4.save_manifest(file_paths["manifest"], run_v4.default_manifest(config))
 
-            extended = {**config, "target_dialogues": 2, "max_candidates": 2}
+            extended = {**config, "target_dialogues": 2}
             manifest = run_v4.load_manifest(extended, file_paths)
-            self.assertEqual(manifest["current_limits"]["max_candidates"], 2)
+            self.assertEqual(manifest["current_limits"]["target_dialogues"], 2)
 
             run_v4.save_manifest(file_paths["manifest"], manifest)
-            decreased = {**extended, "target_dialogues": 1, "max_candidates": 1}
+            decreased = {**extended, "target_dialogues": 1}
             with self.assertRaises(RuntimeError):
                 run_v4.load_manifest(decreased, file_paths)
+
+            changed_candidates = {**extended, "max_candidates": 3}
+            with self.assertRaises(RuntimeError):
+                run_v4.load_manifest(changed_candidates, file_paths)
 
             changed = {**extended, "seed": 2}
             with self.assertRaises(RuntimeError):

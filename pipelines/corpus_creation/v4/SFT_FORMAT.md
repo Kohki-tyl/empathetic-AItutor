@@ -4,15 +4,17 @@
 
 1対話を1レコードとするmessages JSONLを使う。感情変化、誤概念の持続、支援方法の変更を学習するため、通常はターン単位へ分割しない。
 
+次のSFTの目的は、認知的・情緒的共感タスクと数学的指導タスクの両方の精度向上である。完答対話だけへ限定せず、高難度問題に対して正確で共感的な支援を継続している未完了対話も正例に含める。これにより、最終解を急いで提示する行動ではなく、生徒の状態に応じた支援過程を学習対象とする。
+
 ```text
 system: v4教師system prompt
-user: 問題と最初の生徒発話
+user: 問題、初期感情ラベル、最初の生徒発話
 assistant: <analysis>...</analysis><final>...</final>
 user: 2回目以降の生徒発話
 assistant: <analysis>...</analysis><final>...</final>
 ```
 
-system → user → assistantを厳密に交互配置し、連続する同一roleは変換時に拒否する。初回Keep対話と、文脈整合Repair後に全教師ターンの再監査を通過した対話だけを変換する。
+system → user → assistantを厳密に交互配置し、連続する同一roleは変換時に拒否する。初期感情ラベルは最初のuserだけに含め、現在感情は渡さない。初回Keep対話と、文脈整合Repair後に全教師ターンの再監査を通過した対話だけを変換する。
 
 ## assistant教師信号
 

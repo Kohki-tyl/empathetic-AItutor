@@ -229,6 +229,40 @@ def dialogue_text(dialogue: list[dict[str, Any]]) -> str:
     return "\n".join(blocks)
 
 
+def validate_generation_inputs(rows: list[dict[str, Any]]) -> None:
+    if not rows:
+        raise ValueError("Judge対象の生成結果が空です")
+    seen: set[str] = set()
+    failures: list[str] = []
+    for index, row in enumerate(rows):
+        run_id = str(row.get("run_id", "")).strip()
+        reasons: list[str] = []
+        if not run_id:
+            reasons.append("run_id欠損")
+        elif run_id in seen:
+            reasons.append("run_id重複")
+        seen.add(run_id)
+        if row.get("generation_error"):
+            reasons.append(f"generation_error={row['generation_error']}")
+        if int(row.get("phase1_turns", 0)) <= 0:
+            reasons.append("Phase 1対話なし")
+        dialogue = row.get("dialogue_log")
+        if not isinstance(dialogue, list) or not dialogue:
+            reasons.append("dialogue_log欠損")
+        if not str(row.get("phase2_student_answer", "")).strip():
+            reasons.append("Phase 2回答なし")
+        if not isinstance(row.get("phase2_student_trace"), dict):
+            reasons.append("Phase 2構造記録なし")
+        if reasons:
+            failures.append(f"{run_id or f'row-{index}'}: {', '.join(reasons)}")
+    if failures:
+        preview = "; ".join(failures[:5])
+        raise ValueError(
+            f"生成未完了のためJudgeを開始しません: {len(failures)}/{len(rows)}件。"
+            f"先に生成を再実行してください。{preview}"
+        )
+
+
 def recompute_total(result: dict[str, Any], score_fields: list[str]) -> dict[str, Any]:
     if all(isinstance(result.get(field), int) for field in score_fields):
         result = dict(result)
@@ -249,6 +283,7 @@ def main() -> None:
         raise SystemExit("生成ログを保持するため、--inputと--outputには別ファイルを指定してください。")
 
     rows = read_jsonl(args.input)
+    validate_generation_inputs(rows)
     excluded_ids = read_excluded_ids(args.excluded_question_ids)
     excluded_rows = [str(row.get("source_id")) for row in rows if str(row.get("source_id")) in excluded_ids]
     if excluded_rows:

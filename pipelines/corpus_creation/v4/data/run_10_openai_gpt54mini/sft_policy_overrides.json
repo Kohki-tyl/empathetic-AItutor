@@ -1,0 +1,29 @@
+{
+  "policy": "accurate_empathetic_incomplete_dialogues_are_keep",
+  "description": "最終解・検算・生徒自身の理由説明への未到達、または高難度問題で正確かつ共感的な細かな足場を継続中にmax_turnsへ達したことだけを非Keep理由から除外する。数学的誤り、誤答判定、プロフィール逸脱、制御文字、根拠不足、局所的にも前進しない支援不全は除外しない。",
+  "promote_to_keep": [
+    "v4-0004",
+    "v4-0016",
+    "v4-0017",
+    "v4-0022",
+    "v4-0047",
+    "v4-0048",
+    "v4-0051",
+    "v4-0056",
+    "v4-0058",
+    "v4-0060",
+    "v4-0064",
+    "v4-0067",
+    "v4-0069",
+    "v4-0078",
+    "v4-0084",
+    "v4-0091",
+    "v4-0099",
+    "v4-0107"
+  ],
+  "remain_non_keep_examples": {
+    "mathematical_or_explanatory_error": ["v4-0014", "v4-0025", "v4-0030", "v4-0037", "v4-0062", "v4-0065", "v4-0081", "v4-0083", "v4-0095", "v4-0108", "v4-0119"],
+    "nonproductive_repetition_or_local_support_failure": ["v4-0033", "v4-0055", "v4-0063", "v4-0089"],
+    "surface_student_or_text_quality_failure": ["v4-0035", "v4-0045", "v4-0050", "v4-0076", "v4-0106"]
+  }
+}

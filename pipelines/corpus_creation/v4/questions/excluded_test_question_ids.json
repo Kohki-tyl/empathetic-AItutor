@@ -1,0 +1,24 @@
+{
+  "source": "pipelines/model_evaluation/test_v2/validated_questions/validation_report.json",
+  "reason": "構造検査で元問題または類似問題の評価妥当性に問題が見つかったため、全評価条件で共通除外する",
+  "excluded_source_ids": [
+    "math_train_1000",
+    "math_train_1007",
+    "math_train_1024",
+    "math_train_1026",
+    "math_train_1039",
+    "math_train_1041",
+    "math_train_1055",
+    "math_train_1080",
+    "math_train_1081",
+    "math_train_898",
+    "math_train_900",
+    "math_train_934",
+    "math_train_938",
+    "math_train_945",
+    "math_train_954",
+    "math_train_959",
+    "math_train_962",
+    "math_train_992"
+  ]
+}

@@ -30,6 +30,7 @@ STUDENT_STATE_KEYS = {
     "understanding_level", "confidence", "active_misconception", "emotion",
     "acquired_knowledge", "remaining_unknowns",
 }
+STUDENT_MODEL_STATE_KEYS = STUDENT_STATE_KEYS - {"acquired_knowledge"}
 STUDENT_EMOTIONS = [
     "engaged", "curious", "neutral", "confused", "frustrated", "anxious",
     "bored", "eureka", "relieved", "proud",
@@ -57,6 +58,8 @@ STUDENT_LEAK_MARKERS = (
 class Config:
     teacher_base_url: str
     teacher_model: str
+    teacher_serving_mode: str
+    teacher_revision: str | None
     student_base_url: str
     student_model: str
     student_revision: str
@@ -90,14 +93,16 @@ STUDENT_TURN_SCHEMA = {
                             "type": "string",
                             "enum": STUDENT_EMOTIONS,
                         },
-                        "acquired_knowledge": {"type": "array", "items": {"type": "string"}},
                         "remaining_unknowns": {"type": "array", "items": {"type": "string"}},
                     },
                     "required": [
                         "understanding_level", "confidence", "active_misconception",
-                        "emotion", "acquired_knowledge", "remaining_unknowns",
+                        "emotion", "remaining_unknowns",
                     ],
                     "additionalProperties": False,
+                },
+                "newly_acquired_knowledge": {
+                    "type": "array", "items": {"type": "string"},
                 },
                 "response_stage": {"type": "string", "enum": STUDENT_RESPONSE_STAGES},
                 "knowledge_used": {"type": "array", "items": {"type": "string"}},
@@ -105,7 +110,7 @@ STUDENT_TURN_SCHEMA = {
                 "utterance": {"type": "string"},
             },
             "required": [
-                "state_after", "response_stage", "knowledge_used",
+                "state_after", "newly_acquired_knowledge", "response_stage", "knowledge_used",
                 "state_update_reason", "utterance",
             ],
             "additionalProperties": False,
@@ -169,6 +174,11 @@ def parse_args() -> argparse.Namespace:
         help="事前生成した問題・E2/E3プロフィール・初期感情対応表",
     )
     parser.add_argument(
+        "--problem-selection", type=Path,
+        default=BASE_DIR / "prompts" / "test_60_primary_selection.json",
+        help="一次60問（各scope 15件）。確認評価ではtest_60_confirmation_selection.jsonを指定",
+    )
+    parser.add_argument(
         "--initial-emotions", type=Path,
         default=BASE_DIR / "prompts" / "initial_emotions.json",
     )
@@ -192,7 +202,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--phase2-temperature", type=float, default=0.6)
     parser.add_argument("--response-retries", type=int, default=3)
     parser.add_argument("--teacher-checkpoint", help="実際にロードした教師base checkpoint/HF ID")
-    parser.add_argument("--teacher-adapter", help="実際にロードした教師adapterの絶対パス")
+    parser.add_argument(
+        "--teacher-revision", default=os.getenv("TEACHER_MODEL_REVISION"),
+        help="教師vLLM起動時に固定したbase model revision",
+    )
+    parser.add_argument(
+        "--teacher-adapter",
+        help="vLLMの--lora-modulesで実際にロードしたadapterの絶対パス（記録だけには使用不可）",
+    )
+    parser.add_argument(
+        "--teacher-serving-mode", choices=("base", "lora", "merged"),
+        help="教師vLLMの配信形態。省略時は--teacher-adapterがあればlora、それ以外はbase",
+    )
     parser.add_argument("--student-checkpoint", help="実際にロードした生徒checkpoint/HF ID")
     parser.add_argument("--student-revision", default=DEFAULT_STUDENT_REVISION)
     parser.add_argument("--overwrite", action="store_true", help="既存出力を消して最初から実行")
@@ -270,10 +291,29 @@ def validate_student_state(
     previous_state: dict[str, Any],
     *,
     allow_emotion_change: bool = True,
+    newly_acquired_knowledge: list[str] | None = None,
 ) -> tuple[dict[str, Any], list[str]]:
     """v4コーパス生成と同じ状態更新制約を検証する。"""
-    if not isinstance(state, dict) or set(state) != STUDENT_STATE_KEYS:
+    if not isinstance(state, dict) or set(state) not in (
+        STUDENT_MODEL_STATE_KEYS, STUDENT_STATE_KEYS,
+    ):
         raise ValueError("state_after is missing or has unexpected fields")
+    if newly_acquired_knowledge is None:
+        reported = state.get("acquired_knowledge", previous_state["acquired_knowledge"])
+        newly_acquired_knowledge = [
+            item for item in reported if item not in previous_state["acquired_knowledge"]
+        ]
+    if (
+        not isinstance(newly_acquired_knowledge, list)
+        or any(not isinstance(item, str) or not item.strip() for item in newly_acquired_knowledge)
+        or len(newly_acquired_knowledge) != len(set(newly_acquired_knowledge))
+    ):
+        raise ValueError("newly_acquired_knowledge is invalid")
+    accumulated_knowledge = list(previous_state["acquired_knowledge"])
+    accumulated_knowledge.extend(
+        item for item in newly_acquired_knowledge if item not in accumulated_knowledge
+    )
+    state = {**state, "acquired_knowledge": accumulated_knowledge}
     state = {key: state[key] for key in STUDENT_STATE_KEYS}
     level, confidence = state["understanding_level"], state["confidence"]
     if isinstance(level, bool) or not isinstance(level, int) or not 0 <= level <= 4:
@@ -316,8 +356,6 @@ def validate_student_state(
             isinstance(item, str) and item.strip() for item in state[field]
         ):
             raise ValueError(f"{field} is invalid")
-    if not set(previous_state["acquired_knowledge"]).issubset(state["acquired_knowledge"]):
-        raise ValueError("previously acquired knowledge was removed")
     return state, []
 
 
@@ -351,11 +389,12 @@ def parse_student_turn(
     allowed_knowledge: list[str] | None = None,
     expected_response_mode: str = "follow_latest_teacher_step_only",
     latest_teacher_utterance: str = "",
+    required_initial_disclosure: str = "",
 ) -> dict[str, Any]:
     parsed = parse_json_response(raw)
     required = {
         "state_after", "response_stage", "knowledge_used",
-        "state_update_reason", "utterance",
+        "state_update_reason", "utterance", "newly_acquired_knowledge",
     }
     if not required.issubset(parsed):
         raise ValueError(f"student response is missing required fields; returned keys={sorted(parsed)}")
@@ -363,14 +402,18 @@ def parse_student_turn(
     normalized["state_after"], notes = validate_student_state(
         normalized["state_after"], previous_state,
         allow_emotion_change=allow_emotion_change,
+        newly_acquired_knowledge=normalized["newly_acquired_knowledge"],
     )
-    newly_acquired = set(normalized["state_after"]["acquired_knowledge"]) - set(
-        previous_state["acquired_knowledge"]
-    )
+    newly_acquired = set(normalized["newly_acquired_knowledge"])
     if any(item not in latest_teacher_utterance for item in newly_acquired):
         raise ValueError("new knowledge was not copied from the latest teacher utterance")
     normalized["_state_normalizations"] = notes
     normalized["utterance"] = validate_student_utterance(normalized["utterance"])
+    if (
+        required_initial_disclosure
+        and not normalized["utterance"].startswith(required_initial_disclosure)
+    ):
+        raise ValueError("far_beyondの初回発話に2回の試行履歴が明示されていません")
     if normalized["response_stage"] not in STUDENT_RESPONSE_STAGES:
         raise ValueError("response_stage is invalid")
     stages = {
@@ -466,6 +509,16 @@ def initial_response_condition(epistemic_assignment: dict[str, Any]) -> str:
     return str(epistemic_assignment["initial_response_mode"])
 
 
+def required_initial_disclosure(epistemic_assignment: dict[str, Any]) -> str:
+    if epistemic_assignment.get("scope_relation") != "far_beyond":
+        return ""
+    history = epistemic_assignment.get("prior_attempt_history")
+    if not isinstance(history, dict):
+        return ""
+    disclosure = str(history.get("required_initial_disclosure", "")).strip()
+    return "" if disclosure == "なし" else disclosure
+
+
 def load_epistemic_assignments(path: Path) -> dict[str, dict[str, Any]]:
     rows = read_jsonl(path)
     assignments = {str(row.get("source_id")): row for row in rows}
@@ -475,15 +528,80 @@ def load_epistemic_assignments(path: Path) -> dict[str, dict[str, Any]]:
         attempt_history = row.get("prior_attempt_history")
         if not isinstance(attempt_history, dict):
             raise ValueError(f"事前試行履歴がありません: {source_id}")
-        if (
-            row.get("initial_emotion") == "frustrated"
-            and (
-                int(attempt_history.get("attempt_count", 0)) < 2
-                or attempt_history.get("repeated_stuck_point") in {None, "", "なし"}
-            )
+        attempts = attempt_history.get("attempts")
+        if not isinstance(attempts, list):
+            raise ValueError(f"事前試行一覧が不正です: {source_id}")
+        if row.get("scope_relation") == "far_beyond":
+            if (
+                row.get("initial_emotion") != "frustrated"
+                or int(attempt_history.get("attempt_count", 0)) != 2
+                or len(attempts) != 2
+                or [attempt.get("attempt_number") for attempt in attempts] != [1, 2]
+                or any(
+                    attempt.get("stopped_at") != attempt_history.get("repeated_stuck_point")
+                    for attempt in attempts
+                )
+                or attempt_history.get("required_initial_disclosure") in {None, "", "なし"}
+            ):
+                raise ValueError(f"far_beyondに明示的な2回の事前試行履歴がありません: {source_id}")
+        elif (
+            int(attempt_history.get("attempt_count", 0)) != 0
+            or attempts
+            or attempt_history.get("required_initial_disclosure") != "なし"
         ):
-            raise ValueError(f"frustratedに事前失敗履歴がありません: {source_id}")
+            raise ValueError(f"far_beyond以外に事前試行履歴があります: {source_id}")
     return assignments
+
+
+def load_problem_selection(
+    path: Path, assignments: dict[str, dict[str, Any]], excluded_ids: set[str],
+) -> list[str]:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    records = value.get("records") if isinstance(value, dict) else None
+    selected_count = int(value.get("selected_count", 0)) if isinstance(value, dict) else 0
+    per_scope = int(value.get("per_scope_relation", 0)) if isinstance(value, dict) else 0
+    if selected_count not in {60, 120} or per_scope not in {15, 30}:
+        raise ValueError("テスト問題選択表は各scope 15件の60問または各30件の120問にしてください")
+    if not isinstance(records, list) or len(records) != selected_count:
+        raise ValueError("テスト問題選択表のselected_countとrecords件数が一致しません")
+    if value.get("source_partition") != {"start": 800, "end_exclusive": 1000}:
+        raise ValueError("テスト問題は後半200件から選択してください")
+    expected_digest = hashlib.sha256(
+        json.dumps(records, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()
+    if value.get("selection_sha256") != expected_digest:
+        raise ValueError("テスト問題選択表のselection_sha256が一致しません")
+    source_ids: list[str] = []
+    counts: dict[str, int] = {relation: 0 for relation in (
+        "mastered", "frontier", "one_step_beyond", "far_beyond",
+    )}
+    for record in records:
+        source_id = str(record.get("source_id", ""))
+        assignment = assignments.get(source_id)
+        if not source_id or source_id in source_ids or assignment is None:
+            raise ValueError(f"テスト問題選択表に欠損・重複があります: {source_id}")
+        if source_id in excluded_ids:
+            raise ValueError(f"除外問題がテスト選択表に含まれています: {source_id}")
+        if int(assignment.get("order_index", -1)) < 800:
+            raise ValueError(f"先頭800件の問題がテスト選択表に含まれています: {source_id}")
+        if bool(assignment["curriculum_annotation"].get("requires_human_review")):
+            raise ValueError(f"人手確認対象の問題がテスト選択表に含まれています: {source_id}")
+        knowledge_audit = assignment.get("knowledge_boundary_audit") or {}
+        if not bool(knowledge_audit.get("relation_consistent")):
+            raise ValueError(f"テスト問題とプロフィールの知識境界が不整合です: {source_id}")
+        if (
+            assignment.get("scope_relation") == "mastered"
+            and knowledge_audit.get("not_in_prior_knowledge")
+        ):
+            raise ValueError(f"未習概念をmasteredへ割り当てています: {source_id}")
+        for key in ("order_index", "scope_relation", "profile_id", "question_sha256"):
+            if record.get(key) != assignment.get(key):
+                raise ValueError(f"テスト選択表と対応表が一致しません: {source_id}/{key}")
+        counts[str(assignment["scope_relation"])] += 1
+        source_ids.append(source_id)
+    if set(counts.values()) != {per_scope}:
+        raise ValueError(f"テスト問題の範囲関係が不均衡です: {counts}")
+    return source_ids
 
 
 def build_phase2_input(
@@ -499,6 +617,18 @@ def build_phase2_input(
         ],
         "new_problem": similar_question,
     }
+
+
+def teacher_user_input(
+    problem: str, initial_emotion: str, utterance: str, turn: int,
+) -> str:
+    if turn > 0:
+        return utterance
+    return (
+        f"問題: {problem}\n\n"
+        f"初期感情ラベル: {initial_emotion}\n\n"
+        f"生徒発話: {utterance}"
+    )
 
 
 def validate_phase2_transfer(
@@ -545,25 +675,108 @@ def validate_phase2_transfer(
 
 
 def generation_succeeded(row: dict[str, Any]) -> bool:
-    return bool(row.get("run_id")) and not row.get("generation_error") and int(row.get("phase1_turns", 0)) > 0
+    return (
+        bool(row.get("run_id"))
+        and not row.get("generation_error")
+        and int(row.get("phase1_turns", 0)) > 0
+        and bool(str(row.get("phase2_student_answer", "")).strip())
+    )
+
+
+def _model_card_dict(card: Any) -> dict[str, Any]:
+    if isinstance(card, dict):
+        return dict(card)
+    if hasattr(card, "model_dump"):
+        return dict(card.model_dump())
+    return {
+        key: getattr(card, key, None)
+        for key in ("id", "root", "parent", "owned_by")
+    }
+
+
+def _same_adapter_path(served_root: str, expected_adapter: str) -> bool:
+    served = Path(served_root).expanduser()
+    expected = Path(expected_adapter).expanduser()
+    try:
+        if served.exists() and expected.exists():
+            return served.samefile(expected)
+    except OSError:
+        pass
+    return served.resolve(strict=False) == expected.resolve(strict=False)
+
+
+def validate_teacher_serving_metadata(
+    cards: list[Any], teacher_model: str, serving_mode: str,
+    teacher_adapter: str | None, teacher_checkpoint: str | None = None,
+) -> dict[str, Any]:
+    models = [_model_card_dict(card) for card in cards]
+    matches = [card for card in models if str(card.get("id")) == teacher_model]
+    if len(matches) != 1:
+        available = [str(card.get("id")) for card in models]
+        raise RuntimeError(
+            f"教師modelがvLLM /modelsに一意にありません: {teacher_model}; available={available}"
+        )
+    card = matches[0]
+    parent = str(card.get("parent") or "").strip()
+    root = str(card.get("root") or "").strip()
+    if serving_mode == "lora":
+        if not teacher_adapter:
+            raise RuntimeError("LoRA評価には--teacher-adapterが必要です")
+        if not parent:
+            raise RuntimeError(
+                "指定したteacher-modelはLoRA model cardではありません。"
+                "vLLMを--enable-loraとbase_model_name付き--lora-modulesで起動してください。"
+            )
+        if teacher_checkpoint and parent != teacher_checkpoint:
+            raise RuntimeError(
+                f"LoRAのparentと--teacher-checkpointが一致しません: "
+                f"served={parent!r}, expected={teacher_checkpoint!r}"
+            )
+        if not root or not _same_adapter_path(root, teacher_adapter):
+            raise RuntimeError(
+                f"vLLMが配信するLoRA rootと--teacher-adapterが一致しません: "
+                f"served={root!r}, expected={teacher_adapter!r}"
+            )
+    elif teacher_adapter:
+        raise RuntimeError(
+            "--teacher-adapterは--teacher-serving-mode loraでのみ指定できます。"
+            "merged評価ではマージ済みcheckpointを--teacher-checkpointへ指定してください。"
+        )
+    elif parent:
+        raise RuntimeError(
+            f"{serving_mode}評価なのにLoRA子モデルが配信されています: parent={parent}"
+        )
+    return {
+        "id": str(card.get("id")),
+        "root": root or None,
+        "parent": parent or None,
+        "serving_mode": serving_mode,
+    }
 
 
 def call_and_parse_student(client: OpenAI, model: str, messages: list[dict[str, str]], temperature: float,
                            previous_state: dict[str, Any], seed: int, retries: int,
                            *, allow_emotion_change: bool, top_p: float, top_k: int,
                            min_p: float, max_tokens: int,
-                           allowed_knowledge: list[str] | None = None,
-                           expected_response_mode: str = "follow_latest_teacher_step_only",
-                           latest_teacher_utterance: str = "") -> tuple[dict[str, Any], int]:
+                            allowed_knowledge: list[str] | None = None,
+                            expected_response_mode: str = "follow_latest_teacher_step_only",
+                            latest_teacher_utterance: str = "",
+                            required_initial_disclosure: str = "") -> tuple[dict[str, Any], int]:
     last_error: Exception | None = None
     for attempt in range(retries):
         try:
             retry_messages = list(messages)
             if attempt:
+                disclosure_retry = (
+                    " utteranceの先頭を次の文字列と完全一致させてください: "
+                    f"{required_initial_disclosure}"
+                    if required_initial_disclosure else ""
+                )
                 retry_messages.append({"role": "user", "content": (
                     "前回の出力形式が不正でした。problem、turn、state_before等をコピーせず、"
                     "state_after、response_stage、knowledge_used、state_update_reason、"
                     "utteranceの5キーだけを持つJSONを返してください。"
+                    f"{disclosure_retry}"
                 )})
             raw = call_model(
                 client, model, retry_messages, temperature, max_tokens,
@@ -575,6 +788,7 @@ def call_and_parse_student(client: OpenAI, model: str, messages: list[dict[str, 
                 allowed_knowledge=allowed_knowledge,
                 expected_response_mode=expected_response_mode,
                 latest_teacher_utterance=latest_teacher_utterance,
+                required_initial_disclosure=required_initial_disclosure,
             ), attempt
         except Exception as exc:
             last_error = exc
@@ -626,6 +840,7 @@ def run_fingerprint(args: argparse.Namespace, config: Config) -> tuple[str, dict
         "excluded_question_ids": args.excluded_question_ids,
         "profiles": args.profiles,
         "problem_profile_assignments": args.problem_profile_assignments,
+        "problem_selection": args.problem_selection,
         "initial_emotions": args.initial_emotions,
         "teacher_system_prompt": args.teacher_system_prompt,
         "student_system_prompt": BASE_DIR / "prompts" / "student_system.txt",
@@ -640,6 +855,8 @@ def run_fingerprint(args: argparse.Namespace, config: Config) -> tuple[str, dict
         "limit": args.limit,
         "teacher_checkpoint": args.teacher_checkpoint or args.teacher_model,
         "teacher_adapter": args.teacher_adapter,
+        "teacher_serving_mode": config.teacher_serving_mode,
+        "teacher_revision": config.teacher_revision,
         "student_checkpoint": args.student_checkpoint or args.student_model,
     }
     encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -656,8 +873,31 @@ def main() -> None:
         raise SystemExit("生徒のtop-p/top-k/min-p設定が不正です。")
     if args.student_max_tokens < 1:
         raise SystemExit("--student-max-tokensは1以上にしてください。")
+    teacher_serving_mode = args.teacher_serving_mode or (
+        "lora" if args.teacher_adapter else "base"
+    )
+    if teacher_serving_mode == "lora":
+        if not args.teacher_adapter or not args.teacher_checkpoint:
+            raise SystemExit(
+                "LoRA評価には--teacher-adapterと--teacher-checkpointを両方指定してください。"
+            )
+        adapter_path = Path(args.teacher_adapter).expanduser()
+        if not adapter_path.is_dir():
+            raise SystemExit(f"教師LoRA adapterディレクトリがありません: {adapter_path}")
+        args.teacher_adapter = str(adapter_path.resolve())
+    teacher_checkpoint = args.teacher_checkpoint or args.teacher_model
+    if (
+        teacher_serving_mode in {"base", "lora"}
+        and not Path(teacher_checkpoint).expanduser().exists()
+        and not args.teacher_revision
+    ):
+        raise SystemExit(
+            "Hugging Face上の教師baseを評価する場合は--teacher-revisionを固定してください。"
+        )
     config = Config(
-        args.teacher_base_url, args.teacher_model, args.student_base_url, args.student_model,
+        args.teacher_base_url, args.teacher_model, teacher_serving_mode,
+        args.teacher_revision,
+        args.student_base_url, args.student_model,
         args.student_revision, args.max_turns, args.student_temperature,
         args.student_top_p, args.student_top_k, args.student_min_p, args.student_max_tokens,
         args.teacher_temperature,
@@ -668,6 +908,15 @@ def main() -> None:
 
     teacher_client = OpenAI(api_key="EMPTY", base_url=config.teacher_base_url)
     student_client = OpenAI(api_key="EMPTY", base_url=config.student_base_url)
+    try:
+        teacher_serving_evidence = validate_teacher_serving_metadata(
+            list(teacher_client.models.list().data), config.teacher_model,
+            config.teacher_serving_mode, args.teacher_adapter, args.teacher_checkpoint,
+        )
+    except Exception as exc:
+        raise SystemExit(
+            f"教師vLLMの配信モデル検証に失敗しました: {type(exc).__name__}: {exc}"
+        ) from exc
 
     teacher_system = args.teacher_system_prompt.read_text(encoding="utf-8").strip()
     student_template = read_text("student_system.txt")
@@ -699,10 +948,24 @@ def main() -> None:
         for row in read_jsonl(args.similar_questions)
         if str(row.get("source_id") or row.get("id")) not in excluded_ids
     }
-    all_pairs = [(row, similar_by_id.get(str(row.get("id") or row.get("source_id")))) for row in originals]
-    all_pairs = [(original, similar) for original, similar in all_pairs if similar is not None]
-    random.Random(config.seed).shuffle(all_pairs)
     epistemic_by_id = load_epistemic_assignments(args.problem_profile_assignments)
+    selected_source_ids = load_problem_selection(
+        args.problem_selection, epistemic_by_id, excluded_ids,
+    )
+    original_by_id = {
+        str(row.get("id") or row.get("source_id")): row for row in originals
+    }
+    missing_selected = [
+        source_id for source_id in selected_source_ids
+        if source_id not in original_by_id or source_id not in similar_by_id
+    ]
+    if missing_selected:
+        raise ValueError(f"選択済みテスト問題または類似問題がありません: {missing_selected[:5]}")
+    all_pairs = [
+        (original_by_id[source_id], similar_by_id[source_id])
+        for source_id in selected_source_ids
+    ]
+    random.Random(config.seed).shuffle(all_pairs)
     profiles_by_id = {str(profile["id"]): profile for profile in profiles}
     missing_assignments = [
         str(original.get("id") or original.get("source_id"))
@@ -749,6 +1012,7 @@ def main() -> None:
         "config": asdict(config),
         "questions": str(args.questions), "similar_questions": str(args.similar_questions),
         "problem_profile_assignments": str(args.problem_profile_assignments),
+        "problem_selection": str(args.problem_selection),
         "excluded_question_ids": str(args.excluded_question_ids),
         "excluded_question_count": len(excluded_ids),
         "profiles": str(args.profiles), "initial_emotions": str(args.initial_emotions),
@@ -760,16 +1024,22 @@ def main() -> None:
             {
                 "global_pair_index": global_index,
                 "source_id": str(original.get("id") or original.get("source_id")),
-                "profile_id": assignments[global_index][0]["id"],
-                "initial_emotion": assignments[global_index][1],
+                "profile_id": epistemic_by_id[
+                    str(original.get("id") or original.get("source_id"))
+                ]["profile_id"],
+                "initial_emotion": epistemic_by_id[
+                    str(original.get("id") or original.get("source_id"))
+                ]["initial_emotion"],
             }
             for global_index, original, _ in pairs
         ],
         "loaded_models": {
             "teacher_checkpoint": args.teacher_checkpoint or args.teacher_model,
             "teacher_adapter": args.teacher_adapter,
+            "teacher_revision": args.teacher_revision,
             "student_checkpoint": args.student_checkpoint or args.student_model,
             "student_revision": args.student_revision,
+            "teacher_serving_evidence": teacher_serving_evidence,
         },
         "response_retries": args.response_retries,
         "resume": {"existing_records": len(existing_by_id), "successful_records_skipped": len(done),
@@ -792,6 +1062,7 @@ def main() -> None:
             "curriculum_annotation": epistemic_assignment["curriculum_annotation"],
             "scope_relation": epistemic_assignment["scope_relation"],
             "misconception_model": epistemic_assignment["misconception_model"],
+            "prior_attempt_history": epistemic_assignment["prior_attempt_history"],
             "initial_response_constraint": epistemic_assignment["initial_response_constraint"],
         }
         initial_emotion = str(epistemic_assignment["initial_emotion"])
@@ -857,6 +1128,10 @@ def main() -> None:
                         if turn == 0 else "follow_latest_teacher_step_only"
                     ),
                     latest_teacher_utterance=last_teacher,
+                    required_initial_disclosure=(
+                        required_initial_disclosure(epistemic_assignment)
+                        if turn == 0 else ""
+                    ),
                 )
                 validation_retries["student"] += retry_count
                 state_normalizations = student_turn.pop("_state_normalizations", [])
@@ -867,6 +1142,7 @@ def main() -> None:
                     "content": utterance,
                     "response_stage": student_turn["response_stage"],
                     "knowledge_used": student_turn["knowledge_used"],
+                    "newly_acquired_knowledge": student_turn["newly_acquired_knowledge"],
                     "state_after": state,
                     "state_update_validated": True,
                     "state_changed": state != previous_state,
@@ -876,9 +1152,9 @@ def main() -> None:
                         "生徒モデルの応答で更新理由が省略されました。",
                     ),
                 })
-                teacher_user_content = utterance
-                if turn == 0:
-                    teacher_user_content = f"問題: {problem}\n\n生徒発話: {utterance}"
+                teacher_user_content = teacher_user_input(
+                    problem, initial_emotion, utterance, turn,
+                )
                 teacher_history.append({"role": "user", "content": teacher_user_content})
 
                 last_teacher, teacher_analysis, is_completed, teacher_raw, retry_count = call_and_parse_teacher(
@@ -974,8 +1250,10 @@ def main() -> None:
             "loaded_models": {
                 "teacher_checkpoint": args.teacher_checkpoint or args.teacher_model,
                 "teacher_adapter": args.teacher_adapter,
+                "teacher_revision": args.teacher_revision,
                 "student_checkpoint": args.student_checkpoint or args.student_model,
                 "student_revision": args.student_revision,
+                "teacher_serving_evidence": teacher_serving_evidence,
             },
         }
         existing_by_id[run_id] = record

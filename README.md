@@ -18,16 +18,19 @@
 .
 ├── pipelines/
 │   ├── corpus_creation/       # 翻訳、フィルタリング、対話コーパス生成
+│   │   ├── v4/                # E2/E3生徒・監査・Repairを含むv4コーパス
 │   │   ├── prompts/
 │   │   └── questions/
 │   ├── sft/                   # SFTバージョン別の学習データ作成
 │   │   ├── v1/
 │   │   ├── v2/
+│   │   ├── v4/                # 監査済み104対話のABCI用LoRA SFT
 │   │   └── shared/
 │   └── model_evaluation/      # テストバージョン別のモデル評価
 │       ├── test_v1/
 │       ├── test_v2/
 │       ├── test_v3/
+│       ├── test_v4/           # v4生徒準拠の段階的ICL転移評価
 │       └── shared/
 ├── experiments/               # テスト版別の質問、評価結果、分析コード
 │   ├── test_v0/               # 40問で実施したテストv0
@@ -39,7 +42,8 @@
 │   │   ├── questions/
 │   │   └── sft_v1_swallow_8b_v0.5/
 │   ├── test_v2/               # プロファイル更新による転移テスト
-│   └── test_v3/               # インコンテキスト学習テスト
+│   ├── test_v3/               # インコンテキスト学習テスト
+│   └── test_v4/               # 一次60問・確認60問のv4評価結果
 ├── docs/                      # SFT方針と関連資料
 └── TODO.md                    # 今後の作業
 ```
@@ -138,6 +142,17 @@ python pipelines/sft/v2/prepare_v2_cot_sft_dataset.py
 
 `<analysis>`には認知状態、感情状態、次の一歩を収録し、`<final>`には生徒へ提示する短い発話だけを収録します。CoTなし版は比較実験用に残します。
 
+### v4構造化CoT SFT
+
+v4では、全体再監査と構造ゲートを通過した104対話・711教師ターンを同梱し、Swallow 8BへBF16 LoRAで学習します。`<analysis>`は数学的検証・状態推定・支援方針、`<final>`は生徒向け教師発話です。token単位のloss weightをそれぞれ0.25と1.0にし、教師発話を重視します。
+
+```bash
+cd pipelines/sft/v4
+python train_v4_sft.py --config config.json --structure-only
+```
+
+ABCIでの環境作成、完全tokenizer監査、PBS投入方法は[pipelines/sft/v4/README.md](pipelines/sft/v4/README.md)を参照してください。
+
 現在のSFT方針は [docs/SFT_Strategy.md](docs/SFT_Strategy.md) を参照してください。
 
 ## 評価
@@ -212,6 +227,12 @@ python pipelines/model_evaluation/test_v3/evaluate_in_context_dialogues.py \
 
 ABCIでのサーバー構成、20問パイロット、主実験の固定条件は [SFT v2・テストv2/v3設計](docs/sft_v2_test_v2_v3_design.md) を参照してください。
 
+### テストv4：v4生徒準拠インコンテキスト転移
+
+v4コーパスと同じE2/E3プロフィール、初期感情、知識境界を使います。固定120問を各scope 15件の一次60問と確認60問へ分け、通常は一次評価から開始します。LoRA条件ではvLLM側でadapterをロードし、生成前にmodel cardの`id`、`root`、`parent`を検証します。
+
+ABCIの`rt_HF`を使う教師・生徒2GPU構成とJudge手順は[pipelines/model_evaluation/test_v4/README.md](pipelines/model_evaluation/test_v4/README.md)を参照してください。
+
 主な評価指標は次のとおりです。
 
 - 指導完了率: 元問題の対話で学習者が正解へ到達した割合
@@ -235,7 +256,8 @@ experiments/
     ├── questions/                    # v1の元問題・類似問題（200問）
     └── <条件>_<モデル規模>_<モデル版>/
 ├── test_v2/                          # プロファイル更新テスト
-└── test_v3/                          # インコンテキスト学習テスト
+├── test_v3/                          # インコンテキスト学習テスト
+└── test_v4/                          # v4段階的インコンテキスト転移テスト
 ```
 
 例: `experiments/test_v0/baseline_swallow_8b_v0.5`、`experiments/test_v1/sft_v1_swallow_8b_v0.5`
@@ -268,4 +290,7 @@ experiments/
 - [SFT戦略](docs/SFT_Strategy.md)
 - [500件コーパス品質評価レポート](docs/corpus_quality_report.md)
 - [SFT v2・テストv2/v3設計](docs/sft_v2_test_v2_v3_design.md)
+- [v4コーパス設計](pipelines/corpus_creation/v4/README.md)
+- [v4 SFT実行](pipelines/sft/v4/README.md)
+- [test-v4評価](pipelines/model_evaluation/test_v4/README.md)
 - [今後の作業](TODO.md)

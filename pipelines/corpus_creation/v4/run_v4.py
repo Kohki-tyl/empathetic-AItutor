@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import copy
+import concurrent.futures
 import hashlib
 import importlib.metadata
 import json
@@ -27,6 +29,7 @@ STUDENT_STATE_KEYS = {
     "understanding_level", "confidence", "active_misconception", "emotion",
     "acquired_knowledge", "remaining_unknowns",
 }
+STUDENT_MODEL_STATE_KEYS = STUDENT_STATE_KEYS - {"acquired_knowledge"}
 STUDENT_EMOTIONS = [
     "engaged", "curious", "neutral", "confused", "frustrated", "anxious",
     "bored", "eureka", "relieved", "proud",
@@ -72,11 +75,13 @@ STUDENT_SCHEMA = {
                         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
                         "active_misconception": {"type": "string"},
                         "emotion": {"type": "string", "enum": STUDENT_EMOTIONS},
-                        "acquired_knowledge": {"type": "array", "items": {"type": "string"}},
                         "remaining_unknowns": {"type": "array", "items": {"type": "string"}},
                     },
-                    "required": sorted(STUDENT_STATE_KEYS),
+                    "required": sorted(STUDENT_MODEL_STATE_KEYS),
                     "additionalProperties": False,
+                },
+                "newly_acquired_knowledge": {
+                    "type": "array", "items": {"type": "string"},
                 },
                 "response_stage": {"type": "string", "enum": STUDENT_RESPONSE_STAGES},
                 "knowledge_used": {"type": "array", "items": {"type": "string"}},
@@ -84,13 +89,38 @@ STUDENT_SCHEMA = {
                 "utterance": {"type": "string"},
             },
             "required": [
-                "state_after", "response_stage", "knowledge_used",
+                "state_after", "newly_acquired_knowledge", "response_stage", "knowledge_used",
                 "state_update_reason", "utterance",
             ],
             "additionalProperties": False,
         },
     },
 }
+
+
+def student_schema_for_turn(
+    previous: dict[str, Any], expected_response_mode: str | None,
+    *, allow_emotion_change: bool,
+) -> dict[str, Any]:
+    """構造化出力の段階で、感情遷移と応答段階を現在ターンへ制約する。"""
+    schema = copy.deepcopy(STUDENT_SCHEMA)
+    properties = schema["json_schema"]["schema"]["properties"]
+    previous_emotion = str(previous["emotion"])
+    next_emotions = (
+        {previous_emotion, *EMOTION_TRANSITIONS[previous_emotion]}
+        if allow_emotion_change else {previous_emotion}
+    )
+    properties["state_after"]["properties"]["emotion"]["enum"] = sorted(next_emotions)
+    allowed_stages = {
+        "plausible_incorrect": ["attempt"],
+        "partial_reasoning": ["observation", "attempt"],
+        "help_seeking": ["help_seeking"],
+        "correct_but_uncertain": ["attempt", "answer"],
+        "scope_limited_help_seeking": ["observation", "help_seeking"],
+    }
+    if expected_response_mode in allowed_stages:
+        properties["response_stage"]["enum"] = allowed_stages[expected_response_mode]
+    return schema
 
 MATHEMATICAL_ASSESSMENT_PROPERTIES = {
     "status": {"type": "string", "enum": ["correct", "partially_correct", "incorrect", "unclear"]},
@@ -193,17 +223,46 @@ AUDIT_SCHEMA = {
     },
 }
 
+DIALOGUE_AUDIT_PROPERTIES = {
+    **AUDIT_PROPERTIES,
+    "metadata_warnings": {"type": "array", "items": {"type": "string"}},
+    "acceptable_incompleteness": {"type": "array", "items": {"type": "string"}},
+}
+DIALOGUE_AUDIT_SCHEMA = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "v4_dialogue_sft_audit", "strict": True,
+        "schema": {
+            "type": "object", "properties": DIALOGUE_AUDIT_PROPERTIES,
+            "required": list(DIALOGUE_AUDIT_PROPERTIES), "additionalProperties": False,
+        },
+    },
+}
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "command",
         choices=[
-            "generate", "submit-audit", "collect-audit", "submit-repair",
-            "collect-repair", "submit-reaudit", "collect-reaudit", "finalize", "status",
+            "preflight", "generate", "submit-audit", "collect-audit", "submit-repair",
+            "audit-sync", "audit-dialogues-sync", "collect-repair", "submit-reaudit",
+            "collect-reaudit", "finalize", "status",
         ],
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument(
+        "--limit", type=int,
+        help="generateで今回処理する先頭候補数（選択表や本番上限は変更しない）",
+    )
+    parser.add_argument(
+        "--start", type=int, default=0,
+        help="generateで処理を開始する候補index（並列区間生成用）",
+    )
+    parser.add_argument(
+        "--workers", type=int, default=1,
+        help="対話全体同期監査の並列数",
+    )
     return parser.parse_args()
 
 
@@ -243,10 +302,10 @@ def load_config(path: Path) -> dict[str, Any]:
     required = {
         "target_dialogues", "max_candidates", "max_turns", "seed", "teacher_model",
         "teacher_reasoning_effort",
-        "student_model", "student_model_revision", "vllm_version", "student_temperature",
-        "student_top_p", "student_top_k", "student_min_p", "student_max_tokens",
+        "student_model", "student_max_tokens",
         "judge_model", "judge_reasoning_effort", "repair_model",
         "repair_reasoning_effort", "questions", "problem_profile_assignments",
+        "problem_selection",
         "output_dir",
     }
     missing = required - set(config)
@@ -257,14 +316,24 @@ def load_config(path: Path) -> dict[str, Any]:
     for name in ("target_dialogues", "max_candidates", "max_turns", "student_max_tokens"):
         if int(config[name]) <= 0:
             raise ValueError(f"{name}は正の整数にしてください")
-    if not 0 <= float(config["student_temperature"]) <= 2:
-        raise ValueError("student_temperatureは0以上2以下にしてください")
-    if not 0 <= float(config["student_top_p"]) <= 1:
-        raise ValueError("student_top_pは0以上1以下にしてください")
-    if int(config["student_top_k"]) < 0:
-        raise ValueError("student_top_kは0以上にしてください")
-    if not 0 <= float(config["student_min_p"]) <= 1:
-        raise ValueError("student_min_pは0以上1以下にしてください")
+    config.setdefault("student_provider", "vllm")
+    if config["student_provider"] not in {"openai", "vllm"}:
+        raise ValueError("student_providerはopenaiまたはvllmにしてください")
+    if config["student_provider"] == "vllm":
+        for name in (
+            "student_model_revision", "vllm_version", "student_temperature",
+            "student_top_p", "student_top_k", "student_min_p",
+        ):
+            if name not in config:
+                raise ValueError(f"vLLM生徒に必要な設定がありません: {name}")
+        if not 0 <= float(config["student_temperature"]) <= 2:
+            raise ValueError("student_temperatureは0以上2以下にしてください")
+        if not 0 <= float(config["student_top_p"]) <= 1:
+            raise ValueError("student_top_pは0以上1以下にしてください")
+        if int(config["student_top_k"]) < 0:
+            raise ValueError("student_top_kは0以上にしてください")
+        if not 0 <= float(config["student_min_p"]) <= 1:
+            raise ValueError("student_min_pは0以上1以下にしてください")
     config.setdefault("generation_validation_attempts", 3)
     if int(config["generation_validation_attempts"]) < 1:
         raise ValueError("generation_validation_attemptsは1以上にしてください")
@@ -272,6 +341,7 @@ def load_config(path: Path) -> dict[str, Any]:
     config["problem_profile_assignments"] = str(
         resolve_path(config["problem_profile_assignments"], path)
     )
+    config["problem_selection"] = str(resolve_path(config["problem_selection"], path))
     config["output_dir"] = str(resolve_path(config["output_dir"], path))
     if not Path(config["questions"]).is_file():
         raise FileNotFoundError(f"問題JSONLがありません: {config['questions']}")
@@ -279,6 +349,8 @@ def load_config(path: Path) -> dict[str, Any]:
         raise FileNotFoundError(
             f"問題・プロフィール対応表がありません: {config['problem_profile_assignments']}"
         )
+    if not Path(config["problem_selection"]).is_file():
+        raise FileNotFoundError(f"問題選択表がありません: {config['problem_selection']}")
     return config
 
 
@@ -305,6 +377,7 @@ def paths(config: dict[str, Any]) -> dict[str, Path]:
         "generation_errors": root / "generation_errors.jsonl",
         "audit_input": root / "batches" / "audit_input.jsonl",
         "audits": root / "turn_audits.jsonl",
+        "dialogue_audits": root / "dialogue_audits.jsonl",
         "repair_input": root / "batches" / "repair_input.jsonl",
         "repairs": root / "dialogue_repairs.jsonl",
         "reaudit_input": root / "batches" / "reaudit_input.jsonl",
@@ -321,7 +394,7 @@ PROMPT_FILES = [
     "initial_emotions.json", "turn_quality_judge_system.txt", "sft_teacher_system.txt",
     "turn_repair_system.txt",
 ]
-MUTABLE_LIMIT_KEYS = {"target_dialogues", "max_candidates"}
+MUTABLE_LIMIT_KEYS = {"target_dialogues"}
 
 
 def package_version(name: str) -> str:
@@ -343,11 +416,18 @@ def source_hashes(config: dict[str, Any]) -> dict[str, str]:
     question_path = Path(config["questions"])
     assignment_value = config.get("problem_profile_assignments")
     assignment_path = Path(assignment_value) if assignment_value else None
+    selection_value = config.get("problem_selection")
+    selection_path = Path(selection_value) if selection_value else None
     return {
         "questions": sha256(question_path) if question_path.exists() else "missing",
         "problem_profile_assignments": (
             sha256(assignment_path)
             if assignment_path is not None and assignment_path.exists()
+            else "missing"
+        ),
+        "problem_selection": (
+            sha256(selection_path)
+            if selection_path is not None and selection_path.exists()
             else "missing"
         ),
     }
@@ -359,8 +439,9 @@ def runtime_environment(config: dict[str, Any]) -> dict[str, str]:
         "openai": package_version("openai"),
         "tqdm": package_version("tqdm"),
         "installed_vllm": package_version("vllm"),
-        "configured_vllm": str(config["vllm_version"]),
-        "student_model_revision": str(config["student_model_revision"]),
+        "student_provider": str(config.get("student_provider", "vllm")),
+        "configured_vllm": str(config.get("vllm_version", "not-used")),
+        "student_model_revision": str(config.get("student_model_revision", "alias")),
     }
 
 
@@ -470,18 +551,54 @@ def initial_state(
     }
 
 
+def teacher_turn_input(
+    *, problem: str, reference_solution: str, student_utterance: str,
+    profile: dict[str, Any], epistemic_assignment: dict[str, Any],
+    initial_emotion: str, turn_index: int,
+) -> str:
+    """初回だけ固定条件を渡し、以後は生徒発話だけを教師へ渡す。"""
+    if turn_index > 0:
+        return student_utterance
+    learner_context = {
+        "scope_relation": epistemic_assignment["scope_relation"],
+        "prior_knowledge": profile["prior_knowledge"],
+        "unknown_knowledge": profile["unknown_knowledge"],
+        "max_independent_math_level": profile["max_independent_math_level"],
+        "initial_emotion": initial_emotion,
+        "prior_attempt_history": epistemic_assignment["prior_attempt_history"],
+    }
+    sections = [
+        f"問題: {problem}",
+        (
+            f"内部検算用の参照解答: {reference_solution}\n"
+            "参照解答は検算にだけ使い、生徒へそのまま提示しないでください。"
+        ),
+    ]
+    sections.extend([
+        (
+            "学習者条件（問い・例・記号・公式も使用可能知識と照合してください）:\n"
+            + json.dumps(learner_context, ensure_ascii=False)
+        ),
+        f"生徒発話: {student_utterance}",
+    ])
+    return "\n\n".join(sections)
+
+
 def validate_student_turn(
     value: dict[str, Any], previous: dict[str, Any], *,
     allow_emotion_change: bool = True,
     allowed_knowledge: Iterable[str] = (),
     expected_response_mode: str | None = None,
     latest_teacher_utterance: str = "",
+    required_initial_disclosure: str = "",
 ) -> dict[str, Any]:
+    normalizations: list[str] = []
     expected_keys = {
         "state_after", "response_stage", "knowledge_used",
         "state_update_reason", "utterance",
     }
-    if set(value) != expected_keys:
+    schema_keys = expected_keys | {"newly_acquired_knowledge"}
+    if set(value) not in (expected_keys, schema_keys):
         raise ValueError("student response keys are invalid")
     response_stage = str(value["response_stage"])
     if response_stage not in STUDENT_RESPONSE_STAGES:
@@ -508,8 +625,30 @@ def validate_student_turn(
             f"response_stage={response_stage} does not match {expected_response_mode}"
         )
     state = value["state_after"]
-    if not isinstance(state, dict) or set(state) != STUDENT_STATE_KEYS:
+    if not isinstance(state, dict) or set(state) not in (
+        STUDENT_MODEL_STATE_KEYS, STUDENT_STATE_KEYS,
+    ):
         raise ValueError("student state is incomplete")
+    # 新形式ではモデルは差分だけを返し、累積リストはPython側を正本として管理する。
+    # 旧形式の入力も検証関数単体では受理し、既存成果物の再開互換性を保つ。
+    if "newly_acquired_knowledge" in value:
+        newly_acquired_list = value["newly_acquired_knowledge"]
+    else:
+        reported = state.get("acquired_knowledge", previous["acquired_knowledge"])
+        newly_acquired_list = [
+            item for item in reported if item not in previous["acquired_knowledge"]
+        ]
+    if (
+        not isinstance(newly_acquired_list, list)
+        or any(not isinstance(item, str) or not item.strip() for item in newly_acquired_list)
+        or len(newly_acquired_list) != len(set(newly_acquired_list))
+    ):
+        raise ValueError("newly_acquired_knowledge must contain unique non-empty strings")
+    accumulated_knowledge = list(previous["acquired_knowledge"])
+    accumulated_knowledge.extend(
+        item for item in newly_acquired_list if item not in accumulated_knowledge
+    )
+    state = {**state, "acquired_knowledge": accumulated_knowledge}
     if abs(int(state["understanding_level"]) - int(previous["understanding_level"])) > 1:
         raise ValueError("understanding changed by more than one level")
     if state["emotion"] not in STUDENT_EMOTIONS:
@@ -522,10 +661,9 @@ def validate_student_turn(
         raise ValueError("student confidence changed by more than 0.25")
     if not isinstance(state["acquired_knowledge"], list) or not isinstance(state["remaining_unknowns"], list):
         raise ValueError("student knowledge fields must be lists")
-    if not set(previous["acquired_knowledge"]).issubset(state["acquired_knowledge"]):
-        raise ValueError("previously acquired knowledge was removed")
     if not str(state["active_misconception"]).strip():
-        raise ValueError("active misconception is empty")
+        state["active_misconception"] = previous["active_misconception"]
+        normalizations.append("blank_active_misconception_preserved")
     previous_emotion = str(previous["emotion"])
     next_emotion = str(state["emotion"])
     if not allow_emotion_change and next_emotion != previous_emotion:
@@ -541,18 +679,21 @@ def validate_student_turn(
             raise ValueError("initial misconception changed before teacher intervention")
         if abs(confidence - previous_confidence) > 0.1:
             raise ValueError("initial confidence changed by more than 0.1")
-    newly_acquired = set(state["acquired_knowledge"]) - set(previous["acquired_knowledge"])
+    newly_acquired = set(newly_acquired_list)
     if any(item not in latest_teacher_utterance for item in newly_acquired):
         raise ValueError("new knowledge was not copied from the latest teacher utterance")
     allowed.update(newly_acquired)
     if any(item not in allowed for item in knowledge_used):
-        raise ValueError("knowledge_used contains knowledge outside the profile boundary")
+        normalizations.append("knowledge_used_outside_boundary_retained_for_audit")
     if (
         allow_emotion_change and next_emotion != previous_emotion
         and next_emotion not in EMOTION_TRANSITIONS[previous_emotion]
     ):
         raise ValueError("student emotion skipped the permitted cycle")
     utterance = str(value["utterance"]).strip()
+    if required_initial_disclosure and not utterance.startswith(required_initial_disclosure):
+        utterance = required_initial_disclosure + utterance
+        normalizations.append("required_attempt_history_prefixed")
     if not utterance or len(utterance) > 500 or utterance.startswith(("{", "[")):
         raise ValueError("student utterance is invalid")
     if any(marker in utterance.lower() for marker in ["<analysis>", "state_after", "state_update_reason"]):
@@ -565,6 +706,8 @@ def validate_student_turn(
     value["knowledge_used"] = knowledge_used
     value["state_update_reason"] = reason
     value["state_after"] = {key: state[key] for key in STUDENT_STATE_KEYS}
+    value["newly_acquired_knowledge"] = newly_acquired_list
+    value["state_normalizations"] = normalizations
     return value
 
 
@@ -702,6 +845,16 @@ def effective_initial_response_mode(
     return configured_mode
 
 
+def required_initial_disclosure(epistemic_assignment: dict[str, Any]) -> str:
+    if epistemic_assignment.get("scope_relation") != "far_beyond":
+        return ""
+    history = epistemic_assignment.get("prior_attempt_history")
+    if not isinstance(history, dict):
+        return ""
+    disclosure = str(history.get("required_initial_disclosure", "")).strip()
+    return "" if disclosure == "なし" else disclosure
+
+
 def question_content_hash(problem: str, solution: str) -> str:
     encoded = json.dumps(
         {"problem": problem, "reference_solution": solution},
@@ -730,23 +883,42 @@ def load_problem_profile_assignments(
             raise ValueError(f"対応表のinitial_emotionが不正です: {source_id}")
         attempt_history = row.get("prior_attempt_history")
         required_attempt_keys = {
-            "attempt_count", "attempted_strategy",
-            "repeated_stuck_point", "received_help",
+            "attempt_count", "attempts", "repeated_stuck_point",
+            "received_help", "required_initial_disclosure",
         }
         if not isinstance(attempt_history, dict) or set(attempt_history) != required_attempt_keys:
             raise ValueError(f"対応表のprior_attempt_historyが不正です: {source_id}")
-        if (
-            row.get("initial_emotion") == "frustrated"
-            and (
-                int(attempt_history["attempt_count"]) < 2
-                or attempt_history["repeated_stuck_point"] == "なし"
-            )
-        ):
-            raise ValueError(f"frustratedに事前失敗履歴がありません: {source_id}")
-        if row.get("scope_relation") not in {
+        relation = row.get("scope_relation")
+        if relation not in {
             "mastered", "frontier", "one_step_beyond", "far_beyond",
         }:
             raise ValueError(f"対応表のscope_relationが不正です: {source_id}")
+        attempts = attempt_history["attempts"]
+        if not isinstance(attempts, list):
+            raise ValueError(f"対応表の試行一覧が不正です: {source_id}")
+        if relation == "far_beyond":
+            required_trial_keys = {
+                "attempt_number", "strategy", "stopped_at", "outcome",
+            }
+            if (
+                row.get("initial_emotion") != "frustrated"
+                or int(attempt_history["attempt_count"]) != 2
+                or len(attempts) != 2
+                or [attempt.get("attempt_number") for attempt in attempts] != [1, 2]
+                or any(not isinstance(attempt, dict) or set(attempt) != required_trial_keys for attempt in attempts)
+                or any(attempt.get("stopped_at") != attempt_history["repeated_stuck_point"] for attempt in attempts)
+                or any(attempt.get("outcome") != "未解決" for attempt in attempts)
+                or attempt_history["repeated_stuck_point"] == "なし"
+                or attempt_history["received_help"] is not False
+                or attempt_history["required_initial_disclosure"] == "なし"
+            ):
+                raise ValueError(f"far_beyondに明示的な2回の事前試行履歴がありません: {source_id}")
+        elif (
+            int(attempt_history["attempt_count"]) != 0
+            or attempts
+            or attempt_history["required_initial_disclosure"] != "なし"
+        ):
+            raise ValueError(f"far_beyond以外に事前試行履歴があります: {source_id}")
         if row.get("initial_response_mode") not in {
             *INITIAL_RESPONSE_MODES, "scope_limited_help_seeking",
         }:
@@ -762,7 +934,126 @@ def load_problem_profile_assignments(
     return validated
 
 
-def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: bool) -> None:
+def load_problem_selection(
+    path: Path, assignments: list[dict[str, Any]], expected_count: int,
+) -> list[dict[str, Any]]:
+    value = read_json(path)
+    records = value.get("records") if isinstance(value, dict) else None
+    if not isinstance(records, list) or len(records) != expected_count:
+        raise ValueError(f"問題選択表は{expected_count}件必要です")
+    if value.get("source_partition") != {"start": 0, "end_exclusive": 800}:
+        raise ValueError("コーパス問題は先頭800件から選択してください")
+    if int(value.get("per_scope_relation", 0)) != 30 or expected_count != 120:
+        raise ValueError("コーパス問題は4範囲関係から各30件、計120件にしてください")
+    assignment_by_id = {str(row["source_id"]): row for row in assignments}
+    selected: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for record in records:
+        source_id = str(record.get("source_id", ""))
+        assignment = assignment_by_id.get(source_id)
+        if not source_id or source_id in seen or assignment is None:
+            raise ValueError(f"問題選択表に欠損・重複があります: {source_id}")
+        if int(assignment["order_index"]) >= 800:
+            raise ValueError(f"テスト用問題がコーパス選択表に含まれています: {source_id}")
+        if bool(assignment["curriculum_annotation"].get("requires_human_review")):
+            raise ValueError(f"人手確認対象の問題はコーパス生成できません: {source_id}")
+        knowledge_audit = assignment.get("knowledge_boundary_audit") or {}
+        if not bool(knowledge_audit.get("relation_consistent")):
+            raise ValueError(f"問題とプロフィールの知識境界が不整合です: {source_id}")
+        if (
+            assignment.get("scope_relation") == "mastered"
+            and knowledge_audit.get("not_in_prior_knowledge")
+        ):
+            raise ValueError(f"未習概念をmasteredへ割り当てています: {source_id}")
+        for key in ("order_index", "scope_relation", "profile_id", "question_sha256"):
+            if record.get(key) != assignment.get(key):
+                raise ValueError(f"問題選択表と対応表が一致しません: {source_id}/{key}")
+        seen.add(source_id)
+        selected.append(assignment)
+    counts = Counter(row["scope_relation"] for row in selected)
+    if counts != Counter({relation: 30 for relation in (
+        "mastered", "frontier", "one_step_beyond", "far_beyond",
+    )}):
+        raise ValueError(f"問題選択表の範囲関係が不均衡です: {dict(counts)}")
+    return selected
+
+
+def preflight(config: dict[str, Any]) -> None:
+    """高価なモデル起動前に、ABCI実行資産と主要な版を読み取り専用で検証する。"""
+    load_env_file(BASE_DIR / ".env")
+    if not (os.getenv("OPENAI_API_KEY") or os.getenv("GPT_API_KEY")):
+        raise RuntimeError("v4/.envにOPENAI_API_KEYを設定してください")
+    provider = str(config.get("student_provider", "vllm"))
+    installed_vllm = package_version("vllm")
+    torch_cuda = "not-used"
+    if provider == "vllm":
+        if sys.version_info[:2] != (3, 12):
+            raise RuntimeError(
+                f"Python 3.12が必要です: detected={platform.python_version()}"
+            )
+        if installed_vllm != str(config["vllm_version"]):
+            raise RuntimeError(
+                f"vLLM version mismatch: installed={installed_vllm}, "
+                f"config={config['vllm_version']}"
+            )
+        try:
+            import torch
+        except ImportError as exc:
+            raise RuntimeError("PyTorchがインストールされていません") from exc
+        torch_cuda = str(torch.version.cuda)
+        if torch_cuda != "13.0":
+            raise RuntimeError(
+                f"PyTorch CUDA 13.0が必要です: detected={torch_cuda}"
+            )
+
+    profiles = read_json(PROMPT_DIR / "student_profiles.json")
+    questions = ordered_math_questions(read_jsonl(Path(config["questions"])))
+    assignments = load_problem_profile_assignments(
+        Path(config["problem_profile_assignments"]), questions, profiles,
+    )
+    selected = load_problem_selection(
+        Path(config["problem_selection"]), assignments,
+        int(config["max_candidates"]),
+    )
+    test_selection_path = BASE_DIR / "assignments" / "test_120_selection.json"
+    test_selection = read_json(test_selection_path)
+    test_records = test_selection.get("records", [])
+    if (
+        test_selection.get("source_partition")
+        != {"start": 800, "end_exclusive": 1000}
+        or len(test_records) != 120
+        or len({str(row.get("source_id")) for row in test_records}) != 120
+        or Counter(str(row.get("scope_relation")) for row in test_records)
+        != Counter({relation: 30 for relation in (
+            "mastered", "frontier", "one_step_beyond", "far_beyond",
+        )})
+    ):
+        raise RuntimeError("同梱test-v4選択表が不正です")
+    assignment_by_id = {str(row["source_id"]): row for row in assignments}
+    for record in test_records:
+        source_id = str(record.get("source_id", ""))
+        assignment = assignment_by_id.get(source_id)
+        if assignment is None or int(assignment["order_index"]) < 800:
+            raise RuntimeError(f"test-v4選択表と対応表が不一致です: {source_id}")
+        for key in ("order_index", "scope_relation", "profile_id", "question_sha256"):
+            if record.get(key) != assignment.get(key):
+                raise RuntimeError(f"test-v4選択表が不一致です: {source_id}/{key}")
+    print(json.dumps({
+        "status": "ready",
+        "student_provider": provider,
+        "python": platform.python_version(),
+        "torch_cuda": torch_cuda,
+        "vllm": installed_vllm,
+        "questions": len(questions),
+        "corpus_selection": len(selected),
+        "test_selection": len(test_records),
+    }, ensure_ascii=False, indent=2))
+
+
+def generate(
+    config: dict[str, Any], file_paths: dict[str, Path], overwrite: bool,
+    limit: int | None = None, start: int = 0,
+) -> None:
     load_env_file(BASE_DIR / ".env")
     if overwrite:
         for key in (
@@ -776,27 +1067,49 @@ def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: boo
     emotion_config = read_json(PROMPT_DIR / "initial_emotions.json")
     emotion_rows = emotion_config["emotions"]
     emotion_by_name = {row["name"]: row for row in emotion_rows}
-    questions = ordered_math_questions(read_jsonl(Path(config["questions"])))
-    if len(questions) < int(config["max_candidates"]):
-        raise ValueError("math_train_0以降の問題数がmax_candidatesより少ないです")
-    epistemic_assignments = load_problem_profile_assignments(
-        Path(config["problem_profile_assignments"]), questions, profiles,
+    all_questions = ordered_math_questions(read_jsonl(Path(config["questions"])))
+    epistemic_assignment_pool = load_problem_profile_assignments(
+        Path(config["problem_profile_assignments"]), all_questions, profiles,
     )
+    epistemic_assignments = load_problem_selection(
+        Path(config["problem_selection"]), epistemic_assignment_pool,
+        int(config["max_candidates"]),
+    )
+    question_by_id = {
+        question_fields(question)[0]: question for question in all_questions
+    }
+    questions = [question_by_id[str(row["source_id"])] for row in epistemic_assignments]
     profiles_by_id = {str(profile["id"]): profile for profile in profiles}
 
     api_key = os.getenv("OPENAI_API_KEY") or os.getenv("GPT_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEYを設定してください")
+    provider = str(config.get("student_provider", "vllm"))
     teacher_client = OpenAI(api_key=api_key)
-    student_client = OpenAI(
-        api_key=os.getenv("STUDENT_API_KEY", "EMPTY"),
-        base_url=os.getenv("STUDENT_BASE_URL", "http://localhost:8001/v1"),
-    )
+    if provider == "openai":
+        student_client = OpenAI(api_key=api_key)
+    else:
+        student_base_url = os.getenv("STUDENT_BASE_URL")
+        if not student_base_url:
+            raise RuntimeError(
+                "STUDENT_BASE_URLが未設定です。PBSを使うか、起動したvLLMのURLを設定してください"
+            )
+        student_client = OpenAI(
+            api_key=os.getenv("STUDENT_API_KEY", "EMPTY"),
+            base_url=student_base_url,
+        )
     teacher_system = (PROMPT_DIR / "teacher_system.txt").read_text(encoding="utf-8")
     student_template = (PROMPT_DIR / "student_system.txt").read_text(encoding="utf-8")
     manifest = load_manifest(config, file_paths)
 
-    for index in tqdm(range(int(config["max_candidates"])), desc="generate"):
+    generation_count = int(config["max_candidates"])
+    if limit is not None:
+        if limit <= 0:
+            raise ValueError("--limitは1以上にしてください")
+        generation_count = min(generation_count, limit)
+    if start < 0 or start >= generation_count:
+        raise ValueError("--startは0以上かつ生成終了index未満にしてください")
+    for index in tqdm(range(start, generation_count), desc="generate"):
         candidate_id = f"v4-{index:04d}"
         if candidate_id in existing:
             continue
@@ -854,28 +1167,48 @@ def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: boo
                 for validation_attempt in range(int(config["generation_validation_attempts"])):
                     retry_messages = list(student_messages)
                     if last_error is not None:
+                        disclosure_retry = (
+                            " utteranceの先頭を次の文字列と完全一致させてください: "
+                            f"{required_initial_disclosure(epistemic_assignment)}"
+                            if turn_index == 0 and required_initial_disclosure(epistemic_assignment)
+                            else ""
+                        )
                         retry_messages.append({
                             "role": "user",
                             "content": (
                                 f"前回出力は検証エラーでした: {last_error}。"
                                 "プロフィール、初期状態、感情表出を変えず、JSONを再生成してください。"
+                                f"{disclosure_retry}"
                             ),
                         })
-                    raw_student = chat_call(
-                        student_client, config["student_model"], retry_messages,
-                        STUDENT_SCHEMA, temperature=float(config["student_temperature"]),
-                        seed=(
-                            int(config["seed"]) + index * 100 + turn_index
-                            + validation_attempt * 10_000
-                        ),
-                        max_completion_tokens=int(config["student_max_tokens"]),
-                        use_max_tokens=True,
-                        extra_body={
-                            "top_p": float(config.get("student_top_p", 0.95)),
-                            "top_k": int(config.get("student_top_k", 20)),
-                            "min_p": float(config.get("student_min_p", 0)),
-                        },
+                    turn_schema = student_schema_for_turn(
+                        state,
+                        response_mode if turn_index == 0 else "follow_latest_teacher_step_only",
+                        allow_emotion_change=turn_index > 0,
                     )
+                    if provider == "openai":
+                        raw_student = chat_call(
+                            student_client, config["student_model"], retry_messages,
+                            turn_schema,
+                            reasoning_effort=config.get("student_reasoning_effort", "none"),
+                            max_completion_tokens=int(config["student_max_tokens"]),
+                        )
+                    else:
+                        raw_student = chat_call(
+                            student_client, config["student_model"], retry_messages,
+                            turn_schema, temperature=float(config["student_temperature"]),
+                            seed=(
+                                int(config["seed"]) + index * 100 + turn_index
+                                + validation_attempt * 10_000
+                            ),
+                            max_completion_tokens=int(config["student_max_tokens"]),
+                            use_max_tokens=True,
+                            extra_body={
+                                "top_p": float(config.get("student_top_p", 0.95)),
+                                "top_k": int(config.get("student_top_k", 20)),
+                                "min_p": float(config.get("student_min_p", 0)),
+                            },
+                        )
                     try:
                         student_value = validate_student_turn(
                             raw_student, state,
@@ -891,6 +1224,10 @@ def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: boo
                             latest_teacher_utterance=(
                                 recent_dialogue[-1]["content"] if recent_dialogue else ""
                             ),
+                            required_initial_disclosure=(
+                                required_initial_disclosure(epistemic_assignment)
+                                if turn_index == 0 else ""
+                            ),
                         )
                         break
                     except ValueError as exc:
@@ -899,6 +1236,7 @@ def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: boo
                             "role": "student", "turn": turn_index,
                             "attempt": validation_attempt + 1,
                             "validation_error": str(exc),
+                            "invalid_output": raw_student,
                         })
                 else:
                     raise RuntimeError(
@@ -909,17 +1247,21 @@ def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: boo
                     "turn": turn_index, "role": "student", "content": student_value["utterance"],
                     "response_stage": student_value["response_stage"],
                     "knowledge_used": student_value["knowledge_used"],
+                    "newly_acquired_knowledge": student_value["newly_acquired_knowledge"],
                     "state_after": state, "state_update_reason": student_value["state_update_reason"],
+                    "state_normalizations": student_value.get("state_normalizations", []),
                 }
                 conversation.append(student_turn)
                 recent_dialogue.append({"role": "student", "content": student_value["utterance"]})
-                teacher_user_content = student_value["utterance"]
-                if turn_index == 0:
-                    teacher_user_content = (
-                        f"問題: {problem}\n\n内部検算用の参照解答: {solution}\n"
-                        "参照解答は検算にだけ使い、生徒へそのまま提示しないでください。\n\n"
-                        f"生徒発話: {student_value['utterance']}"
-                    )
+                teacher_user_content = teacher_turn_input(
+                    problem=problem,
+                    reference_solution=solution,
+                    student_utterance=student_value["utterance"],
+                    profile=profile,
+                    epistemic_assignment=epistemic_assignment,
+                    initial_emotion=emotion,
+                    turn_index=turn_index,
+                )
                 teacher_history.append({"role": "user", "content": teacher_user_content})
 
                 last_error = None
@@ -948,6 +1290,7 @@ def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: boo
                             "role": "teacher", "turn": turn_index,
                             "attempt": validation_attempt + 1,
                             "validation_error": str(exc),
+                            "invalid_output": raw_teacher,
                         })
                 else:
                     raise RuntimeError(
@@ -984,7 +1327,8 @@ def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: boo
             "models": {
                 "teacher": config["teacher_model"],
                 "student": config["student_model"],
-                "student_revision": config["student_model_revision"],
+                "student_provider": provider,
+                "student_revision": config.get("student_model_revision", "alias"),
             },
         }
         if generation_error:
@@ -1067,6 +1411,57 @@ def classify_audit(audit: dict[str, Any]) -> str:
         "initial_emotion_utterance_consistent",
     ))
     if bool(audit["context_repairable"]) and bool(audit["repair_instructions"]) and immutable_context_is_valid:
+        return "Repair"
+    return "Reject"
+
+
+def classify_dialogue_audit(audit: dict[str, Any]) -> str:
+    """教師SFT適格性を判定し、生徒の内部メタデータ警告は相殺要因にしない。"""
+    minimum = min(int(audit[name]) for name in SCORE_FIELDS)
+    required_true = (
+        "mathematically_correct", "student_answer_assessed_correctly",
+        "cognitive_state_grounded", "emotion_grounded",
+        "analysis_reflected_in_utterance", "student_profile_consistent",
+        "student_role_consistent", "student_state_update_plausible",
+        "initial_emotion_utterance_consistent", "completion_decision_appropriate",
+    )
+    required_false = (
+        "false_affirmation", "direct_answer_without_need", "critical_failure",
+    )
+    acceptable_incompleteness = audit.get("acceptable_incompleteness", [])
+    if (
+        minimum >= 8
+        and all(bool(audit[name]) for name in required_true)
+        and all(not bool(audit[name]) for name in required_false)
+        and not audit["issues"]
+        and not audit["repair_instructions"]
+    ):
+        return "Keep"
+    # 高難度問題を正確かつ共感的に支援している途中でmax_turnsへ達した例は、
+    # 最終解・検算・完了確認の欠如や足場の細かさだけでは除外しない。
+    if acceptable_incompleteness:
+        core_scores = (
+            "mathematical_accuracy_score", "error_diagnosis_recovery_score",
+            "cognitive_empathy_score", "emotional_support_score",
+        )
+        observable_context_valid = all(bool(audit[name]) for name in (
+            "mathematically_correct", "student_answer_assessed_correctly",
+            "cognitive_state_grounded", "emotion_grounded",
+            "analysis_reflected_in_utterance", "student_profile_consistent",
+            "student_role_consistent", "student_state_update_plausible",
+            "initial_emotion_utterance_consistent",
+        ))
+        if (
+            all(int(audit[name]) >= 8 for name in core_scores)
+            and observable_context_valid
+            and not any(bool(audit[name]) for name in (
+                "false_affirmation", "direct_answer_without_need", "critical_failure",
+            ))
+            and not audit["issues"]
+            and not audit["repair_instructions"]
+        ):
+            return "Keep"
+    if bool(audit["context_repairable"]) and bool(audit["repair_instructions"]):
         return "Repair"
     return "Reject"
 
@@ -1204,6 +1599,125 @@ def collect_audit(config: dict[str, Any], file_paths: dict[str, Path]) -> None:
     def transform(key: str, value: dict[str, Any]) -> dict[str, Any]:
         return {"turn_key": key, "status": "completed", "classification": classify_audit(value), "total_score": sum(value[n] for n in SCORE_FIELDS), "audit": value}
     collect_batch(config, file_paths, "audit", file_paths["audits"], transform)
+
+
+def audit_sync(
+    config: dict[str, Any], file_paths: dict[str, Path], overwrite: bool,
+) -> None:
+    """Batchのファイル経路が利用できない場合の再開可能な同期監査。"""
+    load_env_file(BASE_DIR / ".env")
+    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("GPT_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEYを設定してください")
+    manifest = load_manifest(config, file_paths)
+    if overwrite:
+        invalidate_batch_stage(manifest, file_paths, "audit")
+        save_manifest(file_paths["manifest"], manifest)
+    existing = {
+        str(row["turn_key"]) for row in read_jsonl(file_paths["audits"])
+        if row.get("status") == "completed"
+    }
+    records = list(teacher_turn_records(read_jsonl(file_paths["dialogues"])))
+    system = (PROMPT_DIR / "turn_quality_judge_system.txt").read_text(encoding="utf-8")
+    client = OpenAI(api_key=api_key)
+    for key, dialogue, _, conversation_index, turn in tqdm(records, desc="audit-sync"):
+        if key in existing:
+            continue
+        value = chat_call(
+            client, config["judge_model"],
+            [
+                {"role": "system", "content": system},
+                {"role": "user", "content": json.dumps(
+                    audit_payload(dialogue, conversation_index, turn), ensure_ascii=False,
+                )},
+            ],
+            AUDIT_SCHEMA,
+            reasoning_effort=config.get("judge_reasoning_effort"),
+            max_completion_tokens=4000,
+        )
+        append_jsonl(file_paths["audits"], {
+            "turn_key": key,
+            "status": "completed",
+            "classification": classify_audit(value),
+            "total_score": sum(value[name] for name in SCORE_FIELDS),
+            "audit": value,
+        })
+        existing.add(key)
+    manifest = load_manifest(config, file_paths)
+    manifest.setdefault("batch_jobs", {})["audit"] = {
+        "status": "completed_sync",
+        "request_count": len(records),
+        "collected": True,
+    }
+    save_manifest(file_paths["manifest"], manifest)
+    print(f"audited synchronously: {len(existing)} records")
+
+
+def audit_dialogues_sync(
+    config: dict[str, Any], file_paths: dict[str, Path], overwrite: bool,
+    workers: int = 1,
+) -> None:
+    """1対話を1リクエストとして監査し、教師SFT適格性を保存する。"""
+    load_env_file(BASE_DIR / ".env")
+    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("GPT_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEYを設定してください")
+    if overwrite:
+        file_paths["dialogue_audits"].unlink(missing_ok=True)
+    existing = {
+        str(row["candidate_id"]) for row in read_jsonl(file_paths["dialogue_audits"])
+        if row.get("status") == "completed"
+    }
+    dialogues = read_jsonl(file_paths["dialogues"])
+    system = (PROMPT_DIR / "dialogue_quality_judge_system.txt").read_text(encoding="utf-8")
+    if workers < 1:
+        raise ValueError("--workersは1以上にしてください")
+    pending = [d for d in dialogues if str(d["candidate_id"]) not in existing]
+
+    def audit_one(dialogue: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+        value = chat_call(
+            client, config["judge_model"],
+            [
+                {"role": "system", "content": system},
+                {"role": "user", "content": json.dumps(dialogue, ensure_ascii=False)},
+            ],
+            DIALOGUE_AUDIT_SCHEMA,
+            reasoning_effort=config.get("judge_reasoning_effort"),
+            max_completion_tokens=5000,
+        )
+        return str(dialogue["candidate_id"]), value
+
+    client = OpenAI(api_key=api_key)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(audit_one, dialogue): dialogue for dialogue in pending}
+        for future in tqdm(
+            concurrent.futures.as_completed(futures), total=len(futures),
+            desc="audit-dialogues-sync",
+        ):
+            dialogue = futures[future]
+            candidate_id = str(dialogue["candidate_id"])
+            try:
+                _, value = future.result()
+                row = {
+                    "candidate_id": candidate_id, "status": "completed",
+                    "classification": classify_dialogue_audit(value),
+                    "total_score": sum(value[name] for name in SCORE_FIELDS),
+                    "audit": value,
+                }
+                existing.add(candidate_id)
+            except Exception as exc:
+                row = {
+                    "candidate_id": candidate_id, "status": "error",
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
+            append_jsonl(file_paths["dialogue_audits"], row)
+    manifest = load_manifest(config, file_paths)
+    manifest.setdefault("batch_jobs", {})["dialogue_audit"] = {
+        "status": "completed_sync", "request_count": len(dialogues), "collected": True,
+        "prompt_sha256": sha256(PROMPT_DIR / "dialogue_quality_judge_system.txt"),
+    }
+    save_manifest(file_paths["manifest"], manifest)
+    print(f"audited dialogues synchronously: {len(existing)} records")
 
 
 def audits_for_dialogue(
@@ -1413,13 +1927,23 @@ def sft_assistant_content(turn: dict[str, Any]) -> str:
 
 def build_sft_messages(dialogue: dict[str, Any], system_prompt: str) -> list[dict[str, str]]:
     """問題と最初の生徒発話を結合し、roleが必ず交互になるSFT messagesを作る。"""
+    initial_emotion = str(dialogue.get("initial_emotion", "")).strip()
+    if initial_emotion not in STUDENT_EMOTIONS:
+        raise ValueError(
+            f"SFT化に有効な初期感情ラベルがありません: "
+            f"{dialogue.get('candidate_id', 'unknown')}"
+        )
     messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt.strip()}]
     first_student = True
     for turn in dialogue["conversation"]:
         if turn["role"] == "student":
             content = str(turn["content"]).strip()
             if first_student:
-                content = f"問題: {dialogue['problem']}\n\n生徒発話: {content}"
+                content = (
+                    f"問題: {dialogue['problem']}\n\n"
+                    f"初期感情ラベル: {initial_emotion}\n\n"
+                    f"生徒発話: {content}"
+                )
                 first_student = False
             messages.append({"role": "user", "content": content})
         else:
@@ -1623,7 +2147,11 @@ def finalize(config: dict[str, Any], file_paths: dict[str, Path]) -> None:
     file_paths["report"].write_text("\n".join(report) + "\n", encoding="utf-8")
     print(f"accepted: {len(accepted)}; sft: {len(sft_rows)}")
     if len(accepted) < int(config["target_dialogues"]):
-        print("警告: 目標件数未達です。max_candidatesを増やして追加生成してください。", file=sys.stderr)
+        print(
+            "警告: 固定120候補では目標件数未達です。採択基準または候補設計を再検討し、"
+            "新しい選択表とoutput_dirで再実行してください。",
+            file=sys.stderr,
+        )
 
 
 def status(config: dict[str, Any], file_paths: dict[str, Path]) -> None:
@@ -1632,6 +2160,7 @@ def status(config: dict[str, Any], file_paths: dict[str, Path]) -> None:
         "candidate_dialogues": len(read_jsonl(file_paths["dialogues"])),
         "generation_errors": len(read_jsonl(file_paths["generation_errors"])),
         "audits": len(read_jsonl(file_paths["audits"])),
+        "dialogue_audits": len(read_jsonl(file_paths["dialogue_audits"])),
         "repairs": len(read_jsonl(file_paths["repairs"])),
         "reaudits": len(read_jsonl(file_paths["reaudits"])),
         "accepted": len(read_jsonl(file_paths["corpus"])),
@@ -1644,11 +2173,17 @@ def main() -> None:
     args = parse_args()
     config = load_config(args.config.resolve())
     file_paths = paths(config)
-    file_paths["root"].mkdir(parents=True, exist_ok=True)
     commands = {
-        "generate": lambda: generate(config, file_paths, args.overwrite),
+        "preflight": lambda: preflight(config),
+        "generate": lambda: generate(
+            config, file_paths, args.overwrite, args.limit, args.start,
+        ),
         "submit-audit": lambda: submit_audit(config, file_paths, args.overwrite),
         "collect-audit": lambda: collect_audit(config, file_paths),
+        "audit-sync": lambda: audit_sync(config, file_paths, args.overwrite),
+        "audit-dialogues-sync": lambda: audit_dialogues_sync(
+            config, file_paths, args.overwrite, args.workers,
+        ),
         "submit-repair": lambda: submit_repair(config, file_paths, args.overwrite),
         "collect-repair": lambda: collect_repair(config, file_paths),
         "submit-reaudit": lambda: submit_reaudit(config, file_paths, args.overwrite),
@@ -1656,6 +2191,8 @@ def main() -> None:
         "finalize": lambda: finalize(config, file_paths),
         "status": lambda: status(config, file_paths),
     }
+    if args.command != "preflight":
+        file_paths["root"].mkdir(parents=True, exist_ok=True)
     commands[args.command]()
 
 

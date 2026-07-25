@@ -14,8 +14,8 @@
 python scripts/build_problem_profile_assignments.py
 ```
 
-現行対応表は`math_train_0`から`math_train_1097`までの欠番を除く1000問を含む。V4-S01〜V4-S08は各124〜126件である。範囲関係は`mastered` 399件、`frontier` 351件、`one_step_beyond` 200件、`far_beyond` 50件である。初期感情は`neutral` 79件、`engaged` 320件、`curious` 44件、`confused` 328件、`anxious` 179件、`frustrated` 50件である。
+現行対応表は`math_train_0`から`math_train_1097`までの欠番を除く1000問を含む。範囲関係は`mastered` 251件、`frontier` 248件、`one_step_beyond` 251件、`far_beyond` 250件であり、先頭800件と後半200件で均等化カウンタを分離している。
 
-実際に候補生成へ使う先頭120件では、`mastered` 47件、`frontier` 43件、`one_step_beyond` 24件、`far_beyond` 6件である。`anxious`は22件、`frustrated`は6件となり、`frustrated`全件に2回の事前失敗履歴を保存する。
+コーパス生成には、先頭800件からseed 42で固定抽出した`corpus_120_selection.json`だけを使う。`math_train_0`を必ず含み、`mastered`、`frontier`、`one_step_beyond`、`far_beyond`は各30件である。後半200件はテスト専用とし、コーパスへ使用しない。選択表は概念単位の知識境界監査結果を持ち、`mastered`への未習概念混入、範囲関係不整合、要人手確認問題が一件でもあれば再生成または実行を停止する。`far_beyond`全件には問題文の短い固有表現を含む1回目・2回目の事前試行、共通停止箇所、初回発話先頭へ完全一致で置く`required_initial_disclosure`を保存する。
 
-規則が分野根拠語を検出できなかった125件は、`curriculum_annotation.requires_human_review=true`としている。これは生成を禁止する印ではなく、正式実行前の優先的な人手確認対象である。
+`test_120_selection.json`と後半200件の`test_problem_profile_assignments.jsonl`も同じフォルダーへ同梱する。補助スクリプトの既定出力はすべてv4内部で完結し、`model_evaluation`へ書き込まない。概念規則で確定できない問題は`classification_confidence=conservative`として追跡し、空問題・空解答など実行不能なものだけを`requires_human_review=true`として選択から除外する。

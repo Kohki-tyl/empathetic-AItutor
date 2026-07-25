@@ -1,10 +1,13 @@
 {
   "dataset": "data/v4_sft.jsonl",
-  "expected_records": 100,
+  "dataset_sha256": "09bda3da746079639f48146c7fecfdc7c40480d34caaceb3ff9ed229700c4b9d",
+  "expected_records": 104,
   "model_name": "tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5",
   "model_revision": "b1f8317099a97e790ec872c1225ca155979b4816",
-  "output_dir": "outputs/swallow8b_v4_lora",
+  "output_dir": "outputs/swallow8b_v4_lora_104",
   "max_length": 8192,
+  "analysis_loss_weight": 0.25,
+  "final_loss_weight": 1.0,
   "validation_ratio": 0.1,
   "seed": 42,
   "num_train_epochs": 4,
@@ -33,4 +36,3 @@
   "save_total_limit": 4,
   "logging_steps": 1
 }
-

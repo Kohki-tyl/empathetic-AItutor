@@ -24,11 +24,14 @@ from typing import Any, Protocol, Sequence
 
 REQUIRED_CONFIG = {
     "dataset",
+    "dataset_sha256",
     "expected_records",
     "model_name",
     "model_revision",
     "output_dir",
     "max_length",
+    "analysis_loss_weight",
+    "final_loss_weight",
     "validation_ratio",
     "seed",
     "num_train_epochs",
@@ -72,12 +75,19 @@ class EncodedRecord:
     record_id: str
     input_ids: list[int]
     labels: list[int]
+    loss_weights: list[float]
+    analysis_tokens: int
+    final_tokens: int
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("config.json"))
     parser.add_argument("--preflight-only", action="store_true")
+    parser.add_argument(
+        "--structure-only", action="store_true",
+        help="モデルを読み込まず、入力hash・件数・messages構造・splitだけを検証する",
+    )
     parser.add_argument(
         "--resume",
         default="auto",
@@ -123,6 +133,18 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def assert_dataset_hash(path: Path, expected: str) -> str:
+    expected = str(expected).strip().lower()
+    if re.fullmatch(r"[0-9a-f]{64}", expected) is None:
+        raise ValueError("dataset_sha256は64桁の16進SHA-256にしてください")
+    actual = sha256_file(path)
+    if actual != expected:
+        raise RuntimeError(
+            f"SFT入力のSHA-256が設定と一致しません: expected={expected}, actual={actual}"
+        )
+    return actual
+
+
 def canonical_hash(value: Any) -> str:
     raw = json.dumps(
         value,
@@ -163,6 +185,12 @@ def resolve_config(path: Path) -> tuple[dict[str, Any], Path, Path]:
         raise ValueError("num_train_epochsは正にしてください")
     if float(config["learning_rate"]) <= 0:
         raise ValueError("learning_rateは正にしてください")
+    if float(config["analysis_loss_weight"]) <= 0:
+        raise ValueError("analysis_loss_weightは正にしてください")
+    if float(config["final_loss_weight"]) < float(config["analysis_loss_weight"]):
+        raise ValueError(
+            "final_loss_weightはanalysis_loss_weight以上にしてください"
+        )
     if not 0 <= float(config["warmup_ratio"]) < 1:
         raise ValueError("warmup_ratioは0以上1未満にしてください")
     if not 0 <= float(config["lora_dropout"]) < 1:
@@ -209,6 +237,8 @@ def validate_messages(rows: list[dict[str, Any]], expected_records: int) -> None
             content = message.get("content")
             if not isinstance(content, str) or not content.strip():
                 raise ValueError(f"空のmessage: {record_id}:{message_index}")
+            if any(ord(char) < 32 and char not in "\n\t\r" for char in content):
+                raise ValueError(f"制御文字を含むmessage: {record_id}:{message_index}")
             if message["role"] == "assistant":
                 markers = ("<analysis>", "</analysis>", "<final>", "</final>")
                 match = re.fullmatch(
@@ -244,6 +274,8 @@ def deterministic_split(
 
 
 def _token_ids(value: Any) -> list[int]:
+    if hasattr(value, "get") and value.get("input_ids") is not None:
+        value = value["input_ids"]
     if hasattr(value, "tolist"):
         value = value.tolist()
     if not isinstance(value, list) or not all(isinstance(item, int) for item in value):
@@ -270,6 +302,8 @@ def encode_with_assistant_mask(
     tokenizer: ChatTokenizer,
     row: dict[str, Any],
     max_length: int,
+    analysis_loss_weight: float = 0.25,
+    final_loss_weight: float = 1.0,
 ) -> EncodedRecord:
     record_id = str(row["id"])
     messages = row["messages"]
@@ -280,7 +314,10 @@ def encode_with_assistant_mask(
             f"tokens={len(full_ids)}, max_length={max_length}"
         )
     labels = [-100] * len(full_ids)
+    loss_weights = [0.0] * len(full_ids)
     assistant_messages = 0
+    analysis_tokens = 0
+    final_tokens = 0
     for index, message in enumerate(messages):
         if message["role"] != "assistant":
             continue
@@ -304,11 +341,56 @@ def encode_with_assistant_mask(
             raise ValueError(
                 f"chat templateのprefix性が成立しません: {record_id}:{index}"
             )
+        assistant_content = str(message["content"])
+        stripped_content = assistant_content.strip()
+        match = re.fullmatch(
+            r"<analysis>\s*(.*?)\s*</analysis>\s*"
+            r"<final>\s*(.*?)\s*</final>",
+            stripped_content,
+            flags=re.DOTALL,
+        )
+        if match is None:
+            raise ValueError(f"analysis/final境界を決定できません: {record_id}:{index}")
+        partial_messages = [dict(item) for item in messages[: index + 1]]
+        leading_offset = assistant_content.find(stripped_content)
+        final_content_offset = leading_offset + match.start(2)
+        partial_messages[-1]["content"] = assistant_content[:final_content_offset]
+        before_final = render_ids(
+            tokenizer,
+            partial_messages,
+            add_generation_prompt=False,
+        )
+        final_start = 0
+        for full_token, partial_token in zip(after, before_final):
+            if full_token != partial_token:
+                break
+            final_start += 1
+        if not len(before) < final_start < len(after):
+            raise ValueError(
+                f"final本文のtoken境界を決定できません: {record_id}:{index}"
+            )
         labels[len(before) : len(after)] = full_ids[len(before) : len(after)]
+        loss_weights[len(before) : final_start] = [analysis_loss_weight] * (
+            final_start - len(before)
+        )
+        loss_weights[final_start : len(after)] = [final_loss_weight] * (
+            len(after) - final_start
+        )
+        analysis_tokens += final_start - len(before)
+        final_tokens += len(after) - final_start
     target_tokens = sum(label != -100 for label in labels)
     if assistant_messages == 0 or target_tokens == 0:
         raise ValueError(f"assistant教師信号がありません: {record_id}")
-    return EncodedRecord(record_id, full_ids, labels)
+    if any((label == -100) != (weight == 0.0) for label, weight in zip(labels, loss_weights)):
+        raise ValueError(f"labelとloss weightが一致しません: {record_id}")
+    return EncodedRecord(
+        record_id,
+        full_ids,
+        labels,
+        loss_weights,
+        analysis_tokens,
+        final_tokens,
+    )
 
 
 def percentile(values: Sequence[int], probability: float) -> int:
@@ -331,6 +413,11 @@ def token_statistics(records: list[EncodedRecord]) -> dict[str, Any]:
         "p95_tokens": percentile(lengths, 0.95),
         "maximum_tokens": max(lengths, default=0),
         "assistant_target_tokens": total_targets,
+        "weighted_target_mass": round(
+            sum(sum(record.loss_weights) for record in records), 2
+        ),
+        "analysis_target_tokens": sum(record.analysis_tokens for record in records),
+        "final_target_tokens": sum(record.final_tokens for record in records),
         "all_tokens": total_tokens,
         "assistant_target_ratio": round(total_targets / total_tokens, 6)
         if total_tokens
@@ -388,6 +475,7 @@ def prepare_run(
             f"SFT入力がありません: {dataset_path}\n"
             "corpus_creation/v4のfinalizeで生成したv4_sft.jsonlを配置してください。"
         )
+    dataset_sha256 = assert_dataset_hash(dataset_path, str(config["dataset_sha256"]))
     rows = read_jsonl(dataset_path)
     validate_messages(rows, int(config["expected_records"]))
     train_rows, validation_rows = deterministic_split(
@@ -396,14 +484,25 @@ def prepare_run(
         int(config["seed"]),
     )
     train = [
-        encode_with_assistant_mask(tokenizer, row, int(config["max_length"]))
+        encode_with_assistant_mask(
+            tokenizer,
+            row,
+            int(config["max_length"]),
+            float(config["analysis_loss_weight"]),
+            float(config["final_loss_weight"]),
+        )
         for row in train_rows
     ]
     validation = [
-        encode_with_assistant_mask(tokenizer, row, int(config["max_length"]))
+        encode_with_assistant_mask(
+            tokenizer,
+            row,
+            int(config["max_length"]),
+            float(config["analysis_loss_weight"]),
+            float(config["final_loss_weight"]),
+        )
         for row in validation_rows
     ]
-    dataset_sha256 = sha256_file(dataset_path)
     train_ids = [record.record_id for record in train]
     validation_ids = [record.record_id for record in validation]
     fingerprint = build_fingerprint(config, dataset_sha256, train_ids, validation_ids)
@@ -414,12 +513,39 @@ def prepare_run(
         "model_name": config["model_name"],
         "model_revision": config["model_revision"],
         "max_length": config["max_length"],
+        "analysis_loss_weight": config["analysis_loss_weight"],
+        "final_loss_weight": config["final_loss_weight"],
         "train": token_statistics(train),
         "validation": token_statistics(validation),
         "train_ids": train_ids,
         "validation_ids": validation_ids,
     }
     return config, dataset_path, output_dir, train, validation, report
+
+
+def structure_check(config_path: Path) -> dict[str, Any]:
+    config, dataset_path, output_dir = resolve_config(config_path)
+    if not dataset_path.exists():
+        raise FileNotFoundError(f"SFT入力がありません: {dataset_path}")
+    dataset_sha256 = assert_dataset_hash(dataset_path, str(config["dataset_sha256"]))
+    rows = read_jsonl(dataset_path)
+    validate_messages(rows, int(config["expected_records"]))
+    train_rows, validation_rows = deterministic_split(
+        rows, float(config["validation_ratio"]), int(config["seed"])
+    )
+    report = {
+        "status": "structure_ok",
+        "dataset": str(dataset_path),
+        "dataset_sha256": dataset_sha256,
+        "records": len(rows),
+        "train_records": len(train_rows),
+        "validation_records": len(validation_rows),
+        "train_ids": [str(row["id"]) for row in train_rows],
+        "validation_ids": [str(row["id"]) for row in validation_rows],
+        "output_dir": str(output_dir),
+    }
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    return report
 
 
 def resolve_resume(output_dir: Path, resume: str) -> str | bool | None:
@@ -452,18 +578,9 @@ def assert_resume_compatible(output_dir: Path, fingerprint: str) -> None:
 def train(config_path: Path, preflight_only: bool, resume: str) -> None:
     config, _, output_dir = resolve_config(config_path)
     try:
-        import torch
-        from peft import LoraConfig, get_peft_model
-        from torch.utils.data import Dataset
-        from transformers import (
-            AutoModelForCausalLM,
-            AutoTokenizer,
-            Trainer,
-            TrainingArguments,
-            set_seed,
-        )
+        from transformers import AutoTokenizer
     except ImportError as exc:
-        raise RuntimeError("requirements.txtの依存関係を導入してください") from exc
+        raise RuntimeError("完全監査にはtransformersが必要です") from exc
 
     tokenizer = AutoTokenizer.from_pretrained(
         config["model_name"],
@@ -494,6 +611,18 @@ def train(config_path: Path, preflight_only: bool, resume: str) -> None:
     print(json.dumps(report, ensure_ascii=False, indent=2))
     if preflight_only:
         return
+    try:
+        import torch
+        from peft import LoraConfig, get_peft_model
+        from torch.utils.data import Dataset
+        from transformers import (
+            AutoModelForCausalLM,
+            Trainer,
+            TrainingArguments,
+            set_seed,
+        )
+    except ImportError as exc:
+        raise RuntimeError("requirements.txtの依存関係を導入してください") from exc
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA GPUが必要です")
     if int(os.getenv("WORLD_SIZE", "1")) != 1:
@@ -539,9 +668,13 @@ def train(config_path: Path, preflight_only: bool, resume: str) -> None:
         def __len__(self) -> int:
             return len(self.records)
 
-        def __getitem__(self, index: int) -> dict[str, list[int]]:
+        def __getitem__(self, index: int) -> dict[str, Any]:
             record = self.records[index]
-            return {"input_ids": record.input_ids, "labels": record.labels}
+            return {
+                "input_ids": record.input_ids,
+                "labels": record.labels,
+                "loss_weights": record.loss_weights,
+            }
 
     class AssistantOnlyCollator:
         def __init__(self, pad_token_id: int) -> None:
@@ -552,16 +685,47 @@ def train(config_path: Path, preflight_only: bool, resume: str) -> None:
             input_ids: list[list[int]] = []
             labels: list[list[int]] = []
             attention_mask: list[list[int]] = []
+            loss_weights: list[list[float]] = []
             for feature in features:
                 padding = maximum - len(feature["input_ids"])
                 input_ids.append(feature["input_ids"] + [self.pad_token_id] * padding)
                 labels.append(feature["labels"] + [-100] * padding)
                 attention_mask.append([1] * len(feature["input_ids"]) + [0] * padding)
+                loss_weights.append(feature["loss_weights"] + [0.0] * padding)
             return {
                 "input_ids": torch.tensor(input_ids, dtype=torch.long),
                 "labels": torch.tensor(labels, dtype=torch.long),
                 "attention_mask": torch.tensor(attention_mask, dtype=torch.long),
+                "loss_weights": torch.tensor(loss_weights, dtype=torch.float32),
             }
+
+    class WeightedTokenTrainer(Trainer):
+        def compute_loss(
+            self,
+            model: Any,
+            inputs: dict[str, Any],
+            return_outputs: bool = False,
+            num_items_in_batch: Any = None,
+        ) -> Any:
+            del num_items_in_batch
+            labels = inputs.pop("labels")
+            weights = inputs.pop("loss_weights")
+            outputs = model(**inputs)
+            shift_logits = outputs.logits[:, :-1, :].contiguous()
+            shift_labels = labels[:, 1:].contiguous()
+            shift_weights = weights[:, 1:].to(shift_logits.device).contiguous()
+            token_losses = torch.nn.functional.cross_entropy(
+                shift_logits.view(-1, shift_logits.size(-1)),
+                shift_labels.view(-1),
+                ignore_index=-100,
+                reduction="none",
+            ).view_as(shift_labels)
+            active_weights = shift_weights * shift_labels.ne(-100)
+            denominator = active_weights.sum()
+            if denominator.item() <= 0:
+                raise RuntimeError("重み付き教師信号が空です")
+            loss = (token_losses * active_weights).sum() / denominator
+            return (loss, outputs) if return_outputs else loss
 
     effective_batch = (
         int(config["per_device_train_batch_size"])
@@ -622,7 +786,7 @@ def train(config_path: Path, preflight_only: bool, resume: str) -> None:
         report_to=[],
         save_safetensors=True,
     )
-    trainer = Trainer(
+    trainer = WeightedTokenTrainer(
         model=model,
         args=training_args,
         train_dataset=TokenDataset(train_records),
@@ -651,6 +815,9 @@ def train(config_path: Path, preflight_only: bool, resume: str) -> None:
 
 def main() -> None:
     args = parse_args()
+    if args.structure_only:
+        structure_check(args.config)
+        return
     train(args.config, args.preflight_only, args.resume)
 
 

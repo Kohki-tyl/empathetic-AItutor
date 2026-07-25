@@ -9,3 +9,6 @@ sample_log
 
 .DS_Store
 Thumbs.db
+
+# v4 corpus slice jobs: structured JSON/JSONL is retained; console logs are transient.
+pipelines/corpus_creation/v4/data/run_120_slices/*.log

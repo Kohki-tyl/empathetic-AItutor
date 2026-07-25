@@ -1,0 +1,23 @@
+#!/bin/bash
+#PBS -q rt_HG
+#PBS -l select=1
+#PBS -l walltime=06:00:00
+#PBS -P CHANGE_TO_YOUR_ABCI_GROUP
+#PBS -N v4-sft-swallow8b
+#PBS -j oe
+
+set -euo pipefail
+
+cd "${PBS_O_WORKDIR}"
+source /etc/profile.d/modules.sh
+module load cuda/12.6/12.6.1
+source .venv/bin/activate
+
+export PYTHONUNBUFFERED=1
+export TOKENIZERS_PARALLELISM=false
+export HF_HOME="${HF_HOME:-${PBS_O_WORKDIR}/.cache/huggingface}"
+
+mkdir -p logs outputs "${HF_HOME}"
+nvidia-smi
+python train_v4_sft.py --config config.json --resume auto
+

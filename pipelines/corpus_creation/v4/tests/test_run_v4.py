@@ -42,6 +42,24 @@ def audit_with(score: int = 9, **updates):
     return value
 
 
+def valid_teacher_turn(**updates):
+    value = {
+        "mathematical_assessment": {
+            "status": "correct", "verification": "1+1=2",
+            "correct_part": "加法", "error_part": "なし",
+        },
+        "learner_state": {
+            "cognitive_state": "理由を含めて正答した",
+            "emotion": "Neutral", "evidence": "感情表現はない",
+        },
+        "support_decision": {"next_support": "なし", "change_reason": "なし"},
+        "is_completed": True,
+        "teacher_utterance": "式と理由を示せています。1+1=2で正解です。根拠も確認できました。",
+    }
+    value.update(updates)
+    return value
+
+
 class PipelineLogicTests(unittest.TestCase):
     def test_student_vllm_call_uses_model_card_max_tokens_parameter(self):
         captured = {}
@@ -117,25 +135,30 @@ class PipelineLogicTests(unittest.TestCase):
             score=7, context_repairable=True, repair_instructions=[],
         )), "Reject")
 
-    def test_profile_emotion_assignments_are_balanced(self):
-        profiles = [{"id": f"S{index}"} for index in range(4)]
-        emotions = [f"e{index}" for index in range(6)]
-        assignments = run_v4.stratified_assignments({"max_candidates": 120, "seed": 42}, profiles, emotions)
-        counts = {}
-        for profile, emotion in assignments:
-            key = (profile["id"], emotion)
-            counts[key] = counts.get(key, 0) + 1
-        self.assertEqual(len(counts), 24)
-        self.assertEqual(set(counts.values()), {5})
+    def test_questions_start_at_math_train_0_and_use_numeric_order(self):
+        rows = [
+            {"id": "math_train_10"}, {"id": "other_1"},
+            {"id": "math_train_2"}, {"id": "math_train_0"},
+            {"id": "math_train_1"},
+        ]
+        self.assertEqual(
+            [row["id"] for row in run_v4.ordered_math_questions(rows)],
+            ["math_train_0", "math_train_1", "math_train_2", "math_train_10"],
+        )
 
-    def test_assignment_extension_preserves_existing_prefix(self):
-        profiles = [{"id": f"S{index}"} for index in range(4)]
-        emotions = [f"e{index}" for index in range(6)]
-        first = run_v4.stratified_assignments({"max_candidates": 120, "seed": 42}, profiles, emotions)
-        extended = run_v4.stratified_assignments({"max_candidates": 200, "seed": 42}, profiles, emotions)
-        self.assertEqual(len(first), 120)
-        self.assertEqual(len(extended), 200)
-        self.assertEqual(first, extended[:120])
+    def test_out_of_scope_problem_forces_help_seeking(self):
+        self.assertEqual(
+            run_v4.effective_initial_response_mode(
+                "correct_but_uncertain", {"scope_relation": "one_step_beyond"},
+            ),
+            "scope_limited_help_seeking",
+        )
+        self.assertEqual(
+            run_v4.effective_initial_response_mode(
+                "partial_reasoning", {"scope_relation": "frontier"},
+            ),
+            "partial_reasoning",
+        )
 
     def test_student_understanding_cannot_jump(self):
         previous = {
@@ -145,6 +168,7 @@ class PipelineLogicTests(unittest.TestCase):
         }
         value = {
             "state_after": {**previous, "understanding_level": 3},
+            "response_stage": "attempt", "knowledge_used": [],
             "state_update_reason": "jump", "utterance": "わかりました。",
         }
         with self.assertRaises(ValueError):
@@ -158,6 +182,7 @@ class PipelineLogicTests(unittest.TestCase):
         }
         value = {
             "state_after": {**previous, "confidence": 0.8},
+            "response_stage": "attempt", "knowledge_used": [],
             "state_update_reason": "jump", "utterance": "わかりました。",
         }
         with self.assertRaises(ValueError):
@@ -179,6 +204,7 @@ class PipelineLogicTests(unittest.TestCase):
         }
         value = {
             "state_after": {**previous, "emotion": "confused"},
+            "response_stage": "attempt", "knowledge_used": [],
             "state_update_reason": "支援が具体化された", "utterance": "それなら少し考えられそう。",
         }
         self.assertEqual(run_v4.validate_student_turn(value, previous)["state_after"]["emotion"], "confused")
@@ -191,6 +217,7 @@ class PipelineLogicTests(unittest.TestCase):
         }
         value = {
             "state_after": {**previous, "emotion": "proud"},
+            "response_stage": "attempt", "knowledge_used": [],
             "state_update_reason": "急に解決した", "utterance": "全部わかった。",
         }
         with self.assertRaises(ValueError):
@@ -204,10 +231,97 @@ class PipelineLogicTests(unittest.TestCase):
         }
         value = {
             "state_after": {**previous, "emotion": "relieved"},
+            "response_stage": "attempt", "knowledge_used": [],
             "state_update_reason": "開始時に改善した", "utterance": "できそうです。",
         }
         with self.assertRaises(ValueError):
             run_v4.validate_student_turn(value, previous, allow_emotion_change=False)
+
+    def test_initial_turn_cannot_acquire_knowledge_or_raise_understanding(self):
+        previous = {
+            "understanding_level": 1, "confidence": 0.5,
+            "active_misconception": "m", "emotion": "curious",
+            "acquired_knowledge": [], "remaining_unknowns": ["x"],
+        }
+        acquired = {
+            "state_after": {
+                **previous, "understanding_level": 2,
+                "acquired_knowledge": ["new"],
+            },
+            "response_stage": "answer", "knowledge_used": [],
+            "state_update_reason": "自力で習得した", "utterance": "答えは2です。",
+        }
+        with self.assertRaisesRegex(ValueError, "initial understanding"):
+            run_v4.validate_student_turn(
+                acquired, previous, allow_emotion_change=False
+            )
+
+    def test_initial_turn_confidence_change_is_limited(self):
+        previous = {
+            "understanding_level": 1, "confidence": 0.5,
+            "active_misconception": "m", "emotion": "anxious",
+            "acquired_knowledge": [], "remaining_unknowns": ["x"],
+        }
+        value = {
+            "state_after": {**previous, "confidence": 0.65},
+            "response_stage": "answer", "knowledge_used": [],
+            "state_update_reason": "考えた", "utterance": "2だと思います。",
+        }
+        with self.assertRaisesRegex(ValueError, "initial confidence"):
+            run_v4.validate_student_turn(value, previous, allow_emotion_change=False)
+
+    def test_student_cannot_report_out_of_boundary_knowledge(self):
+        previous = {
+            "understanding_level": 1, "confidence": 0.5,
+            "active_misconception": "m", "emotion": "neutral",
+            "acquired_knowledge": [], "remaining_unknowns": ["x"],
+        }
+        value = {
+            "state_after": previous,
+            "response_stage": "attempt", "knowledge_used": ["微分"],
+            "state_update_reason": "試した", "utterance": "微分してみます。",
+        }
+        with self.assertRaisesRegex(ValueError, "outside the profile boundary"):
+            run_v4.validate_student_turn(
+                value, previous, allowed_knowledge=["一次方程式"],
+            )
+
+    def test_new_knowledge_must_be_copied_from_latest_teacher(self):
+        previous = {
+            "understanding_level": 1, "confidence": 0.5,
+            "active_misconception": "m", "emotion": "neutral",
+            "acquired_knowledge": [], "remaining_unknowns": ["x"],
+        }
+        value = {
+            "state_after": {**previous, "acquired_knowledge": ["解の公式"]},
+            "response_stage": "help_seeking", "knowledge_used": [],
+            "state_update_reason": "教わった", "utterance": "ここまでは分かりました。",
+        }
+        with self.assertRaisesRegex(ValueError, "not copied"):
+            run_v4.validate_student_turn(
+                value, previous, latest_teacher_utterance="因数分解を試そう。",
+            )
+        accepted = run_v4.validate_student_turn(
+            value, previous, latest_teacher_utterance="ここでは解の公式を使います。",
+        )
+        self.assertEqual(accepted["state_after"]["acquired_knowledge"], ["解の公式"])
+
+    def test_completed_teacher_cannot_add_next_support(self):
+        value = valid_teacher_turn(
+            support_decision={"next_support": "代入を確認する", "change_reason": "なし"}
+        )
+        with self.assertRaisesRegex(ValueError, "next support"):
+            run_v4.validate_teacher_turn(value)
+
+    def test_completed_teacher_cannot_ask_follow_up(self):
+        value = valid_teacher_turn(
+            teacher_utterance="式は正しいです。答えは2です。確認してみましょう。"
+        )
+        with self.assertRaisesRegex(ValueError, "follow-up"):
+            run_v4.validate_teacher_turn(value)
+
+    def test_completed_teacher_without_follow_up_is_valid(self):
+        self.assertTrue(run_v4.validate_teacher_turn(valid_teacher_turn())["is_completed"])
 
     def test_config_rejects_target_above_candidates(self):
         config = {
@@ -218,7 +332,8 @@ class PipelineLogicTests(unittest.TestCase):
             "student_temperature": 0.6, "student_top_p": 0.95,
             "student_top_k": 20, "student_min_p": 0, "student_max_tokens": 100,
             "repair_model": "r", "repair_reasoning_effort": "medium",
-            "questions": "q.jsonl", "output_dir": "out",
+            "questions": "q.jsonl", "problem_profile_assignments": "a.jsonl",
+            "output_dir": "out",
         }
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "config.json"
@@ -371,15 +486,27 @@ class PipelineLogicTests(unittest.TestCase):
         second = teacher(1, "数え直せましたね。1+1=2で正解です。なぜ2になるか説明できるかな？")
         dialogue = {
             "candidate_id": "v4-0000", "source_id": "q1", "problem": "1+1は？",
-            "reference_solution": "2", "student_profile": {"id": "V2-S01"},
+            "reference_solution": "2", "student_profile": {
+                "id": "V4-S01", "prior_knowledge": ["整数の加法"],
+            },
             "initial_emotion": "confused",
-            "initial_student_state": {"active_misconception": "加法の数え違い"},
+            "initial_student_state": {
+                "active_misconception": "加法の数え違い", "acquired_knowledge": [],
+            },
             "final_student_state": {"active_misconception": "なし", "emotion": "engaged"},
             "is_completed": False, "generation_error": None, "models": {},
             "conversation": [
-                {"turn": 0, "role": "student", "content": "3かな。"},
+                {
+                    "turn": 0, "role": "student", "content": "3かな。",
+                    "state_after": {"acquired_knowledge": []},
+                    "knowledge_used": ["整数の加法"],
+                },
                 original_first,
-                {"turn": 1, "role": "student", "content": "数えると2かも。"},
+                {
+                    "turn": 1, "role": "student", "content": "数えると2かも。",
+                    "state_after": {"acquired_knowledge": []},
+                    "knowledge_used": ["整数の加法"],
+                },
                 second,
             ],
         }

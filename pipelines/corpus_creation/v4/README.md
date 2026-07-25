@@ -13,7 +13,7 @@ v4は、数学的正確性、誤りの診断と回復、認知的共感、感情
 - 完了・未完了の両方を採択対象とし、train／validation分割はSFT設定側で行う。
 - Good／Bad対と指導戦略ラベルは作らない。
 
-厳密な条件は[ADOPTION_CRITERIA.md](./ADOPTION_CRITERIA.md)、モデル仕様は[MODEL_SELECTION.md](./MODEL_SELECTION.md)、SFT形式は[SFT_FORMAT.md](./SFT_FORMAT.md)、設計と妥当性は[V4_CORPUS_DESIGN_AND_FEASIBILITY.md](./V4_CORPUS_DESIGN_AND_FEASIBILITY.md)を参照する。
+厳密な条件は[ADOPTION_CRITERIA.md](./ADOPTION_CRITERIA.md)、モデル仕様は[MODEL_SELECTION.md](./MODEL_SELECTION.md)、SFT形式は[SFT_FORMAT.md](./SFT_FORMAT.md)、E2/E3生徒設計は[ESS_E2_E3_STUDENT_DESIGN.md](./ESS_E2_E3_STUDENT_DESIGN.md)、全体の妥当性は[V4_CORPUS_DESIGN_AND_FEASIBILITY.md](./V4_CORPUS_DESIGN_AND_FEASIBILITY.md)を参照する。
 
 ## 実行環境
 
@@ -59,20 +59,28 @@ python run_v4.py status
 
 対象0件のRepair／再監査は`skipped`として安全に処理される。Batchが未完了なら、完了後に同じ`collect-*`を再実行する。通常の再開時に`--overwrite`は付けない。
 
+ABCIの生成ジョブは`rt_HG`の12時間上限に合わせている。対話生成が時間内に終わらない場合は、同じ`config.json`でジョブを再投入する。候補番号と問題番号の対応は固定され、既存の正常候補を生成し直さない。
+
 ## 再現性と再開
 
 manifestへ、変更不可設定、モデル、reasoning effort、seed、student revision、vLLM版、プロンプトSHA-256、実行環境、Batch ID、run fingerprintを保存する。再開時にfingerprintが変わっていれば処理を停止する。
 
-`target_dialogues`と`max_candidates`だけは追加生成のため変更でき、履歴をmanifestへ残す。プロフィール×初期感情の割当は24件単位の決定的ブロックで作るため、候補数を増やしても既存candidateの割当は変わらない。最初から別条件で実行する場合は別の`output_dir`を使うか、意図を確認したうえで`generate --overwrite`を使う。
+`target_dialogues`と`max_candidates`だけは追加生成のため変更でき、履歴をmanifestへ残す。問題・プロフィール・初期感情は事前対応表で固定されるため、候補数を増やしても既存candidateの割当は変わらない。最初から別条件で実行する場合は別の`output_dir`を使うか、意図を確認したうえで`generate --overwrite`を使う。
 
 ## 生徒条件
 
-V2-S01〜V2-S04と6初期感情の24組合せを層化する。初期感情はプロフィールから独立させ、最初の生徒発話では維持する。理解度は1ターン最大1、確信度は最大0.25、感情は定義済みサイクルの隣接状態だけ変化できる。獲得知識の巻き戻し、内部状態の発話への露出、教師役への逸脱を禁止する。
+V4-S01〜V4-S08はESSのE2とE3を組み合わせる。学年段階に加えて、代数優位、図形優位、確率学習中など分野別習得段階の異なるプロフィールを持つ。E2として学習済み・現在学習中・未習の範囲と進行シグナルを、E3として問題ごとのtrigger、faulty procedure、observable signature、repair criterionを固定する。`prior_knowledge`を開始時の使用可能知識の完全な一覧とし、生徒は各発話で`response_stage`と`knowledge_used`を返す。
 
-問題はseed付きでシャッフルし、プロフィールとは独立に割り当てる。問題の学習範囲・難度とプロフィールの自動対応付けはv4では実装しない。範囲不一致は採択後の分析項目かつ研究上の制約として扱う。
+初期感情はランダム抽出せず、問題の必要範囲とプロフィールの分野別習得段階の関係、およびMATH難度から事前決定する。最初の生徒発話では、その感情を語調・ためらい・確信の強さへ反映する。理解度は1ターン最大1、確信度は最大0.25、感情は定義済みサイクルの隣接状態だけ変化できる。初回だけは教師介入前なので、理解度、獲得知識、未習範囲、誤概念を変更できず、確信度変化も0.1以内とする。
+
+問題選定LLMは使用しない。`math_train_0`から数値順に固定し、`assignments/problem_profile_assignments.jsonl`に保存済みのプロフィール、範囲関係、初期感情、誤概念を参照する。対応表は問題文と参照解答の規則ベース分類で事前生成し、問題内容のSHA-256を検査する。範囲外の場合も問題を飛ばさず、初回を`scope_limited_help_seeking`へ切り替える。
+
+初回生徒発話も対応表で固定する。`frontier`では指定誤概念に基づく誤答または部分手続き、`mastered`では検算・条件確認が一箇所不足した回答、範囲外では具体的援助要請を生成する。無関係なランダム誤答は作らない。
+
+教師の`is_completed=true`は、最新回答が理由を含む正答で、`next_support=なし`、追加質問なしの場合だけ許可する。生徒・教師の構造検証に失敗した場合は最大3回まで検証理由を返して再生成する。
 
 ## 出力
 
-`data/run_100/`へ候補対話、生成エラー、Batch入力、初回監査、文脈付きRepair、全対話再監査、採択コーパス、SFT JSONL、manifest、レポートを保存する。詳細は[data/README.md](./data/README.md)を参照する。
+`data/run_100_ess_e2e3/`へ候補対話、生成エラー、Batch入力、初回監査、文脈付きRepair、全対話再監査、採択コーパス、SFT JSONL、manifest、レポートを保存する。旧9件のpilotは`data/candidate_dialogues.jsonl`に残し、新runへ混在させない。詳細は[data/README.md](./data/README.md)を参照する。
 
 SFT出力は問題と最初の生徒発話を同一userに入れ、roleを交互にする。assistantは短い監査可能な`<analysis>`と生徒向け`<final>`を学習対象にする。使用モデルのtokenizerで全件の系列長を確認し、assistant targetを途中で切り詰めない。

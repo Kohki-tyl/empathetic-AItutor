@@ -8,7 +8,7 @@ import importlib.metadata
 import json
 import os
 import platform
-import random
+import re
 import sys
 import time
 from collections import Counter
@@ -31,6 +31,11 @@ STUDENT_EMOTIONS = [
     "engaged", "curious", "neutral", "confused", "frustrated", "anxious",
     "bored", "eureka", "relieved", "proud",
 ]
+INITIAL_RESPONSE_MODES = [
+    "plausible_incorrect", "partial_reasoning", "help_seeking",
+    "correct_but_uncertain",
+]
+STUDENT_RESPONSE_STAGES = ["observation", "attempt", "help_seeking", "answer"]
 EMOTION_TRANSITIONS = {
     "engaged": {"curious", "confused", "eureka"},
     "curious": {"engaged", "confused", "eureka"},
@@ -73,10 +78,15 @@ STUDENT_SCHEMA = {
                     "required": sorted(STUDENT_STATE_KEYS),
                     "additionalProperties": False,
                 },
+                "response_stage": {"type": "string", "enum": STUDENT_RESPONSE_STAGES},
+                "knowledge_used": {"type": "array", "items": {"type": "string"}},
                 "state_update_reason": {"type": "string"},
                 "utterance": {"type": "string"},
             },
-            "required": ["state_after", "state_update_reason", "utterance"],
+            "required": [
+                "state_after", "response_stage", "knowledge_used",
+                "state_update_reason", "utterance",
+            ],
             "additionalProperties": False,
         },
     },
@@ -236,7 +246,8 @@ def load_config(path: Path) -> dict[str, Any]:
         "student_model", "student_model_revision", "vllm_version", "student_temperature",
         "student_top_p", "student_top_k", "student_min_p", "student_max_tokens",
         "judge_model", "judge_reasoning_effort", "repair_model",
-        "repair_reasoning_effort", "questions", "output_dir",
+        "repair_reasoning_effort", "questions", "problem_profile_assignments",
+        "output_dir",
     }
     missing = required - set(config)
     if missing:
@@ -254,10 +265,20 @@ def load_config(path: Path) -> dict[str, Any]:
         raise ValueError("student_top_kは0以上にしてください")
     if not 0 <= float(config["student_min_p"]) <= 1:
         raise ValueError("student_min_pは0以上1以下にしてください")
+    config.setdefault("generation_validation_attempts", 3)
+    if int(config["generation_validation_attempts"]) < 1:
+        raise ValueError("generation_validation_attemptsは1以上にしてください")
     config["questions"] = str(resolve_path(config["questions"], path))
+    config["problem_profile_assignments"] = str(
+        resolve_path(config["problem_profile_assignments"], path)
+    )
     config["output_dir"] = str(resolve_path(config["output_dir"], path))
     if not Path(config["questions"]).is_file():
         raise FileNotFoundError(f"問題JSONLがありません: {config['questions']}")
+    if not Path(config["problem_profile_assignments"]).is_file():
+        raise FileNotFoundError(
+            f"問題・プロフィール対応表がありません: {config['problem_profile_assignments']}"
+        )
     return config
 
 
@@ -320,8 +341,15 @@ def immutable_run_config(config: dict[str, Any]) -> dict[str, Any]:
 
 def source_hashes(config: dict[str, Any]) -> dict[str, str]:
     question_path = Path(config["questions"])
+    assignment_value = config.get("problem_profile_assignments")
+    assignment_path = Path(assignment_value) if assignment_value else None
     return {
         "questions": sha256(question_path) if question_path.exists() else "missing",
+        "problem_profile_assignments": (
+            sha256(assignment_path)
+            if assignment_path is not None and assignment_path.exists()
+            else "missing"
+        ),
     }
 
 
@@ -424,12 +452,18 @@ def profile_text(profile: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def initial_state(profile: dict[str, Any], emotion: str) -> dict[str, Any]:
+def initial_state(
+    profile: dict[str, Any], emotion: str,
+    epistemic_assignment: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     confidence = 0.35 if profile.get("confidence_bias") == "underconfident" else 0.55
+    misconception = profile["target_misconception"]
+    if epistemic_assignment is not None:
+        misconception = epistemic_assignment["misconception_model"]["label"]
     return {
         "understanding_level": max(0, min(4, int(profile["ability_level"]) - 1)),
         "confidence": confidence,
-        "active_misconception": profile["target_misconception"],
+        "active_misconception": misconception,
         "emotion": emotion,
         "acquired_knowledge": [],
         "remaining_unknowns": list(profile["unknown_knowledge"]),
@@ -437,10 +471,42 @@ def initial_state(profile: dict[str, Any], emotion: str) -> dict[str, Any]:
 
 
 def validate_student_turn(
-    value: dict[str, Any], previous: dict[str, Any], *, allow_emotion_change: bool = True,
+    value: dict[str, Any], previous: dict[str, Any], *,
+    allow_emotion_change: bool = True,
+    allowed_knowledge: Iterable[str] = (),
+    expected_response_mode: str | None = None,
+    latest_teacher_utterance: str = "",
 ) -> dict[str, Any]:
-    if set(value) != {"state_after", "state_update_reason", "utterance"}:
+    expected_keys = {
+        "state_after", "response_stage", "knowledge_used",
+        "state_update_reason", "utterance",
+    }
+    if set(value) != expected_keys:
         raise ValueError("student response keys are invalid")
+    response_stage = str(value["response_stage"])
+    if response_stage not in STUDENT_RESPONSE_STAGES:
+        raise ValueError("student response stage is invalid")
+    knowledge_used = value["knowledge_used"]
+    if not isinstance(knowledge_used, list) or any(
+        not isinstance(item, str) or not item.strip() for item in knowledge_used
+    ):
+        raise ValueError("knowledge_used must be a list of non-empty strings")
+    if len(knowledge_used) != len(set(knowledge_used)):
+        raise ValueError("knowledge_used contains duplicates")
+    allowed = set(allowed_knowledge)
+    allowed_stages = {
+        "plausible_incorrect": {"attempt"},
+        "partial_reasoning": {"observation", "attempt"},
+        "help_seeking": {"help_seeking"},
+        "correct_but_uncertain": {"attempt", "answer"},
+        "scope_limited_help_seeking": {"observation", "help_seeking"},
+        "natural_profile_consistent": set(STUDENT_RESPONSE_STAGES),
+        "follow_latest_teacher_step_only": set(STUDENT_RESPONSE_STAGES),
+    }
+    if expected_response_mode and response_stage not in allowed_stages[expected_response_mode]:
+        raise ValueError(
+            f"response_stage={response_stage} does not match {expected_response_mode}"
+        )
     state = value["state_after"]
     if not isinstance(state, dict) or set(state) != STUDENT_STATE_KEYS:
         raise ValueError("student state is incomplete")
@@ -464,6 +530,23 @@ def validate_student_turn(
     next_emotion = str(state["emotion"])
     if not allow_emotion_change and next_emotion != previous_emotion:
         raise ValueError("initial emotion changed before teacher intervention")
+    if not allow_emotion_change:
+        if int(state["understanding_level"]) != int(previous["understanding_level"]):
+            raise ValueError("initial understanding changed before teacher intervention")
+        if list(state["acquired_knowledge"]) != list(previous["acquired_knowledge"]):
+            raise ValueError("initial acquired knowledge changed before teacher intervention")
+        if list(state["remaining_unknowns"]) != list(previous["remaining_unknowns"]):
+            raise ValueError("initial remaining unknowns changed before teacher intervention")
+        if str(state["active_misconception"]) != str(previous["active_misconception"]):
+            raise ValueError("initial misconception changed before teacher intervention")
+        if abs(confidence - previous_confidence) > 0.1:
+            raise ValueError("initial confidence changed by more than 0.1")
+    newly_acquired = set(state["acquired_knowledge"]) - set(previous["acquired_knowledge"])
+    if any(item not in latest_teacher_utterance for item in newly_acquired):
+        raise ValueError("new knowledge was not copied from the latest teacher utterance")
+    allowed.update(newly_acquired)
+    if any(item not in allowed for item in knowledge_used):
+        raise ValueError("knowledge_used contains knowledge outside the profile boundary")
     if (
         allow_emotion_change and next_emotion != previous_emotion
         and next_emotion not in EMOTION_TRANSITIONS[previous_emotion]
@@ -478,6 +561,8 @@ def validate_student_turn(
     if not reason or len(reason) > 1000:
         raise ValueError("student state update reason is invalid")
     value["utterance"] = utterance
+    value["response_stage"] = response_stage
+    value["knowledge_used"] = knowledge_used
     value["state_update_reason"] = reason
     value["state_after"] = {key: state[key] for key in STUDENT_STATE_KEYS}
     return value
@@ -514,6 +599,15 @@ def validate_teacher_turn(value: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("teacher utterance is invalid")
     if "[指導完了]" in utterance or "<analysis>" in utterance or "<final>" in utterance:
         raise ValueError("teacher utterance contains a reserved SFT marker")
+    if value["is_completed"]:
+        if support["next_support"].strip() != "なし" or support["change_reason"].strip() != "なし":
+            raise ValueError("completed instruction cannot contain next support")
+        follow_up_markers = (
+            "?", "？", "確認してみましょう", "考えてみましょう",
+            "説明できますか", "いくつになりますか", "求めてみましょう",
+        )
+        if any(marker in utterance for marker in follow_up_markers):
+            raise ValueError("completed teacher utterance cannot ask a follow-up question")
     value["teacher_utterance"] = utterance
     return value
 
@@ -566,15 +660,106 @@ def question_fields(row: dict[str, Any]) -> tuple[str, str, str, dict[str, Any]]
     return source_id, problem, solution, metadata
 
 
-def stratified_assignments(config: dict[str, Any], profiles: list[dict[str, Any]], emotions: list[str]) -> list[tuple[dict[str, Any], str]]:
-    size = int(config["max_candidates"])
-    combinations = [(profile, emotion) for profile in profiles for emotion in emotions]
-    assignments: list[tuple[dict[str, Any], str]] = []
-    for block_index in range((size + len(combinations) - 1) // len(combinations)):
-        block = list(combinations)
-        random.Random(int(config["seed"]) + block_index).shuffle(block)
-        assignments.extend(block)
-    return assignments[:size]
+MATH_TRAIN_ID = re.compile(r"^math_train_(\d+)$")
+
+
+def ordered_math_questions(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """math_train_0以降を辞書順ではなく数値順に返す。"""
+    numbered: list[tuple[int, dict[str, Any]]] = []
+    seen: set[int] = set()
+    for row in rows:
+        source_id = str(row.get("id") or row.get("source_id") or "")
+        match = MATH_TRAIN_ID.fullmatch(source_id)
+        if not match:
+            continue
+        number = int(match.group(1))
+        if number in seen:
+            raise ValueError(f"問題IDの数値部分が重複しています: {source_id}")
+        seen.add(number)
+        numbered.append((number, row))
+    numbered.sort(key=lambda item: item[0])
+    return [row for _, row in numbered]
+
+
+def problem_level(metadata: dict[str, Any]) -> int:
+    value = metadata.get("level")
+    if isinstance(value, bool):
+        raise ValueError("問題levelは1以上5以下の整数にしてください")
+    try:
+        level = int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("問題levelは1以上5以下の整数にしてください") from exc
+    if not 1 <= level <= 5:
+        raise ValueError("問題levelは1以上5以下の整数にしてください")
+    return level
+
+
+def effective_initial_response_mode(
+    configured_mode: str, epistemic_assignment: dict[str, Any],
+) -> str:
+    if epistemic_assignment["scope_relation"] in {"one_step_beyond", "far_beyond"}:
+        return "scope_limited_help_seeking"
+    return configured_mode
+
+
+def question_content_hash(problem: str, solution: str) -> str:
+    encoded = json.dumps(
+        {"problem": problem, "reference_solution": solution},
+        ensure_ascii=False, sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def load_problem_profile_assignments(
+    path: Path, questions: list[dict[str, Any]], profiles: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    rows = read_jsonl(path)
+    if len(rows) != len(questions):
+        raise ValueError("問題・プロフィール対応表の件数が問題数と一致しません")
+    profile_ids = {str(profile["id"]) for profile in profiles}
+    validated: list[dict[str, Any]] = []
+    for index, (row, question) in enumerate(zip(rows, questions)):
+        source_id, problem, solution, _ = question_fields(question)
+        if row.get("source_id") != source_id or row.get("order_index") != index:
+            raise ValueError(f"問題・プロフィール対応表の順序が不正です: {source_id}")
+        if row.get("question_sha256") != question_content_hash(problem, solution):
+            raise ValueError(f"対応表作成後に問題内容が変わっています: {source_id}")
+        if row.get("profile_id") not in profile_ids:
+            raise ValueError(f"対応表のprofile_idが不正です: {source_id}")
+        if row.get("initial_emotion") not in STUDENT_EMOTIONS:
+            raise ValueError(f"対応表のinitial_emotionが不正です: {source_id}")
+        attempt_history = row.get("prior_attempt_history")
+        required_attempt_keys = {
+            "attempt_count", "attempted_strategy",
+            "repeated_stuck_point", "received_help",
+        }
+        if not isinstance(attempt_history, dict) or set(attempt_history) != required_attempt_keys:
+            raise ValueError(f"対応表のprior_attempt_historyが不正です: {source_id}")
+        if (
+            row.get("initial_emotion") == "frustrated"
+            and (
+                int(attempt_history["attempt_count"]) < 2
+                or attempt_history["repeated_stuck_point"] == "なし"
+            )
+        ):
+            raise ValueError(f"frustratedに事前失敗履歴がありません: {source_id}")
+        if row.get("scope_relation") not in {
+            "mastered", "frontier", "one_step_beyond", "far_beyond",
+        }:
+            raise ValueError(f"対応表のscope_relationが不正です: {source_id}")
+        if row.get("initial_response_mode") not in {
+            *INITIAL_RESPONSE_MODES, "scope_limited_help_seeking",
+        }:
+            raise ValueError(f"対応表のinitial_response_modeが不正です: {source_id}")
+        misconception = row.get("misconception_model")
+        required_misconception_keys = {
+            "id", "label", "trigger", "faulty_procedure",
+            "observable_signature", "repair_criterion",
+        }
+        if not isinstance(misconception, dict) or set(misconception) != required_misconception_keys:
+            raise ValueError(f"対応表のmisconception_modelが不正です: {source_id}")
+        validated.append(row)
+    return validated
 
 
 def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: bool) -> None:
@@ -589,13 +774,15 @@ def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: boo
     existing = {row["candidate_id"] for row in read_jsonl(file_paths["dialogues"])}
     profiles = read_json(PROMPT_DIR / "student_profiles.json")
     emotion_config = read_json(PROMPT_DIR / "initial_emotions.json")
-    emotions = [row["name"] for row in emotion_config["emotions"]]
-    questions = read_jsonl(Path(config["questions"]))
-    rng = random.Random(int(config["seed"]))
-    rng.shuffle(questions)
+    emotion_rows = emotion_config["emotions"]
+    emotion_by_name = {row["name"]: row for row in emotion_rows}
+    questions = ordered_math_questions(read_jsonl(Path(config["questions"])))
     if len(questions) < int(config["max_candidates"]):
-        raise ValueError("問題数がmax_candidatesより少ないです")
-    assignments = stratified_assignments(config, profiles, emotions)
+        raise ValueError("math_train_0以降の問題数がmax_candidatesより少ないです")
+    epistemic_assignments = load_problem_profile_assignments(
+        Path(config["problem_profile_assignments"]), questions, profiles,
+    )
+    profiles_by_id = {str(profile["id"]): profile for profile in profiles}
 
     api_key = os.getenv("OPENAI_API_KEY") or os.getenv("GPT_API_KEY")
     if not api_key:
@@ -613,14 +800,30 @@ def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: boo
         candidate_id = f"v4-{index:04d}"
         if candidate_id in existing:
             continue
-        profile, emotion = assignments[index]
+        epistemic_assignment = epistemic_assignments[index]
+        base_profile = profiles_by_id[str(epistemic_assignment["profile_id"])]
+        profile = json.loads(json.dumps(base_profile, ensure_ascii=False))
+        profile["problem_epistemic_state"] = {
+            "curriculum_annotation": epistemic_assignment["curriculum_annotation"],
+            "scope_relation": epistemic_assignment["scope_relation"],
+            "misconception_model": epistemic_assignment["misconception_model"],
+            "prior_attempt_history": epistemic_assignment["prior_attempt_history"],
+            "initial_response_constraint": epistemic_assignment["initial_response_constraint"],
+        }
+        emotion = str(epistemic_assignment["initial_emotion"])
         source_id, problem, solution, source_metadata = question_fields(questions[index])
-        state = initial_state(profile, emotion)
+        level = problem_level(source_metadata)
+        requested_response_mode = str(epistemic_assignment["initial_response_mode"])
+        response_mode = effective_initial_response_mode(
+            requested_response_mode, epistemic_assignment,
+        )
+        state = initial_state(profile, emotion, epistemic_assignment)
         initial = dict(state)
         student_system = student_template.replace("{STUDENT_PROFILE}", profile_text(profile))
         teacher_history: list[dict[str, str]] = [{"role": "system", "content": teacher_system}]
         recent_dialogue: list[dict[str, str]] = []
         conversation: list[dict[str, Any]] = []
+        generation_diagnostics: list[dict[str, Any]] = []
         generation_error = None
         try:
             for turn_index in range(int(config["max_turns"])):
@@ -629,29 +832,83 @@ def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: boo
                     "turn": turn_index,
                     "state_before": state,
                     "initial_emotion": emotion,
+                    "initial_emotion_condition": emotion_by_name[emotion],
+                    "initial_response_condition": response_mode if turn_index == 0 else "follow_latest_teacher_step_only",
+                    "problem_level": level,
+                    "epistemic_state_specification": epistemic_assignment,
+                    "knowledge_boundary": {
+                        "prior_knowledge": profile["prior_knowledge"],
+                        "acquired_knowledge": state["acquired_knowledge"],
+                        "unknown_knowledge": profile["unknown_knowledge"],
+                        "max_independent_math_level": profile["max_independent_math_level"],
+                    },
                     "latest_teacher_utterance": recent_dialogue[-1]["content"] if recent_dialogue else "",
                     "recent_dialogue": recent_dialogue[-6:],
                     "instruction": "問題を解き始めてください" if turn_index == 0 else "教師の最新発話へ生徒として応答してください",
                 }
-                student_value = chat_call(
-                    student_client, config["student_model"],
-                    [{"role": "system", "content": student_system}, {"role": "user", "content": json.dumps(student_payload, ensure_ascii=False)}],
-                    STUDENT_SCHEMA, temperature=float(config["student_temperature"]),
-                    seed=int(config["seed"]) + index * 100 + turn_index,
-                    max_completion_tokens=int(config["student_max_tokens"]),
-                    use_max_tokens=True,
-                    extra_body={
-                        "top_p": float(config.get("student_top_p", 0.95)),
-                        "top_k": int(config.get("student_top_k", 20)),
-                        "min_p": float(config.get("student_min_p", 0)),
-                    },
-                )
-                student_value = validate_student_turn(
-                    student_value, state, allow_emotion_change=turn_index > 0,
-                )
+                student_messages = [
+                    {"role": "system", "content": student_system},
+                    {"role": "user", "content": json.dumps(student_payload, ensure_ascii=False)},
+                ]
+                last_error = None
+                for validation_attempt in range(int(config["generation_validation_attempts"])):
+                    retry_messages = list(student_messages)
+                    if last_error is not None:
+                        retry_messages.append({
+                            "role": "user",
+                            "content": (
+                                f"前回出力は検証エラーでした: {last_error}。"
+                                "プロフィール、初期状態、感情表出を変えず、JSONを再生成してください。"
+                            ),
+                        })
+                    raw_student = chat_call(
+                        student_client, config["student_model"], retry_messages,
+                        STUDENT_SCHEMA, temperature=float(config["student_temperature"]),
+                        seed=(
+                            int(config["seed"]) + index * 100 + turn_index
+                            + validation_attempt * 10_000
+                        ),
+                        max_completion_tokens=int(config["student_max_tokens"]),
+                        use_max_tokens=True,
+                        extra_body={
+                            "top_p": float(config.get("student_top_p", 0.95)),
+                            "top_k": int(config.get("student_top_k", 20)),
+                            "min_p": float(config.get("student_min_p", 0)),
+                        },
+                    )
+                    try:
+                        student_value = validate_student_turn(
+                            raw_student, state,
+                            allow_emotion_change=turn_index > 0,
+                            allowed_knowledge=[
+                                *profile["prior_knowledge"],
+                                *state["acquired_knowledge"],
+                            ],
+                            expected_response_mode=(
+                                response_mode if turn_index == 0
+                                else "follow_latest_teacher_step_only"
+                            ),
+                            latest_teacher_utterance=(
+                                recent_dialogue[-1]["content"] if recent_dialogue else ""
+                            ),
+                        )
+                        break
+                    except ValueError as exc:
+                        last_error = exc
+                        generation_diagnostics.append({
+                            "role": "student", "turn": turn_index,
+                            "attempt": validation_attempt + 1,
+                            "validation_error": str(exc),
+                        })
+                else:
+                    raise RuntimeError(
+                        f"student validation failed after retries: {last_error}"
+                    ) from last_error
                 state = student_value["state_after"]
                 student_turn = {
                     "turn": turn_index, "role": "student", "content": student_value["utterance"],
+                    "response_stage": student_value["response_stage"],
+                    "knowledge_used": student_value["knowledge_used"],
                     "state_after": state, "state_update_reason": student_value["state_update_reason"],
                 }
                 conversation.append(student_turn)
@@ -665,12 +922,37 @@ def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: boo
                     )
                 teacher_history.append({"role": "user", "content": teacher_user_content})
 
-                teacher_value = chat_call(
-                    teacher_client, config["teacher_model"], teacher_history, TEACHER_SCHEMA,
-                    reasoning_effort=config.get("teacher_reasoning_effort"),
-                    max_completion_tokens=3000,
-                )
-                teacher_value = validate_teacher_turn(teacher_value)
+                last_error = None
+                for validation_attempt in range(int(config["generation_validation_attempts"])):
+                    retry_history = list(teacher_history)
+                    if last_error is not None:
+                        retry_history.append({
+                            "role": "user",
+                            "content": (
+                                f"前回出力は検証エラーでした: {last_error}。"
+                                "数学的検算、完了判定、次の支援を整合させてJSONを再生成してください。"
+                            ),
+                        })
+                    raw_teacher = chat_call(
+                        teacher_client, config["teacher_model"], retry_history,
+                        TEACHER_SCHEMA,
+                        reasoning_effort=config.get("teacher_reasoning_effort"),
+                        max_completion_tokens=3000,
+                    )
+                    try:
+                        teacher_value = validate_teacher_turn(raw_teacher)
+                        break
+                    except ValueError as exc:
+                        last_error = exc
+                        generation_diagnostics.append({
+                            "role": "teacher", "turn": turn_index,
+                            "attempt": validation_attempt + 1,
+                            "validation_error": str(exc),
+                        })
+                else:
+                    raise RuntimeError(
+                        f"teacher validation failed after retries: {last_error}"
+                    ) from last_error
                 teacher_turn = {"turn": turn_index, "role": "teacher", **teacher_value}
                 conversation.append(teacher_turn)
                 recent_dialogue.append({"role": "teacher", "content": teacher_value["teacher_utterance"]})
@@ -691,6 +973,14 @@ def generate(config: dict[str, Any], file_paths: dict[str, Path], overwrite: boo
             "final_student_state": state, "conversation": conversation,
             "is_completed": bool(conversation and conversation[-1].get("is_completed")),
             "generation_error": generation_error,
+            "generation_condition": {
+                "requested_initial_response_mode": requested_response_mode,
+                "effective_initial_response_mode": response_mode,
+                "problem_level": level,
+                "knowledge_gate_active": response_mode == "scope_limited_help_seeking",
+                "problem_profile_assignment": epistemic_assignment,
+            },
+            "generation_diagnostics": generation_diagnostics,
             "models": {
                 "teacher": config["teacher_model"],
                 "student": config["student_model"],
@@ -722,6 +1012,7 @@ def audit_payload(dialogue: dict[str, Any], conversation_index: int, teacher_tur
         "candidate_id": dialogue["candidate_id"], "problem": dialogue["problem"],
         "reference_solution": dialogue["reference_solution"],
         "student_profile": dialogue["student_profile"], "initial_emotion": dialogue["initial_emotion"],
+        "generation_condition": dialogue.get("generation_condition", {}),
         "dialogue_before": dialogue["conversation"][:conversation_index],
         "teacher_turn": teacher_turn,
         "next_student_turn": dialogue["conversation"][conversation_index + 1] if conversation_index + 1 < len(dialogue["conversation"]) else None,
@@ -1008,6 +1299,37 @@ def collect_repair(config: dict[str, Any], file_paths: dict[str, Path]) -> None:
     collect_batch(config, file_paths, "repair", file_paths["repairs"], transform)
 
 
+def validate_dialogue_knowledge_contract(dialogue: dict[str, Any]) -> None:
+    profile = dialogue["student_profile"]
+    previous = dialogue["initial_student_state"]
+    latest_teacher_utterance = ""
+    for turn in dialogue["conversation"]:
+        if turn.get("role") == "teacher":
+            latest_teacher_utterance = str(
+                turn.get("teacher_utterance") or turn.get("content") or ""
+            )
+            continue
+        if turn.get("role") != "student":
+            continue
+        state = turn.get("state_after")
+        knowledge_used = turn.get("knowledge_used")
+        if not isinstance(state, dict) or not isinstance(knowledge_used, list):
+            raise ValueError("student knowledge metadata is missing")
+        newly_acquired = set(state["acquired_knowledge"]) - set(
+            previous["acquired_knowledge"]
+        )
+        if any(item not in latest_teacher_utterance for item in newly_acquired):
+            raise ValueError("dialogue contains knowledge not introduced by the latest teacher")
+        allowed = (
+            set(profile["prior_knowledge"])
+            | set(previous["acquired_knowledge"])
+            | newly_acquired
+        )
+        if any(item not in allowed for item in knowledge_used):
+            raise ValueError("dialogue contains out-of-bound knowledge_used")
+        previous = state
+
+
 def build_repaired_dialogue(
     dialogue: dict[str, Any], repair_row: dict[str, Any],
 ) -> dict[str, Any]:
@@ -1031,6 +1353,7 @@ def build_repaired_dialogue(
         teacher_index += 1
     if set(replacements) - set(range(teacher_index)):
         raise ValueError("repair references an unknown teacher turn")
+    validate_dialogue_knowledge_contract(rebuilt)
     return rebuilt
 
 
@@ -1245,6 +1568,12 @@ def finalize(config: dict[str, Any], file_paths: dict[str, Path]) -> None:
         "profile_counts": dict(Counter(row["student_profile"]["id"] for row in accepted)),
         "initial_emotion_counts": dict(Counter(row["initial_emotion"] for row in accepted)),
         "profile_initial_emotion_counts": dict(Counter(f"{row['student_profile']['id']}::{row['initial_emotion']}" for row in accepted)),
+        "initial_response_mode_counts": dict(Counter(
+            row.get("generation_condition", {}).get(
+                "effective_initial_response_mode", "legacy_or_unknown"
+            )
+            for row in accepted
+        )),
         "teacher_emotion_counts": dict(Counter(
             turn["learner_state"]["emotion"] for row in accepted for turn in row["conversation"]
             if turn.get("role") == "teacher"
@@ -1286,6 +1615,11 @@ def finalize(config: dict[str, Any], file_paths: dict[str, Path]) -> None:
     report.extend(f"- {key}: {value}" for key, value in sorted(manifest["final"]["profile_counts"].items()))
     report.extend(["", "## 初期感情", ""])
     report.extend(f"- {key}: {value}" for key, value in sorted(manifest["final"]["initial_emotion_counts"].items()))
+    report.extend(["", "## 初回応答条件", ""])
+    report.extend(
+        f"- {key}: {value}"
+        for key, value in sorted(manifest["final"]["initial_response_mode_counts"].items())
+    )
     file_paths["report"].write_text("\n".join(report) + "\n", encoding="utf-8")
     print(f"accepted: {len(accepted)}; sft: {len(sft_rows)}")
     if len(accepted) < int(config["target_dialogues"]):

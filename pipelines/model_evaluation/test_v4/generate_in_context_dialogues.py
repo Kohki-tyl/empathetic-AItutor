@@ -34,6 +34,7 @@ STUDENT_EMOTIONS = [
     "engaged", "curious", "neutral", "confused", "frustrated", "anxious",
     "bored", "eureka", "relieved", "proud",
 ]
+STUDENT_RESPONSE_STAGES = ["observation", "attempt", "help_seeking", "answer"]
 EMOTION_TRANSITIONS = {
     "engaged": {"curious", "confused", "eureka"},
     "curious": {"engaged", "confused", "eureka"},
@@ -98,10 +99,47 @@ STUDENT_TURN_SCHEMA = {
                     ],
                     "additionalProperties": False,
                 },
+                "response_stage": {"type": "string", "enum": STUDENT_RESPONSE_STAGES},
+                "knowledge_used": {"type": "array", "items": {"type": "string"}},
                 "state_update_reason": {"type": "string"},
                 "utterance": {"type": "string"},
             },
-            "required": ["state_after", "state_update_reason", "utterance"],
+            "required": [
+                "state_after", "response_stage", "knowledge_used",
+                "state_update_reason", "utterance",
+            ],
+            "additionalProperties": False,
+        },
+    },
+}
+
+PHASE2_TRANSFER_SCHEMA = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "v4_phase2_transfer_answer",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "answer": {"type": "string"},
+                "knowledge_sources": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "source_type": {
+                                "type": "string",
+                                "enum": ["prior_knowledge", "phase1_teacher"],
+                            },
+                            "source_text": {"type": "string"},
+                        },
+                        "required": ["source_type", "source_text"],
+                        "additionalProperties": False,
+                    },
+                },
+                "application_summary": {"type": "string"},
+            },
+            "required": ["answer", "knowledge_sources", "application_summary"],
             "additionalProperties": False,
         },
     },
@@ -125,6 +163,11 @@ def parse_args() -> argparse.Namespace:
         help="評価条件間で共通除外する問題IDのJSON",
     )
     parser.add_argument("--profiles", type=Path, default=BASE_DIR / "prompts" / "student_profiles.json")
+    parser.add_argument(
+        "--problem-profile-assignments", type=Path,
+        default=BASE_DIR / "prompts" / "problem_profile_assignments.jsonl",
+        help="事前生成した問題・E2/E3プロフィール・初期感情対応表",
+    )
     parser.add_argument(
         "--initial-emotions", type=Path,
         default=BASE_DIR / "prompts" / "initial_emotions.json",
@@ -251,6 +294,17 @@ def validate_student_state(
     next_emotion = str(state["emotion"])
     if not allow_emotion_change and next_emotion != previous_emotion:
         raise ValueError("initial emotion changed before teacher intervention")
+    if not allow_emotion_change:
+        if level != int(previous_state["understanding_level"]):
+            raise ValueError("initial understanding changed before teacher intervention")
+        if list(state["acquired_knowledge"]) != list(previous_state["acquired_knowledge"]):
+            raise ValueError("initial acquired knowledge changed before teacher intervention")
+        if list(state["remaining_unknowns"]) != list(previous_state["remaining_unknowns"]):
+            raise ValueError("initial remaining unknowns changed before teacher intervention")
+        if state["active_misconception"] != previous_state["active_misconception"]:
+            raise ValueError("initial misconception changed before teacher intervention")
+        if abs(float(confidence) - float(previous_state["confidence"])) > 0.1:
+            raise ValueError("initial confidence changed by more than 0.1")
     if (
         allow_emotion_change
         and next_emotion != previous_emotion
@@ -294,9 +348,15 @@ def parse_student_turn(
     previous_state: dict[str, Any],
     *,
     allow_emotion_change: bool = True,
+    allowed_knowledge: list[str] | None = None,
+    expected_response_mode: str = "follow_latest_teacher_step_only",
+    latest_teacher_utterance: str = "",
 ) -> dict[str, Any]:
     parsed = parse_json_response(raw)
-    required = {"state_after", "state_update_reason", "utterance"}
+    required = {
+        "state_after", "response_stage", "knowledge_used",
+        "state_update_reason", "utterance",
+    }
     if not required.issubset(parsed):
         raise ValueError(f"student response is missing required fields; returned keys={sorted(parsed)}")
     normalized = {key: parsed[key] for key in required}
@@ -304,8 +364,35 @@ def parse_student_turn(
         normalized["state_after"], previous_state,
         allow_emotion_change=allow_emotion_change,
     )
+    newly_acquired = set(normalized["state_after"]["acquired_knowledge"]) - set(
+        previous_state["acquired_knowledge"]
+    )
+    if any(item not in latest_teacher_utterance for item in newly_acquired):
+        raise ValueError("new knowledge was not copied from the latest teacher utterance")
     normalized["_state_normalizations"] = notes
     normalized["utterance"] = validate_student_utterance(normalized["utterance"])
+    if normalized["response_stage"] not in STUDENT_RESPONSE_STAGES:
+        raise ValueError("response_stage is invalid")
+    stages = {
+        "plausible_incorrect": {"attempt"},
+        "partial_reasoning": {"observation", "attempt"},
+        "correct_but_uncertain": {"attempt", "answer"},
+        "scope_limited_help_seeking": {"observation", "help_seeking"},
+        "natural_profile_consistent": set(STUDENT_RESPONSE_STAGES),
+        "follow_latest_teacher_step_only": set(STUDENT_RESPONSE_STAGES),
+    }
+    if normalized["response_stage"] not in stages[expected_response_mode]:
+        raise ValueError("response_stage does not match the response condition")
+    knowledge_used = normalized["knowledge_used"]
+    if not isinstance(knowledge_used, list) or any(
+        not isinstance(item, str) or not item.strip() for item in knowledge_used
+    ):
+        raise ValueError("knowledge_used is invalid")
+    if len(knowledge_used) != len(set(knowledge_used)):
+        raise ValueError("knowledge_used contains duplicates")
+    allowed = set(allowed_knowledge or []) | newly_acquired
+    if allowed_knowledge is not None and any(item not in allowed for item in knowledge_used):
+        raise ValueError("knowledge_used is outside the profile boundary")
     if not isinstance(normalized["state_update_reason"], str) or not normalized["state_update_reason"].strip():
         raise ValueError("state_update_reason is invalid")
     return normalized
@@ -339,19 +426,64 @@ def profile_text(profile: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def initial_state(profile: dict[str, Any], emotion: str) -> dict[str, Any]:
+def initial_state(
+    profile: dict[str, Any], emotion: str,
+    epistemic_assignment: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     confidence = 0.35 if profile.get("confidence_bias") == "underconfident" else 0.55
     unknown_knowledge = profile["unknown_knowledge"]
     if isinstance(unknown_knowledge, str):
         unknown_knowledge = [unknown_knowledge]
+    misconception = profile["target_misconception"]
+    if epistemic_assignment is not None:
+        misconception = epistemic_assignment["misconception_model"]["label"]
     return {
         "understanding_level": max(0, min(4, int(profile["ability_level"]) - 1)),
         "confidence": confidence,
-        "active_misconception": profile["target_misconception"],
+        "active_misconception": misconception,
         "emotion": emotion,
         "acquired_knowledge": [],
         "remaining_unknowns": list(unknown_knowledge),
     }
+
+
+def problem_level(row: dict[str, Any]) -> int:
+    value = row.get("level")
+    if isinstance(value, bool):
+        raise ValueError("problem level must be an integer from 1 to 5")
+    try:
+        level = int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("problem level must be an integer from 1 to 5") from exc
+    if not 1 <= level <= 5:
+        raise ValueError("problem level must be an integer from 1 to 5")
+    return level
+
+
+def initial_response_condition(epistemic_assignment: dict[str, Any]) -> str:
+    if epistemic_assignment["scope_relation"] in {"one_step_beyond", "far_beyond"}:
+        return "scope_limited_help_seeking"
+    return str(epistemic_assignment["initial_response_mode"])
+
+
+def load_epistemic_assignments(path: Path) -> dict[str, dict[str, Any]]:
+    rows = read_jsonl(path)
+    assignments = {str(row.get("source_id")): row for row in rows}
+    if len(assignments) != len(rows) or "" in assignments:
+        raise ValueError("問題・プロフィール対応表に欠損または重複があります")
+    for source_id, row in assignments.items():
+        attempt_history = row.get("prior_attempt_history")
+        if not isinstance(attempt_history, dict):
+            raise ValueError(f"事前試行履歴がありません: {source_id}")
+        if (
+            row.get("initial_emotion") == "frustrated"
+            and (
+                int(attempt_history.get("attempt_count", 0)) < 2
+                or attempt_history.get("repeated_stuck_point") in {None, "", "なし"}
+            )
+        ):
+            raise ValueError(f"frustratedに事前失敗履歴がありません: {source_id}")
+    return assignments
 
 
 def build_phase2_input(
@@ -369,20 +501,47 @@ def build_phase2_input(
     }
 
 
-def stratified_assignments(
-    size: int,
-    profiles: list[dict[str, Any]],
-    emotions: list[str],
-    seed: int,
-) -> list[tuple[dict[str, Any], str]]:
-    """v4コーパスと同じ24条件ブロックをseed付きで層化する。"""
-    combinations = [(profile, emotion) for profile in profiles for emotion in emotions]
-    assignments: list[tuple[dict[str, Any], str]] = []
-    for block_index in range((size + len(combinations) - 1) // len(combinations)):
-        block = list(combinations)
-        random.Random(seed + block_index).shuffle(block)
-        assignments.extend(block)
-    return assignments[:size]
+def validate_phase2_transfer(
+    value: dict[str, Any], profile: dict[str, Any], dialogue: list[dict[str, Any]],
+) -> dict[str, Any]:
+    if set(value) != {"answer", "knowledge_sources", "application_summary"}:
+        raise ValueError("phase2 response keys are invalid")
+    answer = str(value["answer"]).strip()
+    if (
+        not answer.startswith(r"\boxed{")
+        or not answer.endswith("}")
+        or answer.count(r"\boxed{") != 1
+        or "\n" in answer
+    ):
+        raise ValueError("phase2 answer must be one boxed answer")
+    sources = value["knowledge_sources"]
+    if not isinstance(sources, list):
+        raise ValueError("phase2 knowledge_sources must be a list")
+    teacher_texts = [
+        str(turn["content"]) for turn in dialogue if turn.get("role") == "teacher"
+    ]
+    for source in sources:
+        if not isinstance(source, dict) or set(source) != {"source_type", "source_text"}:
+            raise ValueError("phase2 knowledge source is invalid")
+        source_text = str(source["source_text"]).strip()
+        if source["source_type"] == "prior_knowledge":
+            if source_text not in profile["prior_knowledge"]:
+                raise ValueError("phase2 prior knowledge source is outside the profile")
+        elif source["source_type"] == "phase1_teacher":
+            if not source_text or not any(source_text in text for text in teacher_texts):
+                raise ValueError("phase2 teacher source is not an exact dialogue quote")
+        else:
+            raise ValueError("phase2 source_type is invalid")
+    if answer != r"\boxed{わからない}" and not sources:
+        raise ValueError("a phase2 answer requires at least one permitted knowledge source")
+    summary = str(value["application_summary"]).strip()
+    if not summary or len(summary) > 300:
+        raise ValueError("phase2 application_summary is invalid")
+    return {
+        "answer": answer,
+        "knowledge_sources": sources,
+        "application_summary": summary,
+    }
 
 
 def generation_succeeded(row: dict[str, Any]) -> bool:
@@ -392,7 +551,10 @@ def generation_succeeded(row: dict[str, Any]) -> bool:
 def call_and_parse_student(client: OpenAI, model: str, messages: list[dict[str, str]], temperature: float,
                            previous_state: dict[str, Any], seed: int, retries: int,
                            *, allow_emotion_change: bool, top_p: float, top_k: int,
-                           min_p: float, max_tokens: int) -> tuple[dict[str, Any], int]:
+                           min_p: float, max_tokens: int,
+                           allowed_knowledge: list[str] | None = None,
+                           expected_response_mode: str = "follow_latest_teacher_step_only",
+                           latest_teacher_utterance: str = "") -> tuple[dict[str, Any], int]:
     last_error: Exception | None = None
     for attempt in range(retries):
         try:
@@ -400,7 +562,8 @@ def call_and_parse_student(client: OpenAI, model: str, messages: list[dict[str, 
             if attempt:
                 retry_messages.append({"role": "user", "content": (
                     "前回の出力形式が不正でした。problem、turn、state_before等をコピーせず、"
-                    "state_after、state_update_reason、utteranceの3キーだけを持つJSONを返してください。"
+                    "state_after、response_stage、knowledge_used、state_update_reason、"
+                    "utteranceの5キーだけを持つJSONを返してください。"
                 )})
             raw = call_model(
                 client, model, retry_messages, temperature, max_tokens,
@@ -409,6 +572,9 @@ def call_and_parse_student(client: OpenAI, model: str, messages: list[dict[str, 
             )
             return parse_student_turn(
                 raw, previous_state, allow_emotion_change=allow_emotion_change,
+                allowed_knowledge=allowed_knowledge,
+                expected_response_mode=expected_response_mode,
+                latest_teacher_utterance=latest_teacher_utterance,
             ), attempt
         except Exception as exc:
             last_error = exc
@@ -443,12 +609,23 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def question_content_hash(row: dict[str, Any]) -> str:
+    problem = str(row.get("translated_question") or row.get("problem") or "").strip()
+    solution = str(row.get("translated_solution") or row.get("solution") or "").strip()
+    encoded = json.dumps(
+        {"problem": problem, "reference_solution": solution},
+        ensure_ascii=False, sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def run_fingerprint(args: argparse.Namespace, config: Config) -> tuple[str, dict[str, str]]:
     source_paths = {
         "questions": args.questions,
         "similar_questions": args.similar_questions,
         "excluded_question_ids": args.excluded_question_ids,
         "profiles": args.profiles,
+        "problem_profile_assignments": args.problem_profile_assignments,
         "initial_emotions": args.initial_emotions,
         "teacher_system_prompt": args.teacher_system_prompt,
         "student_system_prompt": BASE_DIR / "prompts" / "student_system.txt",
@@ -497,18 +674,20 @@ def main() -> None:
     phase2_template = read_text("phase2_in_context_student_system.txt")
     profiles = json.loads(args.profiles.read_text(encoding="utf-8"))
     emotion_config = json.loads(args.initial_emotions.read_text(encoding="utf-8"))
-    emotions = [row["name"] for row in emotion_config["emotions"]]
+    emotion_rows = emotion_config["emotions"]
+    emotions = [row["name"] for row in emotion_rows]
+    emotion_by_name = {row["name"]: row for row in emotion_rows}
     expected_initial_emotions = {
         "neutral", "engaged", "curious", "confused", "frustrated", "anxious",
     }
     profile_ids = [str(profile.get("id")) for profile in profiles]
     if (
-        len(profiles) != 4
-        or len(set(profile_ids)) != 4
+        len(profiles) != 8
+        or len(set(profile_ids)) != 8
         or set(emotions) != expected_initial_emotions
         or len(emotions) != 6
     ):
-        raise ValueError("v4テストは4プロフィール×6初期感情を前提とします。")
+        raise ValueError("v4テストは8プロフィールと6初期感情を前提とします。")
 
     excluded_ids = read_excluded_ids(args.excluded_question_ids)
     originals = [
@@ -523,7 +702,24 @@ def main() -> None:
     all_pairs = [(row, similar_by_id.get(str(row.get("id") or row.get("source_id")))) for row in originals]
     all_pairs = [(original, similar) for original, similar in all_pairs if similar is not None]
     random.Random(config.seed).shuffle(all_pairs)
-    assignments = stratified_assignments(len(all_pairs), profiles, emotions, config.seed)
+    epistemic_by_id = load_epistemic_assignments(args.problem_profile_assignments)
+    profiles_by_id = {str(profile["id"]): profile for profile in profiles}
+    missing_assignments = [
+        str(original.get("id") or original.get("source_id"))
+        for original, _ in all_pairs
+        if str(original.get("id") or original.get("source_id")) not in epistemic_by_id
+    ]
+    if missing_assignments:
+        raise ValueError(f"問題・プロフィール対応表に未登録です: {missing_assignments[:5]}")
+    changed_questions = [
+        str(original.get("id") or original.get("source_id"))
+        for original, _ in all_pairs
+        if epistemic_by_id[str(original.get("id") or original.get("source_id"))].get(
+            "question_sha256"
+        ) != question_content_hash(original)
+    ]
+    if changed_questions:
+        raise ValueError(f"対応表作成後に問題内容が変わっています: {changed_questions[:5]}")
     pairs = [
         (global_index, original, similar)
         for global_index, (original, similar) in enumerate(all_pairs)
@@ -552,6 +748,7 @@ def main() -> None:
     manifest_path.write_text(json.dumps({
         "config": asdict(config),
         "questions": str(args.questions), "similar_questions": str(args.similar_questions),
+        "problem_profile_assignments": str(args.problem_profile_assignments),
         "excluded_question_ids": str(args.excluded_question_ids),
         "excluded_question_count": len(excluded_ids),
         "profiles": str(args.profiles), "initial_emotions": str(args.initial_emotions),
@@ -588,17 +785,28 @@ def main() -> None:
         previous_record = existing_by_id.get(run_id, {})
         previous_attempt = int(previous_record.get("generation_attempt", 1 if previous_record else 0))
         generation_attempt = previous_attempt + 1
-        profile, initial_emotion = assignments[global_index]
+        epistemic_assignment = epistemic_by_id[source_id]
+        base_profile = profiles_by_id[str(epistemic_assignment["profile_id"])]
+        profile = json.loads(json.dumps(base_profile, ensure_ascii=False))
+        profile["problem_epistemic_state"] = {
+            "curriculum_annotation": epistemic_assignment["curriculum_annotation"],
+            "scope_relation": epistemic_assignment["scope_relation"],
+            "misconception_model": epistemic_assignment["misconception_model"],
+            "initial_response_constraint": epistemic_assignment["initial_response_constraint"],
+        }
+        initial_emotion = str(epistemic_assignment["initial_emotion"])
         formatted_profile = profile_text(profile)
-        state = initial_state(profile, initial_emotion)
+        state = initial_state(profile, initial_emotion, epistemic_assignment)
         initial_student_state = dict(state)
         problem = original["translated_question"]
+        level = problem_level(original)
+        first_response_condition = initial_response_condition(epistemic_assignment)
         dialogue: list[dict[str, Any]] = []
         teacher_history = [{"role": "system", "content": teacher_system}]
         last_teacher = ""
         is_completed = False
         generation_error: str | None = None
-        validation_retries = {"student": 0, "teacher": 0}
+        validation_retries = {"student": 0, "teacher": 0, "phase2": 0}
         run_seed = config.seed + global_index * 100 + (generation_attempt - 1) * 1_000_000
 
         for turn in range(config.max_turns):
@@ -607,6 +815,19 @@ def main() -> None:
                 "turn": turn,
                 "state_before": state,
                 "initial_emotion": initial_emotion,
+                "initial_emotion_condition": emotion_by_name[initial_emotion],
+                "initial_response_condition": (
+                    first_response_condition
+                    if turn == 0 else "follow_latest_teacher_step_only"
+                ),
+                "problem_level": level,
+                "epistemic_state_specification": epistemic_assignment,
+                "knowledge_boundary": {
+                    "prior_knowledge": profile["prior_knowledge"],
+                    "acquired_knowledge": state["acquired_knowledge"],
+                    "unknown_knowledge": profile["unknown_knowledge"],
+                    "max_independent_math_level": profile["max_independent_math_level"],
+                },
                 "latest_teacher_utterance": last_teacher,
                 "recent_dialogue": [
                     {"role": item["role"], "content": item["content"]}
@@ -628,6 +849,14 @@ def main() -> None:
                     allow_emotion_change=turn > 0,
                     top_p=config.student_top_p, top_k=config.student_top_k,
                     min_p=config.student_min_p, max_tokens=config.student_max_tokens,
+                    allowed_knowledge=[
+                        *profile["prior_knowledge"], *state["acquired_knowledge"],
+                    ],
+                    expected_response_mode=(
+                        first_response_condition
+                        if turn == 0 else "follow_latest_teacher_step_only"
+                    ),
+                    latest_teacher_utterance=last_teacher,
                 )
                 validation_retries["student"] += retry_count
                 state_normalizations = student_turn.pop("_state_normalizations", [])
@@ -636,6 +865,8 @@ def main() -> None:
                 dialogue.append({
                     "role": "student",
                     "content": utterance,
+                    "response_stage": student_turn["response_stage"],
+                    "knowledge_used": student_turn["knowledge_used"],
                     "state_after": state,
                     "state_update_validated": True,
                     "state_changed": state != previous_state,
@@ -670,23 +901,52 @@ def main() -> None:
                 break
 
         phase2_answer = ""
+        phase2_student_trace: dict[str, Any] | None = None
         if generation_error is None and dialogue:
             phase2_input = build_phase2_input(
                 problem, dialogue, similar["similar_question"],
             )
             try:
-                phase2_answer = call_model(
-                    student_client, config.student_model,
-                    [{"role": "system", "content": phase2_template.replace("{STUDENT_PROFILE}", formatted_profile)},
-                     {"role": "user", "content": json.dumps(phase2_input, ensure_ascii=False)}],
-                    config.phase2_temperature, config.student_max_tokens,
-                    seed=run_seed + 90,
-                    extra_body={
-                        "top_p": config.student_top_p,
-                        "top_k": config.student_top_k,
-                        "min_p": config.student_min_p,
-                    },
-                )
+                phase2_messages = [
+                    {"role": "system", "content": phase2_template.replace(
+                        "{STUDENT_PROFILE}", formatted_profile,
+                    )},
+                    {"role": "user", "content": json.dumps(
+                        phase2_input, ensure_ascii=False,
+                    )},
+                ]
+                phase2_error: Exception | None = None
+                for attempt in range(args.response_retries):
+                    retry_messages = list(phase2_messages)
+                    if phase2_error is not None:
+                        retry_messages.append({"role": "user", "content": (
+                            f"前回出力は検証エラーでした: {phase2_error}。"
+                            "知識源を完全一致で引用し、指定JSONだけを再生成してください。"
+                        )})
+                    try:
+                        raw_phase2 = call_model(
+                            student_client, config.student_model, retry_messages,
+                            config.phase2_temperature, config.student_max_tokens,
+                            response_format=PHASE2_TRANSFER_SCHEMA,
+                            seed=run_seed + 90 + attempt,
+                            extra_body={
+                                "top_p": config.student_top_p,
+                                "top_k": config.student_top_k,
+                                "min_p": config.student_min_p,
+                            },
+                        )
+                        phase2_student_trace = validate_phase2_transfer(
+                            parse_json_response(raw_phase2), profile, dialogue,
+                        )
+                        validation_retries["phase2"] = attempt
+                        break
+                    except Exception as exc:
+                        phase2_error = exc
+                else:
+                    raise ValueError(
+                        f"phase2 structured response failed after retries: {phase2_error}"
+                    ) from phase2_error
+                phase2_answer = phase2_student_trace["answer"]
             except Exception as exc:
                 generation_error = f"Phase2 {type(exc).__name__}: {exc}"
 
@@ -698,8 +958,15 @@ def main() -> None:
             "teacher_model": config.teacher_model, "student_model": config.student_model,
             "student_profile_used": profile, "initial_emotion": initial_emotion,
             "initial_student_state": initial_student_state,
+            "generation_condition": {
+                "problem_level": level,
+                "initial_response_condition": first_response_condition,
+                "knowledge_gate_active": first_response_condition == "scope_limited_help_seeking",
+                "problem_profile_assignment": epistemic_assignment,
+            },
             "final_student_state": state, "phase1_turns": sum(item["role"] == "student" for item in dialogue),
             "phase1_is_completed": is_completed, "phase2_student_answer": phase2_answer,
+            "phase2_student_trace": phase2_student_trace,
             "similar_question": similar["similar_question"],
             "similar_solution": similar["similar_solution"],
             "dialogue_log": dialogue, "generation_error": generation_error,

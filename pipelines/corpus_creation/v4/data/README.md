@@ -1,6 +1,6 @@
 # v4 data
 
-実行時に`run_100/`以下へ次を生成する。
+再設計後の実行では`run_100_ess_e2e3/`以下へ次を生成する。`data/candidate_dialogues.jsonl`の9件は再設計前pilotであり、新runへ追記しない。
 
 - `candidate_dialogues.jsonl`：正常生成された候補対話
 - `generation_errors.jsonl`：生成失敗候補
@@ -17,4 +17,4 @@
 
 学習・検証分割はここでは行わず、SFT実行時に設定する。`manifest.json`は再開時の設定混在を防ぐための実行状態でもあるので、手動で書き換えない。
 
-問題範囲とプロフィールの自動対応は実装していない。入力問題のテキスト以外のフィールドは`source_metadata`へ保持するため、`source_id`、`source_metadata`、プロフィールを使って採択後に難度・範囲を分析できる。
+問題は`math_train_0`から数値順に固定し、候補番号と一対一に対応させる。事前対応表は`../assignments/problem_profile_assignments.jsonl`に置く。候補の`generation_condition`にはE2カリキュラム注釈、E3誤概念、プロフィール、初期感情、初回応答条件を保存するが、SFT messagesへは含めない。

@@ -1,13 +1,14 @@
 {
-  "sampling_method": "seeded_stratified_balanced",
-  "independent_of_student_profile": true,
+  "sampling_method": "deterministic_scope_difficulty_and_prior_attempt_mapping",
+  "independent_of_student_profile": false,
+  "weights_are_used": false,
   "emotions": [
-    {"name": "neutral", "weight": 1},
-    {"name": "engaged", "weight": 1},
-    {"name": "curious", "weight": 1},
-    {"name": "confused", "weight": 1},
-    {"name": "frustrated", "weight": 1},
-    {"name": "anxious", "weight": 1}
+    {"name": "neutral", "weight": 1, "manifestation": "感情を強調せず、分かっていることと不明点を事実として簡潔に述べる"},
+    {"name": "engaged", "weight": 1, "manifestation": "自分から式や具体例を試し、次に確かめたい点を能動的に述べる"},
+    {"name": "curious", "weight": 1, "manifestation": "なぜその関係になるか、別の見方があるかという具体的な関心を示す"},
+    {"name": "confused", "weight": 1, "manifestation": "分かる部分と混同している一か所を区別し、断定を避けて迷いを示す"},
+    {"name": "frustrated", "weight": 1, "manifestation": "試したが同じ所で止まっていることを短く示す。攻撃的・芝居がかった表現にはしない"},
+    {"name": "anxious", "weight": 1, "manifestation": "計算や方針に自信がなく、間違いを気にする控えめな確認表現を含める"}
   ],
   "excluded_as_initial_state": [
     {"name": "bored", "reason": "対話中にフラストレーションが放置された後の離脱状態として扱う"},

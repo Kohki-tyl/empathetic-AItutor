@@ -5,7 +5,7 @@
 | 役割 | モデル | 実行方法 |
 | --- | --- | --- |
 | 生徒シミュレータ | `tokyotech-llm/Qwen3-Swallow-8B-SFT-v0.2` | ABCI上のvLLM 0.25.1 |
-| 教師候補生成 | `gpt-5.6-terra` | Chat Completions、reasoning effort `medium` |
+| 教師候補生成 | `gpt-5.6-terra` | Chat Completions、reasoning effort `high` |
 | 初回監査 | `gpt-5.6-terra` | Batch Chat Completions、reasoning effort `high` |
 | 文脈整合Repair | `gpt-5.6-terra` | Batch Chat Completions、reasoning effort `medium` |
 | 修正済み対話の全ターン再監査 | `gpt-5.6-terra` | Batch Chat Completions、reasoning effort `high` |
@@ -15,6 +15,8 @@
 ## 役割と工程の分離
 
 教師と生徒は別モデルにする。教師候補生成、監査、Repairは同じ`gpt-5.6-terra`を使うが、プロンプト、APIリクエスト、保存ファイルを工程ごとに分離する。
+
+問題選定モデルは置かない。`math_train_0`から数値順に固定し、規則ベースで事前生成したE2/E3対応表からプロフィール、初期感情、誤概念を読み込む。API呼出しと実行時の選定バイアスを避ける。
 
 Repairは対象ターン単位の独立変換ではない。同一対話のRepair対象をまとめ、対話全体を入力して前後整合性を要求する。修正後はRepairターンだけでなく、修正済み対話の全教師ターンを再監査する。
 

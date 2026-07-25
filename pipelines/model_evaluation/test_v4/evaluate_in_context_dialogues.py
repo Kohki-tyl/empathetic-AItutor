@@ -336,10 +336,13 @@ def main() -> None:
         realism_payload = json.dumps({
             "student_profile": row.get("student_profile_used"),
             "initial_emotion": row.get("initial_emotion"),
+            "generation_condition": row.get("generation_condition"),
             "initial_state": row.get("initial_student_state"),
             "final_state": row.get("final_student_state"),
             "dialogue": [{key: value for key, value in turn.items() if key != "analysis"}
                          for turn in row.get("dialogue_log", [])],
+            "phase2_student_answer": row.get("phase2_student_answer"),
+            "phase2_student_trace": row.get("phase2_student_trace"),
         }, ensure_ascii=False)
         realism = previous.get("student_realism_evaluation")
         if not judge_succeeded(realism):

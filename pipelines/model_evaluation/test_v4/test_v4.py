@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 import unittest
-from collections import Counter
 from pathlib import Path
 
 
@@ -26,21 +26,37 @@ evaluation = load_module("v4_test_evaluation", "evaluate_in_context_dialogues.py
 class V4StudentAlignmentTest(unittest.TestCase):
     def setUp(self) -> None:
         self.profile = {
-            "id": "V2-S01",
+            "id": "V4-S01",
             "ability_level": 2,
+            "max_independent_math_level": 2,
+            "prior_knowledge": ["一次方程式"],
             "unknown_knowledge": ["連立方程式"],
             "target_misconception": "表面的な手順に頼る",
             "confidence_bias": "underconfident",
         }
         self.state = generation.initial_state(self.profile, "confused")
 
-    def test_initial_emotion_is_independent_from_profile(self) -> None:
+    def test_assigned_initial_emotion_sets_initial_state(self) -> None:
         self.assertEqual(self.state["emotion"], "confused")
         self.assertEqual(self.state["confidence"], 0.35)
 
     def test_initial_emotion_cannot_change_before_teacher_intervention(self) -> None:
         changed = dict(self.state, emotion="engaged")
         with self.assertRaisesRegex(ValueError, "initial emotion"):
+            generation.validate_student_state(
+                changed, self.state, allow_emotion_change=False,
+            )
+
+    def test_initial_knowledge_cannot_change_before_teacher_intervention(self) -> None:
+        changed = dict(self.state, acquired_knowledge=["new knowledge"])
+        with self.assertRaisesRegex(ValueError, "initial acquired knowledge"):
+            generation.validate_student_state(
+                changed, self.state, allow_emotion_change=False,
+            )
+
+    def test_initial_confidence_change_is_limited(self) -> None:
+        changed = dict(self.state, confidence=self.state["confidence"] + 0.15)
+        with self.assertRaisesRegex(ValueError, "initial confidence"):
             generation.validate_student_state(
                 changed, self.state, allow_emotion_change=False,
             )
@@ -66,14 +82,6 @@ class V4StudentAlignmentTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "was removed"):
             generation.validate_student_state(changed, previous)
 
-    def test_profile_emotion_assignment_is_balanced_per_24(self) -> None:
-        profiles = [{"id": f"S{i}"} for i in range(4)]
-        emotions = [f"e{i}" for i in range(6)]
-        assignments = generation.stratified_assignments(48, profiles, emotions, 42)
-        counts = Counter((profile["id"], emotion) for profile, emotion in assignments)
-        self.assertEqual(len(counts), 24)
-        self.assertEqual(set(counts.values()), {2})
-
     def test_corpus_prompts_and_profiles_are_synced(self) -> None:
         corpus_prompt_dir = BASE_DIR.parent.parent / "corpus_creation" / "v4" / "prompts"
         if not corpus_prompt_dir.exists():
@@ -87,7 +95,25 @@ class V4StudentAlignmentTest(unittest.TestCase):
         for corpus_name, test_name in pairs.items():
             corpus_text = (corpus_prompt_dir / corpus_name).read_text(encoding="utf-8").replace("\r\n", "\n").rstrip("\n")
             test_text = (BASE_DIR / "prompts" / test_name).read_text(encoding="utf-8").replace("\r\n", "\n").rstrip("\n")
-            self.assertEqual(corpus_text, test_text, f"同期が必要です: {test_name}")
+            if corpus_name.endswith(".json"):
+                self.assertEqual(json.loads(corpus_text), json.loads(test_text), f"同期が必要です: {test_name}")
+            else:
+                self.assertEqual(corpus_text, test_text, f"同期が必要です: {test_name}")
+
+    def test_out_of_scope_problem_forces_scope_limited_response(self) -> None:
+        self.assertEqual(
+            generation.initial_response_condition({"scope_relation": "one_step_beyond"}),
+            "scope_limited_help_seeking",
+        )
+
+    def test_in_scope_problem_uses_preassigned_response_mode(self) -> None:
+        self.assertEqual(
+            generation.initial_response_condition({
+                "scope_relation": "frontier",
+                "initial_response_mode": "plausible_incorrect",
+            }),
+            "plausible_incorrect",
+        )
 
     def test_phase2_receives_natural_dialogue_only(self) -> None:
         dialogue = [
@@ -103,6 +129,30 @@ class V4StudentAlignmentTest(unittest.TestCase):
             ],
         )
         self.assertNotIn("final_student_state", payload)
+
+    def test_phase2_knowledge_source_must_be_profile_or_teacher_quote(self) -> None:
+        dialogue = [
+            {"role": "teacher", "content": "両辺に3を足すと5x=15です。"},
+        ]
+        valid = {
+            "answer": r"\boxed{18}",
+            "knowledge_sources": [{
+                "source_type": "phase1_teacher", "source_text": "5x=15",
+            }],
+            "application_summary": "教師が示した等式変形を類似問題へ適用した。",
+        }
+        self.assertEqual(
+            generation.validate_phase2_transfer(valid, self.profile, dialogue)["answer"],
+            r"\boxed{18}",
+        )
+        invalid = {
+            **valid,
+            "knowledge_sources": [{
+                "source_type": "phase1_teacher", "source_text": "解の公式",
+            }],
+        }
+        with self.assertRaisesRegex(ValueError, "exact dialogue quote"):
+            generation.validate_phase2_transfer(invalid, self.profile, dialogue)
 
     def test_teacher_cot_final_is_separated(self) -> None:
         final, analysis, completed = generation.parse_teacher_response(

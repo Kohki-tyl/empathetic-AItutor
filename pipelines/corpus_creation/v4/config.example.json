@@ -4,7 +4,8 @@
   "max_turns": 10,
   "seed": 42,
   "teacher_model": "gpt-5.6-terra",
-  "teacher_reasoning_effort": "medium",
+  "teacher_reasoning_effort": "high",
+  "generation_validation_attempts": 3,
   "student_model": "tokyotech-llm/Qwen3-Swallow-8B-SFT-v0.2",
   "student_model_revision": "496cd5558fef4af1d426e96327d7a74681063280",
   "vllm_version": "0.25.1",
@@ -18,5 +19,6 @@
   "repair_model": "gpt-5.6-terra",
   "repair_reasoning_effort": "medium",
   "questions": "../questions/translated_1000_math.jsonl",
-  "output_dir": "data/run_100"
+  "problem_profile_assignments": "assignments/problem_profile_assignments.jsonl",
+  "output_dir": "data/run_100_ess_e2e3"
 }

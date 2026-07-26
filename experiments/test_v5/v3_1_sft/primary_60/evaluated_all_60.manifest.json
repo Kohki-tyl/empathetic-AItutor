@@ -1,0 +1,26 @@
+{
+  "phase": "evaluation_aggregate",
+  "condition": "test-v5/v3_1_sft/primary_60",
+  "judge_model": "gpt-5.6-terra",
+  "judge_reasoning_effort": "high",
+  "include_generation_failures": true,
+  "num_shards": 4,
+  "records": 60,
+  "evaluation_complete": true,
+  "source_sha256": {
+    "original_dialogues": "91a91c439a5ee2a222bb519ad83825f85d84bbb626ce3dc5ef8fb089bf61a4d3",
+    "classified_dialogues": "bbd5e83b5d25cc25ef978ce2974368d427731e89490f47ec72fcc0afa7f0a284",
+    "evaluated_all_60": "b8adb8f4b4301aa97d23abb3b6ec2e91dbbd442f01baac621270391924b6bcde"
+  },
+  "classification_counts": {
+    "quality_pass_full": 47,
+    "quality_fail_phase1_only": 12,
+    "quality_fail_not_evaluable": 1
+  },
+  "shard_manifests": [
+    "judge_all60_shards/evaluated_0.manifest.json",
+    "judge_all60_shards/evaluated_1.manifest.json",
+    "judge_all60_shards/evaluated_2.manifest.json",
+    "judge_all60_shards/evaluated_3.manifest.json"
+  ]
+}

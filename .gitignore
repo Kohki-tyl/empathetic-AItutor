@@ -12,3 +12,7 @@ Thumbs.db
 
 # v4 corpus slice jobs: structured JSON/JSONL is retained; console logs are transient.
 pipelines/corpus_creation/v4/data/run_120_slices/*.log
+
+# test-v5 ABCI runtime output is transient; structured manifests are retained.
+pipelines/model_evaluation/test_v5/logs/
+pipelines/model_evaluation/test_v5/test-v5-gpt54.o*

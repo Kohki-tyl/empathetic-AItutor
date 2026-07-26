@@ -1,0 +1,5 @@
+model_name_or_path: tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5
+adapter_name_or_path: saves/Swallow-8B/lora/v3_1_cot_sft
+template: llama3
+finetuning_type: lora
+infer_backend: huggingface

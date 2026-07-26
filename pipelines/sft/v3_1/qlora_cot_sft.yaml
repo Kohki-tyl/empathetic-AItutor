@@ -1,0 +1,37 @@
+# v3.1: v3のデータ内容・学習条件を維持し、v4 prompt形式だけへ整合する。
+model_name_or_path: tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.5
+template: llama3
+quantization_bit: 4
+
+bf16: true
+pure_bf16: true
+
+dataset: v3_1_cot_sft
+val_size: 0.125
+cutoff_len: 2048
+
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_target: all
+lora_rank: 16
+lora_alpha: 16
+lora_dropout: 0.05
+upcast_layernorm: true
+
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 8
+learning_rate: 1.5e-4
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.05
+weight_decay: 0.05
+
+eval_strategy: steps
+eval_steps: 15
+logging_steps: 5
+save_steps: 15
+plot_loss: true
+overwrite_output_dir: true
+
+output_dir: saves/Swallow-8B/lora/v3_1_cot_sft

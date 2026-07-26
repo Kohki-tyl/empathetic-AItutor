@@ -1,0 +1,30 @@
+{
+  "phase": "evaluation",
+  "input": "SFT_abci/test/test_v4/data/base/retry_60/dialogues.jsonl",
+  "output": "SFT_abci/test/test_v4/data/base/retry_60/evaluated_all_60_including_failures.jsonl",
+  "judge_model": "gpt-5.6-terra",
+  "judge_reasoning_effort": "high",
+  "source_sha256": {
+    "input": "da77bacc7355fc80ea1893dce1800f77cc22bc3d5992ea05bd7cd6c05ac65b58",
+    "similar_questions": "2f418395223061df66ed2c75360a2d6617b14ee490e666e8d6bf5629d564195f",
+    "excluded_question_ids": "42ccfb0e33a4703563e08bc130987fe7eb27820becde7676060d0ac13c8dfa9a",
+    "instruction_judge_system": "1e1f90258ae72ff627dfe00a730c8c8c0b0a8e058d0d570f589c6496661a4f72",
+    "student_realism_judge_system": "1670c45b677a88a224c753eeb4271d09f9f15f953172067fc44a741eb4e1cfa5",
+    "math_judge_system": "492bda9f83e27f05ddfae97cf1a0066a67277d9d983e99cae825cda2cbe75739",
+    "reuse_evaluated_from": "4384fbb5846156d3eab33d6451d9a2b52b23c1222aa2dfe255c85b3345a6df0c"
+  },
+  "run_fingerprint": "a38c2b49425367c28a352ebd1816e8e3bed336908e3d4e1e8c24629e10900fe0",
+  "transfer_mode": "v4_in_context",
+  "excluded_question_ids": "/home/aci18753zq/empathetic-AItutor/SFT_abci/test/shared/questions/excluded_test_question_ids.json",
+  "planned_runs": 60,
+  "num_shards": 1,
+  "shard_index": 0,
+  "initial_successes_only": false,
+  "successful_generations_only": false,
+  "include_generation_failures": true,
+  "reuse_evaluated_from": "SFT_abci/test/test_v4/data/base/retry_60/evaluated_successes.jsonl",
+  "reused_evaluated_records": 46,
+  "input_records_before_filter": 60,
+  "judge_retries": 3,
+  "request_timeout": 120.0
+}

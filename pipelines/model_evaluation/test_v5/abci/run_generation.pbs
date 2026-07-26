@@ -1,0 +1,180 @@
+#!/bin/bash
+#PBS -q rt_HF
+#PBS -l select=1
+#PBS -l walltime=24:00:00
+#PBS -N test-v5-gpt54
+#PBS -j oe
+
+set -euo pipefail
+
+cd "${PBS_O_WORKDIR}"
+if [ ! -f generate_in_context_dialogues.py ]; then
+  echo "Submit from SFT_abci/test/test_v5: qsub -P GROUP abci/run_generation.pbs"
+  exit 1
+fi
+
+source /etc/profile.d/modules.sh
+module load python/3.12/3.12.9
+module load cuda/13.0/13.0.1
+
+REPO_ROOT="$(cd ../../.. && pwd)"
+V4_DIR="${V4_DIR:-${REPO_ROOT}/SFT_abci/test/test_v4}"
+VENV_PATH="${VENV_PATH:-${REPO_ROOT}/v4/.venv}"
+ENV_FILE="${ENV_FILE:-${REPO_ROOT}/.env}"
+if [ ! -x "${VENV_PATH}/bin/python" ]; then
+  echo "Missing Python environment: ${VENV_PATH}"
+  exit 1
+fi
+if [ ! -f "${ENV_FILE}" ]; then
+  echo "Missing API environment file: ${ENV_FILE}"
+  exit 1
+fi
+if [ ! -f "${V4_DIR}/prompts/test_60_primary_selection.json" ]; then
+  echo "Missing canonical test-v4 assets: ${V4_DIR}"
+  exit 1
+fi
+source "${VENV_PATH}/bin/activate"
+set -a
+source "${ENV_FILE}"
+set +a
+if [ -z "${OPENAI_API_KEY:-${GPT_API_KEY:-}}" ]; then
+  echo "OPENAI_API_KEY or GPT_API_KEY is not set in ${ENV_FILE}"
+  exit 1
+fi
+
+: "${TEACHER_MODEL_PATH:?Set the base or merged teacher checkpoint/HF ID}"
+TEST_CONDITION="${TEST_CONDITION:-lora}"
+TEACHER_SERVED_MODEL="${TEACHER_SERVED_MODEL:-teacher-${TEST_CONDITION}}"
+TEACHER_BASE_SERVED_MODEL="${TEACHER_BASE_SERVED_MODEL:-${TEACHER_SERVED_MODEL}}"
+if [ "${TEST_CONDITION}" = "lora" ] && [ "${TEACHER_BASE_SERVED_MODEL}" = "${TEACHER_SERVED_MODEL}" ]; then
+  TEACHER_BASE_SERVED_MODEL="${TEACHER_MODEL_PATH}"
+fi
+TEACHER_REVISION="${TEACHER_REVISION:-}"
+if [ -z "${TEACHER_REVISION}" ] && [ "${TEST_CONDITION}" != "merged" ]; then
+  TEACHER_REVISION="b1f8317099a97e790ec872c1225ca155979b4816"
+fi
+GPT54_SNAPSHOT="${GPT54_SNAPSHOT:-gpt-5.4-2026-03-05}"
+if [ "${GPT54_SNAPSHOT}" != "gpt-5.4-2026-03-05" ]; then
+  echo "v5 comparison requires the pinned GPT-5.4 snapshot: gpt-5.4-2026-03-05"
+  exit 1
+fi
+SELECTION_FILE="${SELECTION_FILE:-${V4_DIR}/prompts/test_60_primary_selection.json}"
+OUTPUT_FILE="${OUTPUT_FILE:-${PBS_O_WORKDIR}/data/gpt54_student/${TEST_CONDITION}/primary_60/dialogues.jsonl}"
+RETRY_SOURCE_FILE="${RETRY_SOURCE_FILE:-}"
+
+free_port() {
+  python -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()'
+}
+TEACHER_PORT="$(free_port)"
+
+mkdir -p logs "$(dirname "${OUTPUT_FILE}")"
+if [ -n "${RETRY_SOURCE_FILE}" ]; then
+  if [ "${RETRY_SOURCE_FILE}" = "${OUTPUT_FILE}" ]; then
+    echo "RETRY_SOURCE_FILE and OUTPUT_FILE must differ."
+    exit 1
+  fi
+  source_manifest="${RETRY_SOURCE_FILE%.jsonl}.manifest.json"
+  output_manifest="${OUTPUT_FILE%.jsonl}.manifest.json"
+  if [ ! -f "${RETRY_SOURCE_FILE}" ] || [ ! -f "${source_manifest}" ]; then
+    echo "Retry source or manifest is missing: ${RETRY_SOURCE_FILE}"
+    exit 1
+  fi
+  if { [ -e "${OUTPUT_FILE}" ] && [ ! -e "${output_manifest}" ]; } || \
+     { [ ! -e "${OUTPUT_FILE}" ] && [ -e "${output_manifest}" ]; }; then
+    echo "Retry output and manifest must both exist or both be absent."
+    exit 1
+  fi
+  if [ ! -e "${OUTPUT_FILE}" ]; then
+    cp "${RETRY_SOURCE_FILE}" "${OUTPUT_FILE}"
+    cp "${source_manifest}" "${output_manifest}"
+  fi
+fi
+
+teacher_args=(
+  --model "${TEACHER_MODEL_PATH}"
+  --served-model-name "${TEACHER_BASE_SERVED_MODEL}"
+  --dtype bfloat16
+  --port "${TEACHER_PORT}"
+)
+generation_teacher_args=(
+  --teacher-model "${TEACHER_SERVED_MODEL}"
+  --teacher-checkpoint "${TEACHER_MODEL_PATH}"
+  --teacher-serving-mode "${TEST_CONDITION}"
+)
+if [ -n "${TEACHER_REVISION}" ]; then
+  teacher_args+=(--revision "${TEACHER_REVISION}")
+  generation_teacher_args+=(--teacher-revision "${TEACHER_REVISION}")
+fi
+if [ "${TEST_CONDITION}" = "lora" ]; then
+  : "${TEACHER_LORA_PATH:?Set the final_adapter directory for LoRA evaluation}"
+  if [ ! -d "${TEACHER_LORA_PATH}" ]; then
+    echo "Teacher LoRA adapter not found: ${TEACHER_LORA_PATH}"
+    exit 1
+  fi
+  LORA_MODULE_JSON="$(python -c \
+    'import json,sys; print(json.dumps({"name":sys.argv[1],"path":sys.argv[2],"base_model_name":sys.argv[3]}))' \
+    "${TEACHER_SERVED_MODEL}" "${TEACHER_LORA_PATH}" "${TEACHER_MODEL_PATH}")"
+  teacher_args+=(--enable-lora --lora-modules "${LORA_MODULE_JSON}" --max-lora-rank 16)
+  generation_teacher_args+=(--teacher-adapter "${TEACHER_LORA_PATH}")
+elif [ "${TEST_CONDITION}" != "base" ] && [ "${TEST_CONDITION}" != "merged" ]; then
+  echo "TEST_CONDITION must be base, lora, or merged: ${TEST_CONDITION}"
+  exit 1
+fi
+
+cleanup() {
+  kill "${TEACHER_PID:-}" 2>/dev/null || true
+  wait "${TEACHER_PID:-}" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server \
+  "${teacher_args[@]}" > "logs/teacher_${PBS_JOBID}.log" 2>&1 &
+TEACHER_PID=$!
+
+for _ in $(seq 1 180); do
+  if ! kill -0 "${TEACHER_PID}" 2>/dev/null; then
+    echo "Teacher vLLM exited before readiness. Check logs."
+    exit 1
+  fi
+  if curl --fail --silent "http://127.0.0.1:${TEACHER_PORT}/v1/models" >/dev/null; then
+    break
+  fi
+  sleep 5
+done
+if ! curl --fail --silent "http://127.0.0.1:${TEACHER_PORT}/v1/models" >/dev/null; then
+  echo "Timed out waiting for teacher vLLM."
+  exit 1
+fi
+
+MAX_GENERATION_PASSES="${MAX_GENERATION_PASSES:-1}"
+FAILED_COUNT=0
+for generation_pass in $(seq 1 "${MAX_GENERATION_PASSES}"); do
+  echo "Generation pass ${generation_pass}/${MAX_GENERATION_PASSES}"
+  python generate_in_context_dialogues.py \
+    "${generation_teacher_args[@]}" \
+    --teacher-base-url "http://127.0.0.1:${TEACHER_PORT}/v1" \
+    --student-api-provider openai \
+    --student-model "${GPT54_SNAPSHOT}" \
+    --student-checkpoint "${GPT54_SNAPSHOT}" \
+    --student-revision "${GPT54_SNAPSHOT}" \
+    --student-base-url "https://api.openai.com/v1" \
+    --student-reasoning-effort none \
+    --student-temperature 0.6 \
+    --student-top-p 0.95 \
+    --student-top-k 0 \
+    --student-min-p 0.0 \
+    --problem-selection "${SELECTION_FILE}" \
+    --seed 42 \
+    --output "${OUTPUT_FILE}"
+  FAILED_COUNT="$(python -c 'import json,sys; print(sum(bool(json.loads(line).get("generation_error")) for line in open(sys.argv[1], encoding="utf-8") if line.strip()))' "${OUTPUT_FILE}")"
+  echo "Remaining failed generations: ${FAILED_COUNT}"
+  if [ "${FAILED_COUNT}" -eq 0 ]; then
+    break
+  fi
+done
+
+if [ "${FAILED_COUNT}" -ne 0 ]; then
+  echo "Generation still has ${FAILED_COUNT} failed records after ${MAX_GENERATION_PASSES} pass(es)."
+  exit 2
+fi
+echo "Generation completed: ${OUTPUT_FILE}"

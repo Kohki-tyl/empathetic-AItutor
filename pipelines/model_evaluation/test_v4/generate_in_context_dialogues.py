@@ -160,6 +160,15 @@ def parse_args() -> argparse.Namespace:
         help=f"固定生徒モデル（既定: {DEFAULT_STUDENT_MODEL}）",
     )
     parser.add_argument("--student-base-url", default=os.getenv("STUDENT_BASE_URL", "http://localhost:8001/v1"))
+    parser.add_argument(
+        "--student-api-provider", choices=("vllm", "openai"), default="vllm",
+        help="生徒APIの種類。OpenAI APIではvLLM固有sampling引数を送信しない。",
+    )
+    parser.add_argument(
+        "--student-reasoning-effort", default="none",
+        help="OpenAI生徒モデルへ渡すreasoning_effort。",
+    )
+    parser.add_argument("--student-request-timeout", type=float, default=180.0)
     parser.add_argument("--questions", type=Path, default=SHARED_DIR / "questions" / "test_math_questions.jsonl")
     parser.add_argument("--similar-questions", type=Path, default=SHARED_DIR / "questions" / "similar_test_math_questions.jsonl")
     parser.add_argument(
@@ -245,26 +254,75 @@ def normalize_messages(messages: list[dict[str, str]]) -> list[dict[str, str]]:
     return normalized
 
 
-def call_model(client: OpenAI, model: str, messages: list[dict[str, str]], temperature: float,
-               max_tokens: int = 512, response_format: dict[str, Any] | None = None,
-               seed: int | None = None, extra_body: dict[str, Any] | None = None) -> str:
+def build_call_kwargs(
+    model: str,
+    messages: list[dict[str, str]],
+    temperature: float,
+    max_tokens: int = 512,
+    response_format: dict[str, Any] | None = None,
+    seed: int | None = None,
+    extra_body: dict[str, Any] | None = None,
+    *,
+    api_provider: str = "vllm",
+    reasoning_effort: str = "none",
+) -> dict[str, Any]:
     kwargs: dict[str, Any] = {
         "model": model,
         "messages": normalize_messages(messages),
         "temperature": temperature,
-        "max_tokens": max_tokens,
     }
+    if api_provider == "openai":
+        kwargs["max_completion_tokens"] = max_tokens
+        kwargs["reasoning_effort"] = reasoning_effort
+        standard_sampling = dict(extra_body or {})
+        unsupported = [
+            key for key in ("top_k", "min_p")
+            if key in standard_sampling
+        ]
+        if unsupported:
+            raise ValueError(
+                "OpenAI APIへvLLM固有sampling引数を送信できません: "
+                + ", ".join(unsupported)
+            )
+        kwargs.update(standard_sampling)
+    elif api_provider == "vllm":
+        kwargs["max_tokens"] = max_tokens
+        if seed is not None:
+            kwargs["seed"] = seed
+        if extra_body:
+            kwargs["extra_body"] = extra_body
+    else:
+        raise ValueError(f"unsupported API provider: {api_provider}")
     if response_format:
         kwargs["response_format"] = response_format
-    if seed is not None:
-        kwargs["seed"] = seed
-    if extra_body:
-        kwargs["extra_body"] = extra_body
+    return kwargs
+
+
+def call_model(client: OpenAI, model: str, messages: list[dict[str, str]], temperature: float,
+               max_tokens: int = 512, response_format: dict[str, Any] | None = None,
+               seed: int | None = None, extra_body: dict[str, Any] | None = None,
+               *, api_provider: str = "vllm", reasoning_effort: str = "none") -> str:
+    kwargs = build_call_kwargs(
+        model, messages, temperature, max_tokens, response_format, seed, extra_body,
+        api_provider=api_provider, reasoning_effort=reasoning_effort,
+    )
     response = client.chat.completions.create(**kwargs)
     content = response.choices[0].message.content
     if not content:
         raise ValueError(f"{model} returned empty content")
     return content.strip()
+
+
+def validate_openai_student_model(client: OpenAI, expected_model: str) -> dict[str, str]:
+    """OpenAIが返すsnapshot IDを固定値と照合し、比較条件のずれを防ぐ。"""
+    retrieved = client.models.retrieve(expected_model)
+    actual_model = str(getattr(retrieved, "id", ""))
+    if actual_model != expected_model:
+        raise RuntimeError(
+            f"OpenAI生徒モデルが固定snapshotと一致しません: "
+            f"expected={expected_model}, actual={actual_model or 'unknown'}"
+        )
+    return {"id": actual_model, "provider": "openai", "snapshot": actual_model}
 
 
 def parse_json_response(raw: str) -> dict[str, Any]:
@@ -758,6 +816,8 @@ def call_and_parse_student(client: OpenAI, model: str, messages: list[dict[str, 
                            previous_state: dict[str, Any], seed: int, retries: int,
                            *, allow_emotion_change: bool, top_p: float, top_k: int,
                            min_p: float, max_tokens: int,
+                            api_provider: str = "vllm",
+                            reasoning_effort: str = "none",
                             allowed_knowledge: list[str] | None = None,
                             expected_response_mode: str = "follow_latest_teacher_step_only",
                             latest_teacher_utterance: str = "",
@@ -778,10 +838,15 @@ def call_and_parse_student(client: OpenAI, model: str, messages: list[dict[str, 
                     "utteranceの5キーだけを持つJSONを返してください。"
                     f"{disclosure_retry}"
                 )})
+            sampling = {"top_p": top_p}
+            if api_provider == "vllm":
+                sampling.update({"top_k": top_k, "min_p": min_p})
             raw = call_model(
                 client, model, retry_messages, temperature, max_tokens,
                 STUDENT_TURN_SCHEMA, seed + attempt,
-                extra_body={"top_p": top_p, "top_k": top_k, "min_p": min_p},
+                extra_body=sampling,
+                api_provider=api_provider,
+                reasoning_effort=reasoning_effort,
             )
             return parse_student_turn(
                 raw, previous_state, allow_emotion_change=allow_emotion_change,
@@ -858,6 +923,8 @@ def run_fingerprint(args: argparse.Namespace, config: Config) -> tuple[str, dict
         "teacher_serving_mode": config.teacher_serving_mode,
         "teacher_revision": config.teacher_revision,
         "student_checkpoint": args.student_checkpoint or args.student_model,
+        "student_api_provider": args.student_api_provider,
+        "student_reasoning_effort": args.student_reasoning_effort,
     }
     encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest(), hashes
@@ -873,6 +940,14 @@ def main() -> None:
         raise SystemExit("生徒のtop-p/top-k/min-p設定が不正です。")
     if args.student_max_tokens < 1:
         raise SystemExit("--student-max-tokensは1以上にしてください。")
+    if args.student_request_timeout <= 0:
+        raise SystemExit("--student-request-timeoutは正の値にしてください。")
+    if args.student_api_provider == "openai" and (
+        args.student_top_k != 0 or args.student_min_p != 0
+    ):
+        raise SystemExit(
+            "OpenAI生徒モデルでは--student-top-k 0と--student-min-p 0を指定してください。"
+        )
     teacher_serving_mode = args.teacher_serving_mode or (
         "lora" if args.teacher_adapter else "base"
     )
@@ -907,7 +982,34 @@ def main() -> None:
         raise SystemExit("教師と生徒が同じURL・モデルです。比較の交絡を避けるため別モデルを指定してください。")
 
     teacher_client = OpenAI(api_key="EMPTY", base_url=config.teacher_base_url)
-    student_client = OpenAI(api_key="EMPTY", base_url=config.student_base_url)
+    if args.student_api_provider == "openai":
+        student_api_key = os.getenv("OPENAI_API_KEY") or os.getenv("GPT_API_KEY")
+        if not student_api_key:
+            raise SystemExit("OpenAI生徒モデルにはOPENAI_API_KEY（またはGPT_API_KEY）が必要です。")
+        student_client = OpenAI(
+            api_key=student_api_key,
+            base_url=config.student_base_url,
+            timeout=args.student_request_timeout,
+        )
+        try:
+            student_serving_evidence = validate_openai_student_model(
+                student_client, config.student_model,
+            )
+        except Exception as exc:
+            raise SystemExit(
+                f"OpenAI生徒モデルのsnapshot検証に失敗しました: {type(exc).__name__}: {exc}"
+            ) from exc
+    else:
+        student_client = OpenAI(
+            api_key="EMPTY",
+            base_url=config.student_base_url,
+            timeout=args.student_request_timeout,
+        )
+        student_serving_evidence = {
+            "id": config.student_model,
+            "provider": "vllm",
+            "revision": config.student_revision,
+        }
     try:
         teacher_serving_evidence = validate_teacher_serving_metadata(
             list(teacher_client.models.list().data), config.teacher_model,
@@ -1039,6 +1141,8 @@ def main() -> None:
             "teacher_revision": args.teacher_revision,
             "student_checkpoint": args.student_checkpoint or args.student_model,
             "student_revision": args.student_revision,
+            "student_api_provider": args.student_api_provider,
+            "student_serving_evidence": student_serving_evidence,
             "teacher_serving_evidence": teacher_serving_evidence,
         },
         "response_retries": args.response_retries,
@@ -1120,6 +1224,8 @@ def main() -> None:
                     allow_emotion_change=turn > 0,
                     top_p=config.student_top_p, top_k=config.student_top_k,
                     min_p=config.student_min_p, max_tokens=config.student_max_tokens,
+                    api_provider=args.student_api_provider,
+                    reasoning_effort=args.student_reasoning_effort,
                     allowed_knowledge=[
                         *profile["prior_knowledge"], *state["acquired_knowledge"],
                     ],
@@ -1200,16 +1306,20 @@ def main() -> None:
                             "知識源を完全一致で引用し、指定JSONだけを再生成してください。"
                         )})
                     try:
+                        phase2_sampling = {"top_p": config.student_top_p}
+                        if args.student_api_provider == "vllm":
+                            phase2_sampling.update({
+                                "top_k": config.student_top_k,
+                                "min_p": config.student_min_p,
+                            })
                         raw_phase2 = call_model(
                             student_client, config.student_model, retry_messages,
                             config.phase2_temperature, config.student_max_tokens,
                             response_format=PHASE2_TRANSFER_SCHEMA,
                             seed=run_seed + 90 + attempt,
-                            extra_body={
-                                "top_p": config.student_top_p,
-                                "top_k": config.student_top_k,
-                                "min_p": config.student_min_p,
-                            },
+                            extra_body=phase2_sampling,
+                            api_provider=args.student_api_provider,
+                            reasoning_effort=args.student_reasoning_effort,
                         )
                         phase2_student_trace = validate_phase2_transfer(
                             parse_json_response(raw_phase2), profile, dialogue,
@@ -1253,6 +1363,8 @@ def main() -> None:
                 "teacher_revision": args.teacher_revision,
                 "student_checkpoint": args.student_checkpoint or args.student_model,
                 "student_revision": args.student_revision,
+                "student_api_provider": args.student_api_provider,
+                "student_serving_evidence": student_serving_evidence,
                 "teacher_serving_evidence": teacher_serving_evidence,
             },
         }

@@ -1,0 +1,14 @@
+{
+  "judge_model": "gpt-5.6-terra",
+  "reasoning_effort": "high",
+  "prompt_sha256": "f83f2d04b48eff65cae47dc6dc854b6f07ae15ea2a2d6bb90aec3a347c651917",
+  "cutoffs": [
+    1,
+    3,
+    5
+  ],
+  "fixed_cohort_rule": "same dialogue has at least 5 teacher turns",
+  "v3_pair_rule": "both Base and SFT have at least 5 teacher turns",
+  "planned_tasks": 300,
+  "already_completed": 0
+}

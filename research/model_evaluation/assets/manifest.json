@@ -1,0 +1,38 @@
+{
+  "schema_version": "standalone-evaluation-assets-v1",
+  "created_at_utc": "2026-08-12T10:37:13.385728+00:00",
+  "candidate_question_count": 200,
+  "excluded_question_count": 18,
+  "selected_evaluation_count": 100,
+  "selection_sha256": "0aec92b465be1380e0196bc5ee0ef81416c6e114ae4fb3426f4be06133db22ce",
+  "files": {
+    "questions": {
+      "path": "assets/test_math_questions.jsonl",
+      "sha256": "79559b4f39ab6ef687c644d4a431b86588b061497bc125d554d6f7619049db94",
+      "source": "pipelines/model_evaluation/shared/questions/test_math_questions.jsonl",
+      "source_sha256": "79559b4f39ab6ef687c644d4a431b86588b061497bc125d554d6f7619049db94"
+    },
+    "similar_questions": {
+      "path": "assets/similar_test_math_questions.jsonl",
+      "sha256": "2f418395223061df66ed2c75360a2d6617b14ee490e666e8d6bf5629d564195f",
+      "source": "pipelines/model_evaluation/shared/questions/similar_test_math_questions.jsonl",
+      "source_sha256": "2f418395223061df66ed2c75360a2d6617b14ee490e666e8d6bf5629d564195f"
+    },
+    "assignments": {
+      "path": "assets/problem_profile_assignments.jsonl",
+      "sha256": "f6cb1918ad0f5a74281cbae8a95247f855a8b7d6904d6300573ec9e510216472",
+      "source": "pipelines/model_evaluation/test_v4/prompts/problem_profile_assignments.jsonl",
+      "source_sha256": "f6cb1918ad0f5a74281cbae8a95247f855a8b7d6904d6300573ec9e510216472"
+    },
+    "excluded_question_ids": {
+      "path": "assets/excluded_test_question_ids.json",
+      "sha256": "3ce4beb19718da0bf6972bb7c064423b039bfddc276f3dc6cff06270769c0a7c",
+      "source": "pipelines/model_evaluation/shared/questions/excluded_test_question_ids.json",
+      "source_sha256": "3ce4beb19718da0bf6972bb7c064423b039bfddc276f3dc6cff06270769c0a7c"
+    },
+    "training_leakage_audit": {
+      "path": "assets/training_leakage_audit.json",
+      "sha256": "0f61d0fa51f8dcb10d2b9675f4583d55447547d03b7cbdbfa4ec6e28d37585f4"
+    }
+  }
+}

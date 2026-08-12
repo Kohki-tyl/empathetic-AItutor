@@ -1,0 +1,110 @@
+#!/bin/bash
+#PBS -q rt_HF
+#PBS -l select=1
+#PBS -l walltime=24:00:00
+#PBS -N research-model-eval
+#PBS -j oe
+
+set -euo pipefail
+
+cd "${PBS_O_WORKDIR}"
+if [ ! -f generate_dialogues.py ]; then
+  echo "Submit from research/model_evaluation"
+  exit 1
+fi
+
+source /etc/profile.d/modules.sh
+module load python/3.12/3.12.9
+module load cuda/13.0/13.0.1
+
+PROJECT_DIR="${PBS_O_WORKDIR}"
+VENV_PATH="${VENV_PATH:-${PROJECT_DIR}/.venv}"
+ENV_FILE="${ENV_FILE:-${PROJECT_DIR}/.env}"
+CONFIG_FILE="${CONFIG_FILE:-${PBS_O_WORKDIR}/config.example.json}"
+CONDITION="${CONDITION:-base}"
+OUTPUT_FILE="${OUTPUT_FILE:-${PBS_O_WORKDIR}/data/runs/${CONDITION}/dialogues.jsonl}"
+
+: "${TEACHER_MODEL_PATH:?Set TEACHER_MODEL_PATH}"
+TEACHER_SERVED_MODEL="${TEACHER_SERVED_MODEL:-teacher-${CONDITION}}"
+TEACHER_REVISION="${TEACHER_REVISION:-}"
+TEACHER_LORA_PATH="${TEACHER_LORA_PATH:-}"
+if [ -n "${TEACHER_LORA_PATH}" ]; then
+  TEACHER_BASE_SERVED_MODEL="${TEACHER_BASE_SERVED_MODEL:-${TEACHER_MODEL_PATH}}"
+else
+  TEACHER_BASE_SERVED_MODEL="${TEACHER_BASE_SERVED_MODEL:-${TEACHER_SERVED_MODEL}}"
+fi
+
+if [ ! -x "${VENV_PATH}/bin/python" ]; then
+  echo "Missing Python environment: ${VENV_PATH}"
+  echo "Run: bash abci/setup_environment.sh"
+  exit 1
+fi
+source "${VENV_PATH}/bin/activate"
+if [ -f "${ENV_FILE}" ]; then
+  set -a
+  source "${ENV_FILE}"
+  set +a
+fi
+: "${OPENAI_API_KEY:?Set OPENAI_API_KEY for GPT-5.4 student generation}"
+export TEACHER_API_KEY="${TEACHER_API_KEY:-EMPTY}"
+
+free_port() {
+  python -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()'
+}
+TEACHER_PORT="$(free_port)"
+mkdir -p logs "$(dirname "${OUTPUT_FILE}")"
+
+python build_selection.py
+python prepare_cases.py --config "${CONFIG_FILE}"
+python generate_initial_student_utterances.py --config "${CONFIG_FILE}"
+
+teacher_args=(
+  --model "${TEACHER_MODEL_PATH}"
+  --served-model-name "${TEACHER_BASE_SERVED_MODEL}"
+  --dtype bfloat16
+  --port "${TEACHER_PORT}"
+)
+if [ -n "${TEACHER_REVISION}" ]; then
+  teacher_args+=(--revision "${TEACHER_REVISION}")
+fi
+if [ -n "${TEACHER_LORA_PATH}" ]; then
+  if [ ! -d "${TEACHER_LORA_PATH}" ]; then
+    echo "Teacher LoRA adapter not found: ${TEACHER_LORA_PATH}"
+    exit 1
+  fi
+  LORA_MODULE_JSON="$(python -c \
+    'import json,sys; print(json.dumps({"name":sys.argv[1],"path":sys.argv[2],"base_model_name":sys.argv[3]}))' \
+    "${TEACHER_SERVED_MODEL}" "${TEACHER_LORA_PATH}" "${TEACHER_MODEL_PATH}")"
+  teacher_args+=(--enable-lora --lora-modules "${LORA_MODULE_JSON}" --max-lora-rank 64)
+fi
+
+cleanup() {
+  kill "${TEACHER_PID:-}" 2>/dev/null || true
+  wait "${TEACHER_PID:-}" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server \
+  "${teacher_args[@]}" > "logs/teacher_${PBS_JOBID}.log" 2>&1 &
+TEACHER_PID=$!
+
+for _ in $(seq 1 180); do
+  if ! kill -0 "${TEACHER_PID}" 2>/dev/null; then
+    echo "Teacher vLLM exited before readiness"
+    exit 1
+  fi
+  if curl --fail --silent "http://127.0.0.1:${TEACHER_PORT}/v1/models" >/dev/null; then
+    break
+  fi
+  sleep 5
+done
+curl --fail --silent "http://127.0.0.1:${TEACHER_PORT}/v1/models" >/dev/null
+
+python generate_dialogues.py \
+  --config "${CONFIG_FILE}" \
+  --condition "${CONDITION}" \
+  --teacher-model "${TEACHER_SERVED_MODEL}" \
+  --teacher-base-url "http://127.0.0.1:${TEACHER_PORT}/v1" \
+  --output "${OUTPUT_FILE}"
+
+echo "Generation completed: ${OUTPUT_FILE}"

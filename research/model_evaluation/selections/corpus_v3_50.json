@@ -1,0 +1,267 @@
+{
+  "schema_version": "existing-corpus-evaluation-selection-v1",
+  "dataset": "v3_turn_audited_cot_sft",
+  "population_size": 397,
+  "selected_count": 50,
+  "selection_method": "first_n_from_existing_seeded_shuffle",
+  "source_shuffle_seed": 42,
+  "sampling_without_replacement": true,
+  "corpus_sha256": "88a102ddbca4c4d78b669a2646e00f2d32f1d64ac182b322e9f01cc44be40eea",
+  "metadata_sha256": "13a0b7eeb3bb7bc421573bdbdda31accb349722b61130af6bdeea6060630e1e3",
+  "teacher_internal_reasoning_in_output": false,
+  "judge_input_policy": "problem, reference solution, and visible dialogue only",
+  "selected_cases": [
+    {
+      "corpus_index": 0,
+      "source_id": "math_train_508",
+      "case_id": "corpus-v3-math_train_508"
+    },
+    {
+      "corpus_index": 1,
+      "source_id": "math_train_194",
+      "case_id": "corpus-v3-math_train_194"
+    },
+    {
+      "corpus_index": 2,
+      "source_id": "math_train_510",
+      "case_id": "corpus-v3-math_train_510"
+    },
+    {
+      "corpus_index": 3,
+      "source_id": "math_train_389",
+      "case_id": "corpus-v3-math_train_389"
+    },
+    {
+      "corpus_index": 4,
+      "source_id": "math_train_315",
+      "case_id": "corpus-v3-math_train_315"
+    },
+    {
+      "corpus_index": 5,
+      "source_id": "math_train_229",
+      "case_id": "corpus-v3-math_train_229"
+    },
+    {
+      "corpus_index": 6,
+      "source_id": "math_train_231",
+      "case_id": "corpus-v3-math_train_231"
+    },
+    {
+      "corpus_index": 7,
+      "source_id": "math_train_501",
+      "case_id": "corpus-v3-math_train_501"
+    },
+    {
+      "corpus_index": 8,
+      "source_id": "math_train_160",
+      "case_id": "corpus-v3-math_train_160"
+    },
+    {
+      "corpus_index": 9,
+      "source_id": "math_train_168",
+      "case_id": "corpus-v3-math_train_168"
+    },
+    {
+      "corpus_index": 10,
+      "source_id": "math_train_482",
+      "case_id": "corpus-v3-math_train_482"
+    },
+    {
+      "corpus_index": 11,
+      "source_id": "math_train_148",
+      "case_id": "corpus-v3-math_train_148"
+    },
+    {
+      "corpus_index": 12,
+      "source_id": "math_train_91",
+      "case_id": "corpus-v3-math_train_91"
+    },
+    {
+      "corpus_index": 13,
+      "source_id": "math_train_224",
+      "case_id": "corpus-v3-math_train_224"
+    },
+    {
+      "corpus_index": 14,
+      "source_id": "math_train_471",
+      "case_id": "corpus-v3-math_train_471"
+    },
+    {
+      "corpus_index": 15,
+      "source_id": "math_train_497",
+      "case_id": "corpus-v3-math_train_497"
+    },
+    {
+      "corpus_index": 16,
+      "source_id": "math_train_528",
+      "case_id": "corpus-v3-math_train_528"
+    },
+    {
+      "corpus_index": 17,
+      "source_id": "math_train_218",
+      "case_id": "corpus-v3-math_train_218"
+    },
+    {
+      "corpus_index": 18,
+      "source_id": "math_train_340",
+      "case_id": "corpus-v3-math_train_340"
+    },
+    {
+      "corpus_index": 19,
+      "source_id": "math_train_53",
+      "case_id": "corpus-v3-math_train_53"
+    },
+    {
+      "corpus_index": 20,
+      "source_id": "math_train_108",
+      "case_id": "corpus-v3-math_train_108"
+    },
+    {
+      "corpus_index": 21,
+      "source_id": "math_train_234",
+      "case_id": "corpus-v3-math_train_234"
+    },
+    {
+      "corpus_index": 22,
+      "source_id": "math_train_306",
+      "case_id": "corpus-v3-math_train_306"
+    },
+    {
+      "corpus_index": 23,
+      "source_id": "math_train_93",
+      "case_id": "corpus-v3-math_train_93"
+    },
+    {
+      "corpus_index": 24,
+      "source_id": "math_train_341",
+      "case_id": "corpus-v3-math_train_341"
+    },
+    {
+      "corpus_index": 25,
+      "source_id": "math_train_318",
+      "case_id": "corpus-v3-math_train_318"
+    },
+    {
+      "corpus_index": 26,
+      "source_id": "math_train_394",
+      "case_id": "corpus-v3-math_train_394"
+    },
+    {
+      "corpus_index": 27,
+      "source_id": "math_train_3",
+      "case_id": "corpus-v3-math_train_3"
+    },
+    {
+      "corpus_index": 28,
+      "source_id": "math_train_331",
+      "case_id": "corpus-v3-math_train_331"
+    },
+    {
+      "corpus_index": 29,
+      "source_id": "math_train_48",
+      "case_id": "corpus-v3-math_train_48"
+    },
+    {
+      "corpus_index": 30,
+      "source_id": "math_train_381",
+      "case_id": "corpus-v3-math_train_381"
+    },
+    {
+      "corpus_index": 31,
+      "source_id": "math_train_125",
+      "case_id": "corpus-v3-math_train_125"
+    },
+    {
+      "corpus_index": 32,
+      "source_id": "math_train_289",
+      "case_id": "corpus-v3-math_train_289"
+    },
+    {
+      "corpus_index": 33,
+      "source_id": "math_train_65",
+      "case_id": "corpus-v3-math_train_65"
+    },
+    {
+      "corpus_index": 34,
+      "source_id": "math_train_44",
+      "case_id": "corpus-v3-math_train_44"
+    },
+    {
+      "corpus_index": 35,
+      "source_id": "math_train_369",
+      "case_id": "corpus-v3-math_train_369"
+    },
+    {
+      "corpus_index": 36,
+      "source_id": "math_train_267",
+      "case_id": "corpus-v3-math_train_267"
+    },
+    {
+      "corpus_index": 37,
+      "source_id": "math_train_435",
+      "case_id": "corpus-v3-math_train_435"
+    },
+    {
+      "corpus_index": 38,
+      "source_id": "math_train_80",
+      "case_id": "corpus-v3-math_train_80"
+    },
+    {
+      "corpus_index": 39,
+      "source_id": "math_train_124",
+      "case_id": "corpus-v3-math_train_124"
+    },
+    {
+      "corpus_index": 40,
+      "source_id": "math_train_319",
+      "case_id": "corpus-v3-math_train_319"
+    },
+    {
+      "corpus_index": 41,
+      "source_id": "math_train_334",
+      "case_id": "corpus-v3-math_train_334"
+    },
+    {
+      "corpus_index": 42,
+      "source_id": "math_train_39",
+      "case_id": "corpus-v3-math_train_39"
+    },
+    {
+      "corpus_index": 43,
+      "source_id": "math_train_115",
+      "case_id": "corpus-v3-math_train_115"
+    },
+    {
+      "corpus_index": 44,
+      "source_id": "math_train_532",
+      "case_id": "corpus-v3-math_train_532"
+    },
+    {
+      "corpus_index": 45,
+      "source_id": "math_train_177",
+      "case_id": "corpus-v3-math_train_177"
+    },
+    {
+      "corpus_index": 46,
+      "source_id": "math_train_82",
+      "case_id": "corpus-v3-math_train_82"
+    },
+    {
+      "corpus_index": 47,
+      "source_id": "math_train_294",
+      "case_id": "corpus-v3-math_train_294"
+    },
+    {
+      "corpus_index": 48,
+      "source_id": "math_train_118",
+      "case_id": "corpus-v3-math_train_118"
+    },
+    {
+      "corpus_index": 49,
+      "source_id": "math_train_87",
+      "case_id": "corpus-v3-math_train_87"
+    }
+  ],
+  "output": "selections/corpus_v3_50_dialogues.jsonl",
+  "output_sha256": "43b0a2193a73ba8266632ca024b7210f6e8dc1699114fb03aa2bc30e140b9738"
+}

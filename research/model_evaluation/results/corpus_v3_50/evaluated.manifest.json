@@ -1,0 +1,37 @@
+{
+  "schema_version": "teacher-dialogue-evaluation-manifest-v4-visible-dialogue-only",
+  "created_at_utc": "2026-08-12T11:06:35.172196+00:00",
+  "run_fingerprint": "046ad10280e98761aad6b152d98bb3a924b7d44f81c6a8d7ebbfeb3c2aed5d17",
+  "fingerprint_inputs": {
+    "schema_version": "teacher-dialogue-evaluation-v4-visible-dialogue-only",
+    "input_sha256": "43b0a2193a73ba8266632ca024b7210f6e8dc1699114fb03aa2bc30e140b9738",
+    "dialogue_prompt_sha256": "e1ad8686116376ecb68d34a331c37406d8c66f8c72d93746bf57e72520c318ea",
+    "transfer_prompt_sha256": "c43c43e1240e15ce3b5b97fcee22311899d29fa17d9b8bdb08796a64a4c40392",
+    "judge": {
+      "model": "gpt-5.6-terra",
+      "base_url": "https://api.openai.com/v1",
+      "api_key_env": "GPT_API_KEY",
+      "reasoning_effort": "high",
+      "temperature": 1.0,
+      "top_p": 1.0,
+      "max_tokens": 8192,
+      "request_timeout": 180,
+      "retries": 3,
+      "seed": 142
+    },
+    "axes": [
+      "mathematical_accuracy",
+      "error_diagnosis_recovery",
+      "instruction_completion",
+      "scaffolding",
+      "emotional_support",
+      "emotion_recognition"
+    ]
+  },
+  "planned_cases": 50,
+  "dialogue_generation_successes": 50,
+  "evaluated_cases": 50,
+  "judge_failures": 0,
+  "student_quality_judged": false,
+  "teacher_internal_reasoning_in_judge_input": false
+}

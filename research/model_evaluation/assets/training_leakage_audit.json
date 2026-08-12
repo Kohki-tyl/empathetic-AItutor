@@ -1,0 +1,20 @@
+{
+  "schema_version": "precomputed-training-source-id-audit-v1",
+  "created_at_utc": "2026-08-12T10:37:13.377229+00:00",
+  "selection_sha256": "0aec92b465be1380e0196bc5ee0ef81416c6e114ae4fb3426f4be06133db22ce",
+  "selected_source_ids_sha256": "119178d4853c98f01230c1b7f52de852cc801ffb83fdb8b54293707c27e62c81",
+  "selected_count": 100,
+  "training_corpora": [
+    {
+      "source": "pipelines/corpus_creation/v3/data/v3_rebuilt_corpus.jsonl",
+      "sha256": "8d1255359f46e0b720ef5d4d4331f0aa26f6eb4c6f8eab573ebc608feaa53800"
+    },
+    {
+      "source": "pipelines/corpus_creation/v4/data/run_10_openai_gpt54mini/v4_all_keep_corpus.jsonl",
+      "sha256": "922b74974db36f00b68615afdc7ac28804eac32ce852affde1d51cc3ddd7c2fe"
+    }
+  ],
+  "overlap_count": 0,
+  "overlapping_source_ids": [],
+  "scope": "source_id exact-match audit; training corpora are not bundled"
+}

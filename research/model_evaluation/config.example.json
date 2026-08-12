@@ -1,0 +1,49 @@
+{
+  "schema_version": "research-model-evaluation-config-v2-standalone",
+  "paths": {
+    "questions": "assets/test_math_questions.jsonl",
+    "similar_questions": "assets/similar_test_math_questions.jsonl",
+    "profiles": "profiles/simple_student_profiles.json",
+    "assignments": "assets/problem_profile_assignments.jsonl",
+    "selection": "selections/evaluation_100.json",
+    "training_corpora": [],
+    "training_leakage_audit": "assets/training_leakage_audit.json",
+    "cases": "data/cases.jsonl",
+    "initial_responses": "data/initial_student_responses.jsonl"
+  },
+  "student": {
+    "model": "gpt-5.4-2026-03-05",
+    "base_url": "https://api.openai.com/v1",
+    "api_key_env": "OPENAI_API_KEY",
+    "reasoning_effort": "none",
+    "temperature": 0.6,
+    "top_p": 0.95,
+    "max_tokens": 4096,
+    "request_timeout": 180,
+    "retries": 3,
+    "seed": 42
+  },
+  "teacher": {
+    "seed": 84,
+    "temperature": 0.2,
+    "top_p": 1.0,
+    "max_tokens": 4096,
+    "request_timeout": 180,
+    "retries": 3,
+    "max_turns": 10,
+    "completion_marker": "[指導完了]"
+  },
+  "judge": {
+    "model": "",
+    "base_url": "https://api.openai.com/v1",
+    "api_key_env": "JUDGE_API_KEY",
+    "fallback_api_key_env": "OPENAI_API_KEY",
+    "reasoning_effort": "high",
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 8192,
+    "request_timeout": 180,
+    "retries": 3,
+    "seed": 142
+  }
+}

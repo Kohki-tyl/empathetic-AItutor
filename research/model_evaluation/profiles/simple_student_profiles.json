@@ -1,0 +1,74 @@
+[
+  {
+    "id": "V4-S01",
+    "grade": "中学1年生",
+    "speech_style": {
+      "register": "丁寧口調",
+      "confidence_expression": "控えめ",
+      "response_length": "短い"
+    }
+  },
+  {
+    "id": "V4-S02",
+    "grade": "中学2年生",
+    "speech_style": {
+      "register": "タメ口",
+      "confidence_expression": "自信がある",
+      "response_length": "短い"
+    }
+  },
+  {
+    "id": "V4-S03",
+    "grade": "中学3年生",
+    "speech_style": {
+      "register": "丁寧口調",
+      "confidence_expression": "慎重",
+      "response_length": "標準"
+    }
+  },
+  {
+    "id": "V4-S04",
+    "grade": "高校2年生",
+    "speech_style": {
+      "register": "タメ口",
+      "confidence_expression": "自信がある",
+      "response_length": "標準"
+    }
+  },
+  {
+    "id": "V4-S05",
+    "grade": "中学1年生",
+    "speech_style": {
+      "register": "タメ口",
+      "confidence_expression": "控えめ",
+      "response_length": "短い"
+    }
+  },
+  {
+    "id": "V4-S06",
+    "grade": "中学3年生",
+    "speech_style": {
+      "register": "丁寧口調",
+      "confidence_expression": "自信がある",
+      "response_length": "短い"
+    }
+  },
+  {
+    "id": "V4-S07",
+    "grade": "中学3年生",
+    "speech_style": {
+      "register": "タメ口",
+      "confidence_expression": "慎重",
+      "response_length": "標準"
+    }
+  },
+  {
+    "id": "V4-S08",
+    "grade": "高校1年生",
+    "speech_style": {
+      "register": "丁寧口調",
+      "confidence_expression": "慎重",
+      "response_length": "標準"
+    }
+  }
+]

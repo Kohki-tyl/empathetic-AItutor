@@ -1,0 +1,24 @@
+{
+  "schema_version": "research-corpus-copy-v1",
+  "dataset_name": "v3_turn_audited_cot_sft",
+  "file": "v3_397_dialogues.jsonl",
+  "evaluation_metadata_file": "v3_397_metadata.jsonl",
+  "source": "pipelines/sft/v3/data/v3_cot_sft.jsonl",
+  "source_manifest": "pipelines/sft/v3/data/v3_cot_sft_manifest.json",
+  "selection_source": "pipelines/corpus_creation/v3/data/v3_rebuilt_corpus.jsonl",
+  "filter": {
+    "is_completed": true,
+    "all_teacher_turns_audited": true
+  },
+  "shuffle_seed": 42,
+  "dialogue_count": 397,
+  "system_turn_count": 397,
+  "user_turn_count": 1626,
+  "assistant_turn_count": 1626,
+  "sha256": "88a102ddbca4c4d78b669a2646e00f2d32f1d64ac182b322e9f01cc44be40eea",
+  "byte_size": 3165570,
+  "evaluation_metadata_sha256": "13a0b7eeb3bb7bc421573bdbdda31accb349722b61130af6bdeea6060630e1e3",
+  "evaluation_metadata_byte_size": 390635,
+  "format": "OpenAI messages JSONL",
+  "assistant_output_format": "<analysis>...</analysis><final>...</final>"
+}

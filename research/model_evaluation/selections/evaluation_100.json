@@ -1,0 +1,755 @@
+{
+  "policy_version": "research-tail200-balanced-scope-25-v1",
+  "source_policy": "translated_questions_last_n_in_file_order",
+  "source_file": "assets/test_math_questions.jsonl",
+  "source_file_sha256": "79559b4f39ab6ef687c644d4a431b86588b061497bc125d554d6f7619049db94",
+  "assignments_file": "assets/problem_profile_assignments.jsonl",
+  "assignments_file_sha256": "f6cb1918ad0f5a74281cbae8a95247f855a8b7d6904d6300573ec9e510216472",
+  "exclusion_source": "assets/excluded_test_question_ids.json",
+  "exclusion_source_sha256": "3ce4beb19718da0bf6972bb7c064423b039bfddc276f3dc6cff06270769c0a7c",
+  "tail_size": 200,
+  "tail_first_source_id": "math_train_884",
+  "tail_last_source_id": "math_train_1097",
+  "seed": 42,
+  "per_scope_relation": 25,
+  "selected_count": 100,
+  "available_counts_after_exclusion": {
+    "mastered": 46,
+    "frontier": 45,
+    "one_step_beyond": 45,
+    "far_beyond": 46
+  },
+  "excluded_source_ids": [
+    "math_train_1000",
+    "math_train_1007",
+    "math_train_1024",
+    "math_train_1026",
+    "math_train_1039",
+    "math_train_1041",
+    "math_train_1055",
+    "math_train_1080",
+    "math_train_1081",
+    "math_train_898",
+    "math_train_900",
+    "math_train_934",
+    "math_train_938",
+    "math_train_945",
+    "math_train_954",
+    "math_train_959",
+    "math_train_962",
+    "math_train_992"
+  ],
+  "profile_counts": {
+    "V4-S01": 13,
+    "V4-S02": 13,
+    "V4-S03": 13,
+    "V4-S04": 15,
+    "V4-S05": 9,
+    "V4-S06": 12,
+    "V4-S07": 11,
+    "V4-S08": 14
+  },
+  "selection_sha256": "0aec92b465be1380e0196bc5ee0ef81416c6e114ae4fb3426f4be06133db22ce",
+  "records": [
+    {
+      "source_id": "math_train_885",
+      "order_index": 801,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S04",
+      "question_sha256": "13de70514af5fc9cb4c243019c196b89a467a14b2cf2716fe969ee65df6aa33b"
+    },
+    {
+      "source_id": "math_train_894",
+      "order_index": 810,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S01",
+      "question_sha256": "169e45b8c09b6dc078ec35eb1dfe55e625e4b3735a79127f7f7f54ff9aa1cf58"
+    },
+    {
+      "source_id": "math_train_896",
+      "order_index": 812,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S03",
+      "question_sha256": "393b979ea89cb5bec54f243237f0429ff065a82b1e2f7e8f2a55865bb615da4c"
+    },
+    {
+      "source_id": "math_train_897",
+      "order_index": 813,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S01",
+      "question_sha256": "20f33463134c1940cf0903dbf90d969642b815b0bbf305a7c82147318102838c"
+    },
+    {
+      "source_id": "math_train_901",
+      "order_index": 817,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S01",
+      "question_sha256": "5355022857af18054958b300d4b467acf78bb798d179b4bc7f4c97b9c05f69c4"
+    },
+    {
+      "source_id": "math_train_902",
+      "order_index": 818,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S08",
+      "question_sha256": "f7db9fa6bf76a0512607f1cf1f3498e18db92f2554e183a1a73dbc47b92a6d97"
+    },
+    {
+      "source_id": "math_train_904",
+      "order_index": 820,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S03",
+      "question_sha256": "4d6a86e9c8a2c6891a62424424f035622af45fddfc2372eb70b51707d63d67c2"
+    },
+    {
+      "source_id": "math_train_905",
+      "order_index": 821,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S07",
+      "question_sha256": "f0105b7c171265c41489541e7b27b0b1929c481d9772702af17ab1799dba91a3"
+    },
+    {
+      "source_id": "math_train_906",
+      "order_index": 822,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S06",
+      "question_sha256": "d36046f515fad10bc00f9b63f4aee98b5f4776776e3178dc04ee633372aefdd0"
+    },
+    {
+      "source_id": "math_train_912",
+      "order_index": 827,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S05",
+      "question_sha256": "0160c6472197c7a9c10623107d420719a2ea2d8862a607df1a28ce8676f7cc73"
+    },
+    {
+      "source_id": "math_train_919",
+      "order_index": 833,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S07",
+      "question_sha256": "542cc7140c702d08fd1d3044cadd70ddb2f9b91acb3c6b5901ac015354c10a8d"
+    },
+    {
+      "source_id": "math_train_920",
+      "order_index": 834,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S04",
+      "question_sha256": "d3e5d4e3608760bb228f9b02a84c554483f37aecb132834186758ee5fbe50b49"
+    },
+    {
+      "source_id": "math_train_921",
+      "order_index": 835,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S06",
+      "question_sha256": "d92ed8795a493c73884b0b0cc81fb1bad6b46812aae9465e213703194cf6da68"
+    },
+    {
+      "source_id": "math_train_924",
+      "order_index": 837,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S02",
+      "question_sha256": "7697104de48ca5a14bf3e4639c730bd68a09c1466319f75cad089fb0f26a9e33"
+    },
+    {
+      "source_id": "math_train_926",
+      "order_index": 839,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S08",
+      "question_sha256": "a4e2b1b0cf94ea1422e8658413d8938bee9c0c22e978a759f79c387a5b71ab8b"
+    },
+    {
+      "source_id": "math_train_927",
+      "order_index": 840,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S06",
+      "question_sha256": "bab081ae51851a0816b6c11d9b970f66fd2d48d684fd38d32e66826cc028261d"
+    },
+    {
+      "source_id": "math_train_929",
+      "order_index": 842,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S06",
+      "question_sha256": "1d3da60771786159e1366b7b5aba20e7d425a4ab5aa68eb90b43930fc6c5ecc2"
+    },
+    {
+      "source_id": "math_train_933",
+      "order_index": 844,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S04",
+      "question_sha256": "1b587dee145efded6f1e76a746075e4fe559a1c601a161514cb44c09dee2562f"
+    },
+    {
+      "source_id": "math_train_936",
+      "order_index": 847,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S01",
+      "question_sha256": "3e5c9822c81419145a196e2e14ebcc65572dcf9950159267399ba0ff0b8e81ae"
+    },
+    {
+      "source_id": "math_train_939",
+      "order_index": 849,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S06",
+      "question_sha256": "d01f8d9120aebeb2fa3f7846d1553b52991dc8c95d8c25527adca9c0da83e7c6"
+    },
+    {
+      "source_id": "math_train_940",
+      "order_index": 850,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S08",
+      "question_sha256": "370370a286f9075bcd5fe3751d436e379b52d4c71419887afb1c9727ee3bfac4"
+    },
+    {
+      "source_id": "math_train_941",
+      "order_index": 851,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S02",
+      "question_sha256": "24b4a38ac7119e84a08d23efd335111fc84b7e1e58efc3b1e57026396f55e227"
+    },
+    {
+      "source_id": "math_train_942",
+      "order_index": 852,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S03",
+      "question_sha256": "9f6f447e1e0d6263a105633fd52826660c259bbf0944ad7a9cd0f4222aec78aa"
+    },
+    {
+      "source_id": "math_train_943",
+      "order_index": 853,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S04",
+      "question_sha256": "e7a05b4cf897f8c3033e6fb5d6cfb886cce7e15a390b98744f855657feffca33"
+    },
+    {
+      "source_id": "math_train_944",
+      "order_index": 854,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S07",
+      "question_sha256": "971b645556816df89cec23221138394c82f357e943ccd57e8423693cbb332a22"
+    },
+    {
+      "source_id": "math_train_946",
+      "order_index": 856,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S01",
+      "question_sha256": "3fa6c3c42bc47d2884e323c896c79ec424beaa79bb61aae2495b0001f1dff680"
+    },
+    {
+      "source_id": "math_train_947",
+      "order_index": 857,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S02",
+      "question_sha256": "23f89263f334596ae2063fe13401c0c6713153b2847bec3bb569a359e9d93c6c"
+    },
+    {
+      "source_id": "math_train_948",
+      "order_index": 858,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S03",
+      "question_sha256": "99269f23144abd15bca5b99817afc483ca3e23b6d7f1f187b65df48442573ebd"
+    },
+    {
+      "source_id": "math_train_949",
+      "order_index": 859,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S05",
+      "question_sha256": "a05b757a70db6cb63991be607619a3e4ff4734124e28a171768e3f9b6762ae58"
+    },
+    {
+      "source_id": "math_train_952",
+      "order_index": 862,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S05",
+      "question_sha256": "40b65ccf78f3b576dec2a80105c37d057dc79856539ef16d4f86bc724cb3b616"
+    },
+    {
+      "source_id": "math_train_955",
+      "order_index": 865,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S07",
+      "question_sha256": "3dcfc484054e05b4cfd7ee2d86101fd902d3d279b1944389862761b5b14ad567"
+    },
+    {
+      "source_id": "math_train_956",
+      "order_index": 866,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S04",
+      "question_sha256": "3f7be3546f79145a62415e3a87addc826efb0dfeb301dd8b2394a6ed40c53eb4"
+    },
+    {
+      "source_id": "math_train_960",
+      "order_index": 869,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S03",
+      "question_sha256": "663a82dd14f47d1b953ae736046af873abc72d4ada915d84f2a8713479268aea"
+    },
+    {
+      "source_id": "math_train_961",
+      "order_index": 870,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S06",
+      "question_sha256": "a04e8e333ffe05670ebef16bda2b62581c59b098975436b7e2b0b3af610a6d38"
+    },
+    {
+      "source_id": "math_train_966",
+      "order_index": 875,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S07",
+      "question_sha256": "2c23dfafc1aabd10825676775fbc2e0bbbbc17de2b8e15cf14d04087e501af39"
+    },
+    {
+      "source_id": "math_train_967",
+      "order_index": 876,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S02",
+      "question_sha256": "07dbba26813761cb502be796feb1ba7eac1f3bfc171432db09c7a51c5b061236"
+    },
+    {
+      "source_id": "math_train_970",
+      "order_index": 878,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S03",
+      "question_sha256": "6be9671ea5320fb4109ca47a8f1ef0eecc34ee0c3b9ed8d5573efb17e66d2b97"
+    },
+    {
+      "source_id": "math_train_975",
+      "order_index": 883,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S06",
+      "question_sha256": "767591abc2ee3e9c414d0e014bd62b90253c6e3bc54919f2ff3a7db362348278"
+    },
+    {
+      "source_id": "math_train_978",
+      "order_index": 886,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S04",
+      "question_sha256": "158ca2d70a680193596603d1e422afc02e6b9a5f8a66e7221cbbdf7a6f46b991"
+    },
+    {
+      "source_id": "math_train_981",
+      "order_index": 889,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S08",
+      "question_sha256": "9741d75cbc509dead62e5c11a571bc4f8c01e5d06cb047b94097eddf9292f6d8"
+    },
+    {
+      "source_id": "math_train_984",
+      "order_index": 891,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S02",
+      "question_sha256": "dc439cebc60d4fe901c72a20e7bedb80a8215ebd97959a468c3673e11f48eee0"
+    },
+    {
+      "source_id": "math_train_985",
+      "order_index": 892,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S07",
+      "question_sha256": "f26e92b5f0a203e83b5be166a2a5d2c840193ea3187ae5b2ac7fbde7aa22766b"
+    },
+    {
+      "source_id": "math_train_986",
+      "order_index": 893,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S03",
+      "question_sha256": "24aae801031fd305b0fd6ad5c3770779ded94235aeca399131a709534e6d249b"
+    },
+    {
+      "source_id": "math_train_988",
+      "order_index": 895,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S04",
+      "question_sha256": "99549f926bcd2bd4ce84af05897cea4629951705216607ea44ddab85295ea9ea"
+    },
+    {
+      "source_id": "math_train_990",
+      "order_index": 897,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S08",
+      "question_sha256": "5116602285c87ef304cfa1aa7e691b71f69723ef0df1e4b39ec928d7ed59653e"
+    },
+    {
+      "source_id": "math_train_991",
+      "order_index": 898,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S03",
+      "question_sha256": "52e217d8c36323845abd691918bc8cb35ba18653be32483e944cd069e5a8d5bb"
+    },
+    {
+      "source_id": "math_train_994",
+      "order_index": 901,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S01",
+      "question_sha256": "2daff811cf3b099f5b69feba4d939e35a11162fe4ef073eb9ff8ad539121310f"
+    },
+    {
+      "source_id": "math_train_995",
+      "order_index": 902,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S08",
+      "question_sha256": "7223d74d0178f646bc32776da52e002ad354ce1e9edb5558df93855a0d1d3240"
+    },
+    {
+      "source_id": "math_train_996",
+      "order_index": 903,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S06",
+      "question_sha256": "3e79efac99e8998baf9bd8eabda3a4b0bb75a6566e9d370e3633eddb4acfbe91"
+    },
+    {
+      "source_id": "math_train_997",
+      "order_index": 904,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S07",
+      "question_sha256": "c8d445cb792123db4cf533070df937b59ce124f2d6aead0f3467d6fa39a425bb"
+    },
+    {
+      "source_id": "math_train_998",
+      "order_index": 905,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S05",
+      "question_sha256": "4b44f27ac8e8a6bb005b60006f6f5977e39bb29c1d1ce7d5e5ac6deabe9c5b9c"
+    },
+    {
+      "source_id": "math_train_1003",
+      "order_index": 910,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S04",
+      "question_sha256": "ce1f90322e243b4c82c81d0afbf56e6cd6b1c84b665bcaf297afe47fb2eec059"
+    },
+    {
+      "source_id": "math_train_1004",
+      "order_index": 911,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S08",
+      "question_sha256": "8357e79910b4be9c8ff25e27c0cf1fd60085ab77d9c9db9b33c14b74b62830b6"
+    },
+    {
+      "source_id": "math_train_1006",
+      "order_index": 913,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S03",
+      "question_sha256": "2551b9fafac69413f377cb1303abf7c3fa2154b78db458851e1ec4a96ada2813"
+    },
+    {
+      "source_id": "math_train_1008",
+      "order_index": 915,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S05",
+      "question_sha256": "6894881caec4188f103d19fa0da915408c128f11791368bf32194b2c8fa3f430"
+    },
+    {
+      "source_id": "math_train_1009",
+      "order_index": 916,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S04",
+      "question_sha256": "6da41bfd40fe90f2883485e24712bf1b497e57aecb0875acc2820b0b01d2d431"
+    },
+    {
+      "source_id": "math_train_1010",
+      "order_index": 917,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S04",
+      "question_sha256": "e293593b9bf01e0160efd4f4ea4e72c34c34d138d6ebc9d1cacad74fd875b870"
+    },
+    {
+      "source_id": "math_train_1012",
+      "order_index": 919,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S01",
+      "question_sha256": "43662911a0c7f8dbefe0e5ba6bee6dd57498d44b9f7a0c11a8559da1a5292ae7"
+    },
+    {
+      "source_id": "math_train_1014",
+      "order_index": 921,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S08",
+      "question_sha256": "b71c34209844689f3bd6e6de5dff0601d4f29436827dec68e3b1326bd9e5d44f"
+    },
+    {
+      "source_id": "math_train_1015",
+      "order_index": 922,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S05",
+      "question_sha256": "b5fcba3e1c5170607e82264f80c20b9e8f9742b6d851ccec40e3bda6160c5540"
+    },
+    {
+      "source_id": "math_train_1019",
+      "order_index": 926,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S06",
+      "question_sha256": "768dbd5291d1c547b5c8d83620584106c65de446843ebccb23395133f18b55c0"
+    },
+    {
+      "source_id": "math_train_1020",
+      "order_index": 927,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S02",
+      "question_sha256": "4a2307947e85dc1d9d1b1875a1bdf21ae2a5a6813953bf4f329a1299908a8271"
+    },
+    {
+      "source_id": "math_train_1023",
+      "order_index": 930,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S02",
+      "question_sha256": "2e88d1ec6f67c375f61998f84255fe8609c52a13d8d5dd229194f6ea0d6e2efc"
+    },
+    {
+      "source_id": "math_train_1028",
+      "order_index": 934,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S02",
+      "question_sha256": "85e24fa4a4918ed7cea80fb211773a328716531a14d0c5f8783e38e7d6131ad6"
+    },
+    {
+      "source_id": "math_train_1029",
+      "order_index": 935,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S01",
+      "question_sha256": "5064a25fa597fc1a29c9883d86e90538533a255c5fe0a06c438d09611ebb81a5"
+    },
+    {
+      "source_id": "math_train_1031",
+      "order_index": 937,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S08",
+      "question_sha256": "97ebbbddae4e5fc1a50a7902e523461416dbdff26d9dbd2929b4ef3ba31fa0a1"
+    },
+    {
+      "source_id": "math_train_1032",
+      "order_index": 938,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S04",
+      "question_sha256": "9facb0f4016b05fa80b97c017fade3e5a6b18ad0a50637c69c304854a1df7990"
+    },
+    {
+      "source_id": "math_train_1033",
+      "order_index": 939,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S03",
+      "question_sha256": "d46666ac8a7ddb94799410bb9bf4fabaab377bacaa53d429c87f61554d50f448"
+    },
+    {
+      "source_id": "math_train_1035",
+      "order_index": 940,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S07",
+      "question_sha256": "b8d09b3fbbbe3e30e2165eb14c4d36cf1a395bf0498d84360a8f95e84914c9ff"
+    },
+    {
+      "source_id": "math_train_1038",
+      "order_index": 943,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S02",
+      "question_sha256": "9e58c40a0c10679166496bd5a24f4605cc6b122f0f947ab96c29cc226fc7b9d2"
+    },
+    {
+      "source_id": "math_train_1040",
+      "order_index": 945,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S07",
+      "question_sha256": "47e305b0cf39558f6dd778ba49bb050adb7e0301e66d6d08307cd834ecb50d88"
+    },
+    {
+      "source_id": "math_train_1043",
+      "order_index": 947,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S08",
+      "question_sha256": "2ea9801d7ea68b2ceb730c6d0967d75c516779164b1401af1c6e7072861d34ce"
+    },
+    {
+      "source_id": "math_train_1045",
+      "order_index": 949,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S01",
+      "question_sha256": "26d8e6d1be30193f7112a73fb8dd12b2ee196d7c73a3d6d07544c2866bab5c56"
+    },
+    {
+      "source_id": "math_train_1047",
+      "order_index": 951,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S02",
+      "question_sha256": "577aa14ae4c2aad05f0d8802c73196c563b9de697be1b6a052bcd29c11cb2205"
+    },
+    {
+      "source_id": "math_train_1050",
+      "order_index": 954,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S01",
+      "question_sha256": "5bbdb49fa6bae48d9f02a03e54cb0c6b9af4c0f514993d4801c6342d72f8f568"
+    },
+    {
+      "source_id": "math_train_1053",
+      "order_index": 957,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S04",
+      "question_sha256": "19ae2fe5e3a39d3c14e065e66762e02263f5159ea0337bf6eedcc173a1ab0384"
+    },
+    {
+      "source_id": "math_train_1056",
+      "order_index": 960,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S06",
+      "question_sha256": "d0e15c775cba95b95b826a86f0884cfb1eb24dec1777517dcc65b2fc8dc264e2"
+    },
+    {
+      "source_id": "math_train_1057",
+      "order_index": 961,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S07",
+      "question_sha256": "23e09d78508eb7335f3e84e9feedb719ab92da5d007ade2119af889521683502"
+    },
+    {
+      "source_id": "math_train_1059",
+      "order_index": 963,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S02",
+      "question_sha256": "8476cd9fb790737d51e41925be5c000cc698cdb0b851b9528a95289c26bc7c4f"
+    },
+    {
+      "source_id": "math_train_1060",
+      "order_index": 964,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S03",
+      "question_sha256": "5be65aff79d5b261fb30c040e273a628f4b1d604faae3f289c72dec4d0d39343"
+    },
+    {
+      "source_id": "math_train_1061",
+      "order_index": 965,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S05",
+      "question_sha256": "0edd5a1845aa11b4cc8380a3c748fab0671585524afd8006f7c2aa44d9241cca"
+    },
+    {
+      "source_id": "math_train_1062",
+      "order_index": 966,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S04",
+      "question_sha256": "250eacb327965192aaa5521a9d9406828ba44b9410c651f6597dce7b2665848a"
+    },
+    {
+      "source_id": "math_train_1063",
+      "order_index": 967,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S06",
+      "question_sha256": "ccfe866204dea0d4fb4c40441caf5fb756fb34808faa577b31be2d3656451750"
+    },
+    {
+      "source_id": "math_train_1066",
+      "order_index": 970,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S08",
+      "question_sha256": "f49a1c5b4c207803ec9ee3a6eab41d18e37b6106b35417252d88c9692603c2ea"
+    },
+    {
+      "source_id": "math_train_1067",
+      "order_index": 971,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S02",
+      "question_sha256": "11ec3894d5cf76c9a945074efce9cc6664cf81b8128ab677ef0e8a7f51ec388a"
+    },
+    {
+      "source_id": "math_train_1069",
+      "order_index": 973,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S03",
+      "question_sha256": "6039051371a7b90155f959136afebca1b0a1dd67f4f7c0f94518e1291368431a"
+    },
+    {
+      "source_id": "math_train_1071",
+      "order_index": 975,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S08",
+      "question_sha256": "8a8585d7e52712835046fbdd89943ca81b32d2f351f359a6b670adddde720cf0"
+    },
+    {
+      "source_id": "math_train_1072",
+      "order_index": 976,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S05",
+      "question_sha256": "987d825fff196bf6fc7d48a49a4d8d248d691104e82aaf98577e8d3960359195"
+    },
+    {
+      "source_id": "math_train_1075",
+      "order_index": 979,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S01",
+      "question_sha256": "97306a227aeb291e8367bbe7e04c87b2b2edc42ce84fd908e6f3346da7751252"
+    },
+    {
+      "source_id": "math_train_1076",
+      "order_index": 980,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S02",
+      "question_sha256": "9ba70b56ff11fec38abac43c179f2f2b748f4d2a0cd1da9026212ecb6905d0a0"
+    },
+    {
+      "source_id": "math_train_1082",
+      "order_index": 985,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S08",
+      "question_sha256": "8693d56ab3ebc7f0d0b7755f2f29e96a4e4b577fd0b23a6353477c26b47e73ba"
+    },
+    {
+      "source_id": "math_train_1086",
+      "order_index": 988,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S03",
+      "question_sha256": "91fddcee03a0e113633736a73676afddc2d8f6060d7e06a7ae6222ad36fd7abe"
+    },
+    {
+      "source_id": "math_train_1087",
+      "order_index": 989,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S01",
+      "question_sha256": "59725c0877767cc60cb5cb773c0fce50383ce2ba8df439940ccd411c405502ab"
+    },
+    {
+      "source_id": "math_train_1088",
+      "order_index": 990,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S04",
+      "question_sha256": "1e2aa87ced33a3dfa4a5957c6ab4555a7f03a57054cdebac2f5ab53b4380b146"
+    },
+    {
+      "source_id": "math_train_1089",
+      "order_index": 991,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S07",
+      "question_sha256": "8835626c4049dc68f392804184a5b9b96aebe3778f206ea32be156f4f4df4c2b"
+    },
+    {
+      "source_id": "math_train_1090",
+      "order_index": 992,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S08",
+      "question_sha256": "f827f48fb53a00cf6c9687365f2e4ab7736ccdcbe4e33f430444858448e58590"
+    },
+    {
+      "source_id": "math_train_1092",
+      "order_index": 994,
+      "scope_relation": "frontier",
+      "profile_id": "V4-S05",
+      "question_sha256": "1ca83ad06780b9beb18c307ab36ea359224ad483847cec049e1b3d6b2a25ebe3"
+    },
+    {
+      "source_id": "math_train_1095",
+      "order_index": 997,
+      "scope_relation": "far_beyond",
+      "profile_id": "V4-S01",
+      "question_sha256": "408de9d07a31c289b58dc4e25f148acf8cc22897408ce02da597cb43b0db7caa"
+    },
+    {
+      "source_id": "math_train_1096",
+      "order_index": 998,
+      "scope_relation": "mastered",
+      "profile_id": "V4-S04",
+      "question_sha256": "82463a57e01fd1895907072cbbef8b258eb98bd7e33f2d6a2a1f134df7419300"
+    },
+    {
+      "source_id": "math_train_1097",
+      "order_index": 999,
+      "scope_relation": "one_step_beyond",
+      "profile_id": "V4-S06",
+      "question_sha256": "551e196db2f72174917002718b59475b5e1c2d83d9f51cc87e7d4d083ef72282"
+    }
+  ]
+}

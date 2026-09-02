@@ -71,6 +71,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT, help="入力JSONL")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="評価結果JSONL")
     parser.add_argument("--model", default="gpt-5.4", help="Judgeモデル名")
+    parser.add_argument("--start-index", type=int, default=0, help="評価を開始する0始まりの位置")
     parser.add_argument("--limit", type=int, help="先頭から評価する最大件数")
     parser.add_argument("--max-retries", type=int, default=3, help="API呼び出しの最大試行回数")
     parser.add_argument("--overwrite", action="store_true", help="既存結果を削除して最初から評価")
@@ -199,10 +200,13 @@ def main() -> None:
         raise RuntimeError("環境変数 GPT_API_KEY を設定してください。")
     if args.limit is not None and args.limit <= 0:
         raise ValueError("--limitには1以上の整数を指定してください。")
+    if args.start_index < 0:
+        raise ValueError("--start-indexには0以上の整数を指定してください。")
 
     sessions = load_jsonl(args.input)
     if args.limit is not None:
         sessions = sessions[: args.limit]
+    sessions = sessions[args.start_index :]
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     if args.overwrite:

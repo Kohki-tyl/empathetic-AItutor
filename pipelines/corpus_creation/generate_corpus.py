@@ -1,3 +1,4 @@
+import argparse
 import os
 import json
 from openai import OpenAI
@@ -7,6 +8,18 @@ api_key = os.getenv('GPT_API_KEY')
 client = OpenAI(api_key=api_key)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="共感的数学対話コーパスを生成します。")
+    parser.add_argument(
+        "--output",
+        default=os.path.join(BASE_DIR, "500_empathetic_dialogues.jsonl"),
+        help="出力JSONL",
+    )
+    parser.add_argument("--start-index", type=int, default=0, help="生成を開始する0始まりの位置")
+    parser.add_argument("--limit", type=int, default=500, help="先頭から生成する最大件数")
+    return parser.parse_args()
 
 def load_prompt_file(filename):
     path = os.path.join(BASE_DIR, filename)
@@ -145,8 +158,9 @@ def generate_dialogue(problem: str, profile_dict: dict, initial_condition: str, 
     }
 
 if __name__ == "__main__":
+    args = parse_args()
     profile_filename = os.path.join(BASE_DIR, "prompts", "student_profile.json")
-    output_filename = os.path.join(BASE_DIR, "500_empathetic_dialogues.jsonl")
+    output_filename = os.path.abspath(args.output)
     input_filename = os.path.join(BASE_DIR, "questions", "translated_1000_math.jsonl")
     
     with open(profile_filename, "r", encoding="utf-8") as f:
@@ -158,8 +172,15 @@ if __name__ == "__main__":
             if line.strip():
                 problems_list.append(json.loads(line))
                 
-    LIMIT = 500
-    target_problems = problems_list[:LIMIT]
+    LIMIT = args.limit
+    if LIMIT <= 0:
+        raise ValueError("--limitには1以上の整数を指定してください。")
+    if args.start_index < 0:
+        raise ValueError("--start-indexには0以上の整数を指定してください。")
+    if args.start_index >= LIMIT:
+        raise ValueError("--start-indexは--limitより小さくしてください。")
+    if LIMIT > len(problems_list):
+        raise ValueError(f"--limitが入力件数を超えています: {LIMIT} > {len(problems_list)}")
     
     condition_presets = [
         "あなたは現在【Frustrated】状態です。気分の悪さ、あるいはこの問題への強い苦手意識により、最初からイライラしており投げやりなトーンです。",
@@ -168,16 +189,20 @@ if __name__ == "__main__":
     ]
     
     # --- レジューム機能 ---
-    start_index = 0
+    completed_count = 0
     if os.path.exists(output_filename):
         with open(output_filename, "r", encoding="utf-8") as f:
-            start_index = sum(1 for line in f if line.strip())
-        print(f"\n既存のデータを {start_index} 件検出しました。続きから生成を再開します...")
+            completed_count = sum(1 for line in f if line.strip())
+        print(f"\n既存のデータを {completed_count} 件検出しました。続きから生成を再開します...")
     else:
+        os.makedirs(os.path.dirname(output_filename), exist_ok=True)
         with open(output_filename, "w", encoding="utf-8") as f:
             pass
 
-    remaining_problems = target_problems[start_index:]
+    start_index = args.start_index + completed_count
+    if start_index > LIMIT:
+        raise ValueError(f"既存の出力件数が指定範囲を超えています: {start_index} > {LIMIT}")
+    remaining_problems = problems_list[start_index:LIMIT]
 
     # 生成ループ
     for i, item in enumerate(tqdm(remaining_problems, initial=start_index, total=LIMIT)):

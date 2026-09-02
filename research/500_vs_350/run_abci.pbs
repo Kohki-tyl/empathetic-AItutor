@@ -1,0 +1,34 @@
+#!/bin/bash
+#PBS -q rt_HG
+#PBS -l select=1
+#PBS -l walltime=12:00:00
+#PBS -N sft-500-vs-350
+#PBS -j oe
+
+set -euo pipefail
+
+cd "${PBS_O_WORKDIR}"
+source /etc/profile.d/modules.sh
+module load python/3.12/3.12.9
+module load cuda/13.0/13.0.1
+
+CONFIG_FILE="${CONFIG_FILE:?qsub -v CONFIG_FILE=config.all500.json のように指定してください}"
+TRAINER="../v4/train_v4_sft.py"
+if [ ! -x .venv/bin/python ]; then
+  echo "Missing .venv. READMEのセットアップを実行してください。"
+  exit 1
+fi
+if [ ! -f "${CONFIG_FILE}" ] || [ ! -f "${TRAINER}" ]; then
+  echo "Missing config or v4 trainer: ${CONFIG_FILE}, ${TRAINER}"
+  exit 1
+fi
+source .venv/bin/activate
+
+export PYTHONUNBUFFERED=1
+export TOKENIZERS_PARALLELISM=false
+export HF_HOME="${HF_HOME:-${PBS_O_WORKDIR}/.cache/huggingface}"
+
+mkdir -p logs outputs "${HF_HOME}"
+nvidia-smi
+python "${TRAINER}" --config "${CONFIG_FILE}" --structure-only
+python "${TRAINER}" --config "${CONFIG_FILE}" --resume auto

@@ -1,0 +1,23 @@
+{
+  "schema_version": "combined-teacher-dialogue-evaluation-manifest-v1",
+  "created_at_utc": "2026-08-18T06:51:07.520403+00:00",
+  "selection_sha256": "6d1cc047c744e05871599a9e67f3c283da1d77873d99a639a5bac955e49c17e6",
+  "input_shards": [
+    "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\data\\runs\\legacy-500\\final-shard-0.jsonl",
+    "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\data\\runs\\legacy-500\\final-shard-1.jsonl",
+    "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\data\\runs\\legacy-500\\final-shard-2.jsonl",
+    "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\data\\runs\\legacy-500\\final-shard-3.jsonl",
+    "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\data\\runs\\legacy-500\\final-shard-4.jsonl",
+    "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\data\\runs\\legacy-500\\final-shard-5.jsonl",
+    "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\data\\runs\\legacy-500\\final-shard-6.jsonl",
+    "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\data\\runs\\legacy-500\\final-shard-7.jsonl",
+    "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\data\\runs\\legacy-500\\final-shard-8.jsonl",
+    "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\data\\runs\\legacy-500\\final-shard-9.jsonl",
+    "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\data\\runs\\legacy-500\\final-shard-10.jsonl",
+    "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\data\\runs\\legacy-500\\final-shard-11.jsonl"
+  ],
+  "planned_cases": 500,
+  "evaluated_cases": 500,
+  "unique_cases": 500,
+  "output_sha256": "7b7fce142eaf006611389e1a4e2155fb3944d055af4556ea2b993a4f04dcdb19"
+}

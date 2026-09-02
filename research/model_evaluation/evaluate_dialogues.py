@@ -23,6 +23,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--judge-model")
+    parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
@@ -77,12 +78,17 @@ def main() -> None:
     dialogue_prompt = dialogue_prompt_path.read_text(encoding="utf-8")
     transfer_prompt = transfer_prompt_path.read_text(encoding="utf-8")
     rows = read_jsonl(input_path)
+    if args.start < 0:
+        raise SystemExit("--startは0以上で指定してください")
+    rows = rows[args.start:]
     if args.limit is not None:
         rows = rows[:args.limit]
 
     fingerprint_inputs = {
         "schema_version": "teacher-dialogue-evaluation-v4-visible-dialogue-only",
         "input_sha256": sha256_file(input_path),
+        "input_start": args.start,
+        "input_limit": args.limit,
         "dialogue_prompt_sha256": sha256_file(dialogue_prompt_path),
         "transfer_prompt_sha256": sha256_file(transfer_prompt_path),
         "judge": judge,

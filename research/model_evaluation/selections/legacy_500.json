@@ -1,0 +1,13 @@
+{
+  "schema_version": "legacy-500-evaluation-selection-v1",
+  "dataset": "pipelines/corpus_creation/500_empathetic_dialogues.jsonl",
+  "population_size": 500,
+  "selected_count": 500,
+  "selection_method": "full_population",
+  "corpus_sha256": "f64b2e8ec4e282309050ed103d4e9482f71912733ad485d0b2a545dd87161cba",
+  "questions_sha256": "fe371a28683defa8a61c46b3c311a576dbb1120b019976ab635a90a14ff23e45",
+  "teacher_internal_reasoning_in_output": false,
+  "judge_input_policy": "problem, reference solution, and visible dialogue only",
+  "output": "C:\\Users\\okada\\.github\\empathetic-AItutor\\research\\model_evaluation\\selections\\legacy_500_dialogues.jsonl",
+  "output_sha256": "6d1cc047c744e05871599a9e67f3c283da1d77873d99a639a5bac955e49c17e6"
+}

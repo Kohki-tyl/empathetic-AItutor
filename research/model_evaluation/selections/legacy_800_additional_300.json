@@ -1,0 +1,16 @@
+{
+  "schema_version": "legacy-500-evaluation-selection-v1",
+  "dataset": "pipelines/corpus_creation/500_empathetic_dialogues.jsonl",
+  "population_size": 800,
+  "selected_count": 300,
+  "selection_method": "contiguous_range",
+  "selection_start_index": 500,
+  "selection_end_index_exclusive": 800,
+  "dataset_label": "legacy-800-additional",
+  "corpus_sha256": "2d39118b605a7fc3b5017fc97eae649084dcbee39be9cf51e22074500664e69f",
+  "questions_sha256": "fe371a28683defa8a61c46b3c311a576dbb1120b019976ab635a90a14ff23e45",
+  "teacher_internal_reasoning_in_output": false,
+  "judge_input_policy": "problem, reference solution, and visible dialogue only",
+  "output": "E:\\github\\empathetic-AItutor\\research\\model_evaluation\\selections\\legacy_800_additional_300_dialogues.jsonl",
+  "output_sha256": "206eaf0d71e31d9eb29d1609e3349e175b814ea4ce053fa96934d656ef7fbbfb"
+}

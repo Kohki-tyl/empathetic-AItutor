@@ -23,11 +23,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--questions", type=Path, default=DEFAULT_QUESTIONS)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
+    parser.add_argument("--start-index", type=int, default=0)
+    parser.add_argument("--end-index", type=int)
+    parser.add_argument("--dataset-label", default="legacy-500")
     return parser.parse_args()
 
 
 def convert_dialogue(
-    record: dict[str, Any], question: dict[str, Any], *, corpus_index: int
+    record: dict[str, Any], question: dict[str, Any], *, corpus_index: int,
+    dataset_label: str = "legacy-500",
 ) -> dict[str, Any]:
     source_id = str(record["source_id"])
     conversation = record.get("conversation")
@@ -65,9 +69,9 @@ def convert_dialogue(
     completed = record.get("is_completed") is True
     return {
         "schema_version": "legacy-500-dialogue-record-v1-visible-only",
-        "case_id": f"legacy-500-{source_id}",
+        "case_id": f"{dataset_label}-{source_id}",
         "source_id": source_id,
-        "condition": "legacy-500-corpus",
+        "condition": f"{dataset_label}-corpus",
         "teacher_model": "legacy-corpus-generator-not-recorded",
         "profile_id": str(profile.get("id", "not_available")),
         "learning_status": "not_available_in_legacy_corpus",
@@ -88,7 +92,8 @@ def convert_dialogue(
 
 
 def build_evaluation_input(
-    corpus_path: Path, questions_path: Path
+    corpus_path: Path, questions_path: Path, *, start_index: int = 0,
+    end_index: int | None = None, dataset_label: str = "legacy-500",
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     corpus = read_jsonl(corpus_path)
     questions = {str(row["id"]): row for row in read_jsonl(questions_path)}
@@ -101,16 +106,29 @@ def build_evaluation_input(
     if missing:
         raise ValueError(f"参照問題が見つかりません: {missing[:5]}")
 
+    if start_index < 0:
+        raise ValueError("start_indexは0以上である必要があります")
+    resolved_end = len(corpus) if end_index is None else end_index
+    if resolved_end <= start_index or resolved_end > len(corpus):
+        raise ValueError(f"評価範囲が不正です: {start_index}:{resolved_end} / {len(corpus)}")
     converted = [
-        convert_dialogue(row, questions[str(row["source_id"])], corpus_index=index)
-        for index, row in enumerate(corpus)
+        convert_dialogue(
+            corpus[index],
+            questions[str(corpus[index]["source_id"])],
+            corpus_index=index,
+            dataset_label=dataset_label,
+        )
+        for index in range(start_index, resolved_end)
     ]
     manifest = {
         "schema_version": "legacy-500-evaluation-selection-v1",
         "dataset": "pipelines/corpus_creation/500_empathetic_dialogues.jsonl",
         "population_size": len(corpus),
         "selected_count": len(converted),
-        "selection_method": "full_population",
+        "selection_method": "contiguous_range",
+        "selection_start_index": start_index,
+        "selection_end_index_exclusive": resolved_end,
+        "dataset_label": dataset_label,
         "corpus_sha256": sha256_file(corpus_path),
         "questions_sha256": sha256_file(questions_path),
         "teacher_internal_reasoning_in_output": False,
@@ -125,7 +143,13 @@ def main() -> None:
     questions_path = args.questions.resolve()
     output_path = args.output.resolve()
     manifest_path = args.manifest.resolve()
-    rows, manifest = build_evaluation_input(corpus_path, questions_path)
+    rows, manifest = build_evaluation_input(
+        corpus_path,
+        questions_path,
+        start_index=args.start_index,
+        end_index=args.end_index,
+        dataset_label=args.dataset_label,
+    )
     write_jsonl(output_path, rows)
     manifest["output"] = str(output_path)
     manifest["output_sha256"] = sha256_file(output_path)

@@ -1,0 +1,13 @@
+{
+  "schema_version": "combined-teacher-dialogue-evaluation-manifest-v1",
+  "created_at_utc": "2026-09-02T14:48:09.937366+00:00",
+  "selection_sha256": "f481c100414fe5f929c8f6ca174f02a032bb7ba5741dd3932bdc8e9a0ef4d1be",
+  "input_shards": [
+    "E:\\github\\empathetic-AItutor\\research\\model_evaluation\\results\\legacy_500\\evaluated.jsonl",
+    "E:\\github\\empathetic-AItutor\\research\\model_evaluation\\results\\legacy_800_additional\\evaluated.jsonl"
+  ],
+  "planned_cases": 800,
+  "evaluated_cases": 800,
+  "unique_cases": 800,
+  "output_sha256": "e17a26d0e2ca33446647baa424cfb77da5003dc88f239bc41f825f7a41df01e9"
+}

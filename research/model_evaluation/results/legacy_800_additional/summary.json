@@ -1,0 +1,93 @@
+{
+  "schema_version": "teacher-model-summary-v1",
+  "conditions": {
+    "legacy-800-additional-corpus": {
+      "planned_cases": 300,
+      "dialogue_generation_successes": 300,
+      "dialogue_generation_success_rate": 1.0,
+      "evaluated_cases": 300,
+      "all_applicable_axes_at_least_8": 212,
+      "all_applicable_axes_at_least_8_rate": 0.7067,
+      "overall_score_60": {
+        "n": 300,
+        "mean": 51.3157,
+        "median": 56.0,
+        "minimum": 8.0,
+        "maximum": 60.0
+      },
+      "axis_scores": {
+        "mathematical_accuracy": {
+          "n": 300,
+          "mean": 8.6267,
+          "median": 10.0,
+          "minimum": 0.0,
+          "maximum": 10.0,
+          "na_count": 0
+        },
+        "error_diagnosis_recovery": {
+          "n": 237,
+          "mean": 7.9198,
+          "median": 10.0,
+          "minimum": 0.0,
+          "maximum": 10.0,
+          "na_count": 63
+        },
+        "instruction_completion": {
+          "n": 300,
+          "mean": 7.8967,
+          "median": 10.0,
+          "minimum": 0.0,
+          "maximum": 10.0,
+          "na_count": 0
+        },
+        "scaffolding": {
+          "n": 288,
+          "mean": 8.7535,
+          "median": 10.0,
+          "minimum": 0.0,
+          "maximum": 10.0,
+          "na_count": 12
+        },
+        "emotional_support": {
+          "n": 279,
+          "mean": 8.8315,
+          "median": 9.0,
+          "minimum": 4.0,
+          "maximum": 10.0,
+          "na_count": 21
+        },
+        "emotion_recognition": {
+          "n": 300,
+          "mean": 8.82,
+          "median": 9.0,
+          "minimum": 2.0,
+          "maximum": 10.0,
+          "na_count": 0
+        }
+      },
+      "instruction_group_mean": {
+        "n": 300,
+        "mean": 8.2844,
+        "median": 10.0,
+        "minimum": 0.0,
+        "maximum": 10.0
+      },
+      "empathy_group_mean": {
+        "n": 300,
+        "mean": 8.8367,
+        "median": 9.0,
+        "minimum": 2.6667,
+        "maximum": 10.0
+      },
+      "critical_failures": 55,
+      "critical_failure_rate": 0.1833,
+      "instruction_completed": 202,
+      "instruction_completion_rate": 0.6733,
+      "max_turn_reached": 0,
+      "transfer_judged": 0,
+      "transfer_correct": 0,
+      "transfer_accuracy": null
+    }
+  },
+  "comparisons": {}
+}

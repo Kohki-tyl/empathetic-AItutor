@@ -1,0 +1,40 @@
+{
+  "editor.fontFamily": "Consolas, 'BIZ UDGothic', monospace",
+  "editor.fontSize": 14,
+  "editor.lineHeight": 22,
+  "editor.fontLigatures": false,
+  "editor.renderWhitespace": "all",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "terminal.integrated.fontFamily": "Consolas, 'BIZ UDGothic', monospace",
+  "terminal.integrated.fontSize": 13,
+  "markdown.preview.fontFamily": "'Noto Sans JP', 'Yu Gothic UI', sans-serif",
+  "markdown.preview.fontSize": 15,
+  "markdown.preview.lineHeight": 1.8,
+  "markdown.preview.breaks": true,
+  "markdown.preview.scrollEditorWithPreview": true,
+  "markdown.preview.scrollPreviewWithEditor": true,
+  "markdown.extension.preview.autoShowPreviewToSide": true,
+  "markdown.updateLinksOnFileMove.enabled": "prompt",
+  "breadcrumbs.enabled": true,
+  "breadcrumbs.symbolPath": "on",
+  "outline.showStrings": true,
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "on"
+    },
+    "editor.tabSize": 2,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.markdownlint": "explicit"
+    }
+  },
+  "markdownlint.run": "onSave",
+  "markdownlint.config": {
+    "MD013": false,
+    "MD033": false
+  }
+}

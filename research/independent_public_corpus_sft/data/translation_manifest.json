@@ -1,0 +1,29 @@
+{
+  "schema_version": "public-corpus-ja-translation-manifest-v1",
+  "model": "gpt-5.6-luna",
+  "reasoning_effort": "low",
+  "datasets": {
+    "empathetic_dialogues": {
+      "records": 500,
+      "model": "gpt-5.6-luna",
+      "source_sha256": "d938ad8bd7f1ecb0faa5d703b10fbe55d77f951d1e3635face5498b8261fc3c0",
+      "translated_sha256": "d5af2d1fcddfb90623cf681a48968ae650a18a28674402708f177ab646d3d7f2",
+      "sft_sha256": "be8d21c7c9fe0ffd393da4418236f87aad984a3bda8109d8b2cec3fcfd25e4e6",
+      "trailing_user_sources_normalized_for_sft": 88,
+      "adjacent_same_role_sources_merged_for_sft": 0,
+      "leading_assistant_turns_removed_for_sft": 0,
+      "validation": "all source hashes, IDs, API provenance, translated turn structures, and SFT message structures passed"
+    },
+    "mathdial": {
+      "records": 500,
+      "model": "gpt-5.6-luna",
+      "source_sha256": "4c91fadb0ab93d71d0de9d09addf0a4871c3b909d66f80114d8bcc10746f8975",
+      "translated_sha256": "1ff21be83a4ffef2e860d74d2e599ffc214e097e98233d2c15b4730edc62ab9b",
+      "sft_sha256": "fb9227d0f5a8777c150e2f2a06d1979f2bfc8cef8e2d08b432d49f3ae8424d92",
+      "trailing_user_sources_normalized_for_sft": 254,
+      "adjacent_same_role_sources_merged_for_sft": 65,
+      "leading_assistant_turns_removed_for_sft": 521,
+      "validation": "all source hashes, IDs, API provenance, translated turn structures, and SFT message structures passed"
+    }
+  }
+}

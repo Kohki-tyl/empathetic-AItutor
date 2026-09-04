@@ -1,0 +1,22 @@
+{
+  "seed": 42,
+  "sample_size": 500,
+  "model": "gpt-5.6-luna",
+  "reasoning_effort": "low",
+  "max_completion_tokens": 12000,
+  "request_retries": 5,
+  "retry_base_seconds": 2.0,
+  "translation_workers": 8,
+  "empathetic_dialogues": {
+    "source": "raw/empathetic_dialogues_train.parquet",
+    "sample": "data/empathetic_dialogues_500_source.jsonl",
+    "translated": "data/empathetic_dialogues_500_ja.jsonl",
+    "sft": "data/empathetic_dialogues_500_ja_sft.jsonl"
+  },
+  "mathdial": {
+    "source": "raw/mathdial_train.jsonl",
+    "sample": "data/mathdial_500_source.jsonl",
+    "translated": "data/mathdial_500_ja.jsonl",
+    "sft": "data/mathdial_500_ja_sft.jsonl"
+  }
+}

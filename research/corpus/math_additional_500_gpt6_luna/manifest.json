@@ -1,0 +1,27 @@
+{
+  "additional_records": 500,
+  "combined_records": 1500,
+  "model": "gpt-6-luna",
+  "existing_corpus": "E:\\github\\empathetic-AItutor\\pipelines\\corpus_creation\\questions\\translated_1000_math.jsonl",
+  "existing_sha256": "fe371a28683defa8a61c46b3c311a576dbb1120b019976ab635a90a14ff23e45",
+  "selection_manifest": "selection_manifest.json",
+  "additional_file": "translated_additional_500_math_gpt6_luna.jsonl",
+  "additional_sha256": "84d4354c9990658ebb39476b5729342d9f628014538a67de1fd9853715d9247e",
+  "combined_file": "translated_1500_math_mixed_translation.jsonl",
+  "combined_sha256": "3db96e5d569a53b11350529ff469b2f4e10259d6d89492a909c9ae4b955d1737",
+  "overlap_with_existing_ids": 0,
+  "overlap_with_existing_problem_text": 0,
+  "flagged_records": 6,
+  "review_status": "machine_translated_unreviewed",
+  "thought_process": "empty: basic translation only; no generated reasoning trace",
+  "combined_translation_models": "existing 1000: runtime model not recorded; new 500: gpt-6-luna",
+  "latex_command_loss_records": 0,
+  "existing_file_unchanged": true,
+  "quality_postprocessing": [
+    {
+      "id": "math_train_1120",
+      "type": "Japanese_date_order",
+      "numeric_content_changed": false
+    }
+  ]
+}

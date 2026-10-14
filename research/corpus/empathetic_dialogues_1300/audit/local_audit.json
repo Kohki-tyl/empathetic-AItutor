@@ -1,0 +1,291 @@
+{
+  "audit_status": "local_and_content_checks_completed",
+  "dialogue_count": 500,
+  "teacher_turns": 2167,
+  "completed_dialogues": 484,
+  "incomplete_ids": [
+    "math_train_1138",
+    "math_train_1161",
+    "math_train_1162",
+    "math_train_1167",
+    "math_train_1191",
+    "math_train_1205",
+    "math_train_1222",
+    "math_train_1316",
+    "math_train_1354",
+    "math_train_1393",
+    "math_train_1468",
+    "math_train_1494",
+    "math_train_1506",
+    "math_train_1508",
+    "math_train_1608",
+    "math_train_1652"
+  ],
+  "duplicate_source_ids": [],
+  "duplicate_problem_groups": [],
+  "reference_id_match": true,
+  "translated_problem_mismatches": [],
+  "original_800_prefix_unchanged": true,
+  "additional_500_matches_combined": true,
+  "structural_errors": [],
+  "unsupported_control_characters": [
+    [
+      "math_train_1099",
+      0,
+      "content"
+    ],
+    [
+      "math_train_1124",
+      0,
+      "thought_process"
+    ],
+    [
+      "math_train_1124",
+      0,
+      "roadmap_breakdown"
+    ],
+    [
+      "math_train_1124",
+      0,
+      "content"
+    ],
+    [
+      "math_train_1137",
+      14,
+      "roadmap_breakdown"
+    ],
+    [
+      "math_train_1162",
+      9,
+      "next_step_plan"
+    ],
+    [
+      "math_train_1176",
+      1,
+      "roadmap_breakdown"
+    ],
+    [
+      "math_train_1176",
+      1,
+      "next_step_plan"
+    ],
+    [
+      "math_train_1196",
+      0,
+      "content"
+    ],
+    [
+      "math_train_1212",
+      3,
+      "roadmap_breakdown"
+    ],
+    [
+      "math_train_1212",
+      3,
+      "content"
+    ],
+    [
+      "math_train_1244",
+      2,
+      "content"
+    ],
+    [
+      "math_train_1258",
+      0,
+      "content"
+    ],
+    [
+      "math_train_1261",
+      3,
+      "content"
+    ],
+    [
+      "math_train_1262",
+      6,
+      "content"
+    ],
+    [
+      "math_train_1289",
+      0,
+      "content"
+    ],
+    [
+      "math_train_1290",
+      2,
+      "thought_process"
+    ],
+    [
+      "math_train_1290",
+      2,
+      "roadmap_breakdown"
+    ],
+    [
+      "math_train_1290",
+      2,
+      "next_step_plan"
+    ],
+    [
+      "math_train_1290",
+      2,
+      "content"
+    ],
+    [
+      "math_train_1308",
+      3,
+      "content"
+    ],
+    [
+      "math_train_1308",
+      5,
+      "thought_process"
+    ],
+    [
+      "math_train_1318",
+      5,
+      "roadmap_breakdown"
+    ],
+    [
+      "math_train_1318",
+      5,
+      "next_step_plan"
+    ],
+    [
+      "math_train_1318",
+      5,
+      "content"
+    ],
+    [
+      "math_train_1338",
+      0,
+      "content"
+    ],
+    [
+      "math_train_1347",
+      0,
+      "content"
+    ],
+    [
+      "math_train_1381",
+      2,
+      "next_step_plan"
+    ],
+    [
+      "math_train_1386",
+      4,
+      "content"
+    ],
+    [
+      "math_train_1394",
+      1,
+      "content"
+    ],
+    [
+      "math_train_1421",
+      0,
+      "thought_process"
+    ],
+    [
+      "math_train_1421",
+      0,
+      "content"
+    ],
+    [
+      "math_train_1421",
+      1,
+      "thought_process"
+    ],
+    [
+      "math_train_1421",
+      1,
+      "roadmap_breakdown"
+    ],
+    [
+      "math_train_1454",
+      5,
+      "thought_process"
+    ],
+    [
+      "math_train_1468",
+      4,
+      "content"
+    ],
+    [
+      "math_train_1546",
+      4,
+      "content"
+    ],
+    [
+      "math_train_1565",
+      2,
+      "content"
+    ],
+    [
+      "math_train_1565",
+      4,
+      "roadmap_breakdown"
+    ],
+    [
+      "math_train_1565",
+      4,
+      "content"
+    ],
+    [
+      "math_train_1669",
+      0,
+      "content"
+    ],
+    [
+      "math_train_1683",
+      4,
+      "content"
+    ],
+    [
+      "math_train_1686",
+      1,
+      "roadmap_breakdown"
+    ],
+    [
+      "math_train_1690",
+      2,
+      "roadmap_breakdown"
+    ]
+  ],
+  "input_sha256": "0ddcf80568edc7b8760fbbc7e46471a1833d075f5fadda75ee3d1dec1411f4d3",
+  "content_quality_audited": true,
+  "sft_selection_finalized": false,
+  "control_character_counts": {
+    "U+007F": 151
+  },
+  "control_affected_dialogues": 29,
+  "control_examples": [
+    {
+      "source_id": "math_train_1099",
+      "role": "teacher",
+      "turn": 0,
+      "field": "content",
+      "context": "'うん、その考え方でかなりいいよ。これを \\x7fad-bc\\x7f の形で見ると、a,b,c,d はそれぞれ何にな'"
+    },
+    {
+      "source_id": "math_train_1099",
+      "role": "teacher",
+      "turn": 0,
+      "field": "content",
+      "context": "'うん、その考え方でかなりいいよ。これを \\x7fad-bc\\x7f の形で見ると、a,b,c,d はそれぞれ何になるかな？'"
+    },
+    {
+      "source_id": "math_train_1124",
+      "role": "teacher",
+      "turn": 0,
+      "field": "thought_process",
+      "context": "'が、着手点としてノルムの二乗展開を正しく選べている。実際に \\x7f\\x7fa\\x7f\\x7f^2+\\x7f\\x7fb\\x7f\\x7f^2+\\x7f\\x7fc\\x7f\\x7f^2=1 なので、内'"
+    },
+    {
+      "source_id": "math_train_1124",
+      "role": "teacher",
+      "turn": 0,
+      "field": "thought_process",
+      "context": "'、着手点としてノルムの二乗展開を正しく選べている。実際に \\x7f\\x7fa\\x7f\\x7f^2+\\x7f\\x7fb\\x7f\\x7f^2+\\x7f\\x7fc\\x7f\\x7f^2=1 なので、内積'"
+    }
+  ],
+  "selection_note": "Candidate IDs available in selection.json; no training data or split changed."
+}

@@ -1,0 +1,2306 @@
+[
+  {
+    "source_id": "math_train_402",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "うん、\u0016\\(\\frac{4}{9}\\)で合ってるよ。『偶奇がちがう2通りに分ける』って考え方がしっかりできていて、とてもいいね。",
+    "normalized": "うん、\\(\\frac{4}{9}\\)で合ってるよ。『偶奇がちがう2通りに分ける』って考え方がしっかりできていて、とてもいいね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_67",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい置き方だよ、その方針で合ってる！ 次は \bk+1 の符号で不等式の向きが変わるから、まず k=-1 は除いて、k>-1 と k<-1 に分けて考えてみよう。",
+    "normalized": "いい置き方だよ、その方針で合ってる！ 次は k+1 の符号で不等式の向きが変わるから、まず k=-1 は除いて、k>-1 と k<-1 に分けて考えてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_824",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "そこまでいい感じ！ \f⌊-4.2⌋ は『-4.2以下の最大の整数』だから、-4と-5のどっちが条件に合うか比べてみよう。",
+    "normalized": "そこまでいい感じ！ ⌊-4.2⌋ は『-4.2以下の最大の整数』だから、-4と-5のどっちが条件に合うか比べてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_397",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい流れだね、その見方で合ってるよ。では \u0001-1 は奇数・偶数のどちらで、そこから f(-1) はいくつになるかな？",
+    "normalized": "いい流れだね、その見方で合ってるよ。では -1 は奇数・偶数のどちらで、そこから f(-1) はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_744",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "うん、正解！\u000b\\(6p^4+5p^2-4\\) で合ってるよ。今の『全部にかけて、同じ文字の項をまとめる』流れ、すごくいいね。",
+    "normalized": "うん、正解！\\(6p^4+5p^2-4\\) で合ってるよ。今の『全部にかけて、同じ文字の項をまとめる』流れ、すごくいいね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_30",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だね、その考え方で合ってるよ。じゃあ次は左の定数は何になって、右の \u0000-7+□ と等しくするには □ にいくつを入れればいいかな？",
+    "normalized": "いい着眼点だね、その考え方で合ってるよ。じゃあ次は左の定数は何になって、右の -7+□ と等しくするには □ にいくつを入れればいいかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_502",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "いい流れだよ、その式で合ってる！ じゃあ次は \u001d7/5 をなくすにはどうすればいいか考えて、まず x を出してみよう。",
+    "normalized": "いい流れだよ、その式で合ってる！ じゃあ次は 7/5 をなくすにはどうすればいいか考えて、まず x を出してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_874",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いいところまでできてるよ。 \u001c⌈-14.6⌉は『-14.6以上のいちばん小さい整数』だけど、-15と-14ならどっちがその条件に合うかな？",
+    "normalized": "いいところまでできてるよ。 ⌈-14.6⌉は『-14.6以上のいちばん小さい整数』だけど、-15と-14ならどっちがその条件に合うかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_120",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その方針でいいよ。まずは一気に全部やらずに、解の『和』だけ見て、\f2a と b でどんな式が1本できるか書いてみよう。",
+    "normalized": "うん、その方針でいいよ。まずは一気に全部やらずに、解の『和』だけ見て、2a と b でどんな式が1本できるか書いてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_144",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "そこまで分かってるのはかなりいいよ。じゃあ \b$z^3-1=(z-u)(z-v)(z-w)$ を展開したとき、$z$ の係数が何になるか見てみようか？",
+    "normalized": "そこまで分かってるのはかなりいいよ。じゃあ $z^3-1=(z-u)(z-v)(z-w)$ を展開したとき、$z$ の係数が何になるか見てみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_430",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい流れだよ、その考え方でかなり近い。じゃあ「\bθ=arccot(4/7) とおくと何が言えて、だから tanθ がいくつになるか」を一言で言ってみよう。",
+    "normalized": "いい流れだよ、その考え方でかなり近い。じゃあ「θ=arccot(4/7) とおくと何が言えて、だから tanθ がいくつになるか」を一言で言ってみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_410",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい出だしだよ、その方針でほぼ合ってる。 \bただ、いちばん大事なのは符号だから、\\((x-m)(x-n)\\) と展開したとき定数項が何になるか見て、ほんとうに \\(mn=14\\) でいいか確かめてみよう。",
+    "normalized": "いい出だしだよ、その方針でほぼ合ってる。 ただ、いちばん大事なのは符号だから、\\((x-m)(x-n)\\) と展開したとき定数項が何になるか見て、ほんとうに \\(mn=14\\) でいいか確かめてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_118",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "正解！\b8^2<80<9^2 だから 8<√80<9、なので ⌊√80⌋=8 だね。",
+    "normalized": "正解！8^2<80<9^2 だから 8<√80<9、なので ⌊√80⌋=8 だね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_234",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい方針だよ、その見方でOK！ では同じように \b\triangle BCD でも BM を見て、三角形 AMB の3辺がどうなるか整理してみようか。",
+    "normalized": "いい方針だよ、その見方でOK！ では同じように \\triangle BCD でも BM を見て、三角形 AMB の3辺がどうなるか整理してみようか。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1394",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "うん、その考え方でばっちり、答えは16だよ！ 展開せずに『a^2+2ab+b^2の形を見抜く』のが今回のポイントだったね。",
+    "normalized": "うん、その考え方でばっちり、答えは16だよ！ 展開せずに『a^2+2ab+b^2の形を見抜く』のが今回のポイントだったね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_565",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その置き方で合ってるよ。まずは割る式から \bx^2=-5x-1 と見て、x^3=x・x^2 に代入するとどうなるかな？",
+    "normalized": "うん、その置き方で合ってるよ。まずは割る式から x^2=-5x-1 と見て、x^3=x・x^2 に代入するとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1262",
+    "conversation_index": 13,
+    "role": "teacher",
+    "turn": 6,
+    "original": "その確認でOK、7・11・13を全部合わせると、k は結局何の倍数ならよさそう？ そしてその k が決まったとき、j-i=k をみたす (i,j) は何組あるかな？",
+    "normalized": "その確認でOK、7・11・13を全部合わせると、k は結局何の倍数ならよさそう？ そしてその k が決まったとき、j-i=k をみたす (i,j) は何組あるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_879",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その説明でばっちり！ 外積は『順番を入れ替えると逆向きになる（反交換的）』だから、\u001d\\(\\mathbf{w}\\times\\mathbf{v}=-(\\mathbf{v}\\times\\mathbf{w})\\) になるんだね。",
+    "normalized": "その説明でばっちり！ 外積は『順番を入れ替えると逆向きになる（反交換的）』だから、\\(\\mathbf{w}\\times\\mathbf{v}=-(\\mathbf{v}\\times\\mathbf{w})\\) になるんだね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_480",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、計算はよさそう！ じゃあ最後に、どうして \u0002で割るのかを『2つ選ぶ』意味でひとことで言えるかな？",
+    "normalized": "うん、計算はよさそう！ じゃあ最後に、どうして で割るのかを『2つ選ぶ』意味でひとことで言えるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_150",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その変形で合ってるよ。じゃあ次は \u00005/4 と 10/3 の間に入る整数を、実際に小さい順に書いてみようか。",
+    "normalized": "うん、その変形で合ってるよ。じゃあ次は 5/4 と 10/3 の間に入る整数を、実際に小さい順に書いてみようか。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_497",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "いい流れで解けてるよ。最後に \u001d9/5 は x>1 を満たしているかだけ確認してみようか？",
+    "normalized": "いい流れで解けてるよ。最後に 9/5 は x>1 を満たしているかだけ確認してみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_110",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "いいところまで来てるよ。『割れない』ってことは最初に \u0013分の1 食べる時点で3で割り切れる必要があるから、68・70・72・74・76の中でそれを満たすのはどれかな？",
+    "normalized": "いいところまで来てるよ。『割れない』ってことは最初に 分の1 食べる時点で3で割り切れる必要があるから、68・70・72・74・76の中でそれを満たすのはどれかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_716",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その確認で完璧！\u000btanは『向かい側÷となり』だから、\\(\\tan B=\\frac{3}{2}\\) で合ってるよ。",
+    "normalized": "その確認で完璧！tanは『向かい側÷となり』だから、\\(\\tan B=\\frac{3}{2}\\) で合ってるよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_433",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "そこまでできてるの、かなりいいよ。じゃあ最後に \u0010×9÷2 を、先に 10÷2 にして考えるといくつになるかな？",
+    "normalized": "そこまでできてるの、かなりいいよ。じゃあ最後に ×9÷2 を、先に 10÷2 にして考えるといくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_200",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その式でばっちりだよ。まずは \u0015と3、14と2で約分できるか見てみようか？",
+    "normalized": "うん、その式でばっちりだよ。まずは と3、14と2で約分できるか見てみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_861",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "いいね、その形で合ってるよ。じゃあ \bS-xS=(1-x)S と見て、右側の \\(x+x^2+x^3+\\cdots\\) は等比級数の和でどう書けるかな？",
+    "normalized": "いいね、その形で合ってるよ。じゃあ S-xS=(1-x)S と見て、右側の \\(x+x^2+x^3+\\cdots\\) は等比級数の和でどう書けるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1261",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その通り、かなり整理できてるよ。じゃあ 0 から 1007 までは全部で何個あるかを使って、個数を {m \\choose n} の形で書くと m はいくつになるかな？",
+    "normalized": "その通り、かなり整理できてるよ。じゃあ 0 から 1007 までは全部で何個あるかを使って、個数を {m \\choose n} の形で書くと m はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_426",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だよ、その読み替えで進めて大丈夫。次は \b5x^2+19x-4=0\t を因数分解できるか見てみようか？",
+    "normalized": "いい着眼点だよ、その読み替えで進めて大丈夫。次は 5x^2+19x-4=0\t を因数分解できるか見てみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_587",
+    "conversation_index": 11,
+    "role": "teacher",
+    "turn": 5,
+    "original": "その整理で合ってるよ。じゃあ次は、\u001c\theq A q+B>0 がすべての q>0 で成り立つには、qをすごく大きくしたときと 0 に近づけたときから A と B にどんな条件が必要か考えてみよう。",
+    "normalized": "その整理で合ってるよ。じゃあ次は、\theq A q+B>0 がすべての q>0 で成り立つには、qをすごく大きくしたときと 0 に近づけたときから A と B にどんな条件が必要か考えてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_62",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その通り、よく気づけたね！ \u000bsin45° = √2/2 で正解だよ。",
+    "normalized": "その通り、よく気づけたね！ sin45° = √2/2 で正解だよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_216",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "うん、\u00193/512で正解！ 5対5をのぞけば左右対称だから、残りを半分にする考え方がしっかりできているよ。",
+    "normalized": "うん、3/512で正解！ 5対5をのぞけば左右対称だから、残りを半分にする考え方がしっかりできているよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_491",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その説明でばっちり！ \u001c\\(\\frac{z}{x}\\times\\frac{x}{y}=\\frac{z}{y}\\) と見て 8 になる、まで自分で言えたので完璧だよ。",
+    "normalized": "その説明でばっちり！ \\(\\frac{z}{x}\\times\\frac{x}{y}=\\frac{z}{y}\\) と見て 8 になる、まで自分で言えたので完璧だよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1318",
+    "conversation_index": 11,
+    "role": "teacher",
+    "turn": 5,
+    "original": "そう、その式で合ってるよ。あとは \\sqrt{4+16} を計算して、できればいちばん簡単な形にしてみよう。",
+    "normalized": "そう、その式で合ってるよ。あとは \\sqrt{4+16} を計算して、できればいちばん簡単な形にしてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_166",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "完璧！『中線10→斜辺20→一辺は20/√2=10√2』とつながっていて、答えは \u0010√2 じゃなくてちゃんと 10√2 で合ってるよ。",
+    "normalized": "完璧！『中線10→斜辺20→一辺は20/√2=10√2』とつながっていて、答えは √2 じゃなくてちゃんと 10√2 で合ってるよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_481",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい出だしだね、そのくくり方は合ってるよ。次は \u0015x^2-4x+10 のところがまだ分けられるか、積が150で和が-4になる2つの数があるか見てみよう。",
+    "normalized": "いい出だしだね、そのくくり方は合ってるよ。次は x^2-4x+10 のところがまだ分けられるか、積が150で和が-4になる2つの数があるか見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1669",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい整理だよ、その『射影ベクトルは mathbf w と同じ向き』がカギです。ではまず、\\(\\begin{pmatrix}-9/10\\\\3/10\\end{pmatrix}\\) と平行な、もっと簡単な整数のベクトルを1つ言えるかな？",
+    "normalized": "いい整理だよ、その『射影ベクトルは mathbf w と同じ向き』がカギです。ではまず、\\(\\begin{pmatrix}-9/10\\\\3/10\\end{pmatrix}\\) と平行な、もっと簡単な整数のベクトルを1つ言えるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_851",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その展開は合ってるよ。次は \u001c(2x^2+2x-12)(x-6)\u001d を、まず「xをかける部分」と「-6をかける部分」に分けるとどう書けるかな？",
+    "normalized": "うん、その展開は合ってるよ。次は (2x^2+2x-12)(x-6) を、まず「xをかける部分」と「-6をかける部分」に分けるとどう書けるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_845",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その通り、\u001c81/125\u001dで正解だよ！『表が多い』を2回と3回に分けて考えられたのが大事なポイントだったね。",
+    "normalized": "その通り、81/125で正解だよ！『表が多い』を2回と3回に分けて考えられたのが大事なポイントだったね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_367",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "うん、その通りで答えは 1 だよ。方針も変形もちゃんとできていたね—「\u0007cot x を \u0007tan x に直して分母をそろえたら、分子がちょうど一致する」と見られていて良い感じ！",
+    "normalized": "うん、その通りで答えは 1 だよ。方針も変形もちゃんとできていたね—「cot x を tan x に直して分母をそろえたら、分子がちょうど一致する」と見られていて良い感じ！",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_627",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その考え方で合ってるよ。まずは \b2x^2-8x+7=0\b が因数分解できそうか、かけて14・たして-8になる組があるか見てみようか？",
+    "normalized": "うん、その考え方で合ってるよ。まずは 2x^2-8x+7=0 が因数分解できそうか、かけて14・たして-8になる組があるか見てみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_594",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その『変だな』に気づけたのがすごく大事だよ。1≦x≦3 では本当に |x-3|+|x-1| がずっと4になるから、そのとき上下の式の y は同じ値になるのか見てみよう。",
+    "normalized": "その『変だな』に気づけたのがすごく大事だよ。1≦x≦3 では本当に |x-3|+|x-1| がずっと4になるから、そのとき上下の式の y は同じ値になるのか見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_70",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その通り、\u001c56/15\u001dマイル/時で正解！順番に倍率をかけて考えられていて、とてもよかったよ。",
+    "normalized": "その通り、56/15マイル/時で正解！順番に倍率をかけて考えられていて、とてもよかったよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_805",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その考え方でOKだよ。じゃあ 5, 25, 125, … を 3 で割った余りを見て、\u001d3k+2=5^{m+1}\u001c になれる最小のものを探してみよう。",
+    "normalized": "その考え方でOKだよ。じゃあ 5, 25, 125, … を 3 で割った余りを見て、3k+2=5^{m+1} になれる最小のものを探してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_256",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい出だし！その見方でかなり近いよ。ここで確認だけど、1は使ってよさそう？ それと a,b,c は順番なしの集合だから、3つのグループ分けとして考えるとどう言い換えられるかな？",
+    "normalized": "いい出だし！その見方でかなり近いよ。ここで確認だけど、1は使ってよさそう？ それと a,b,c は順番なしの集合だから、3つのグループ分けとして考えるとどう言い換えられるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_523",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "いい流れだよ！ \u001d\\cos\\theta+i\\sin\\theta\u001d は何に等しかったか思い出して、ここでは \\(\\theta=2x\\) として当てはめてみよう。",
+    "normalized": "いい流れだよ！ \\cos\\theta+i\\sin\\theta は何に等しかったか思い出して、ここでは \\(\\theta=2x\\) として当てはめてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_274",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その説明ばっちりだよ。『それぞれの確率をかけて、両方起こる確率を出す』って考え方で、答えは \u001d1/36\u001d だね。",
+    "normalized": "その説明ばっちりだよ。『それぞれの確率をかけて、両方起こる確率を出す』って考え方で、答えは 1/36 だね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_97",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その通り、ここまで完璧だよ。では |z+w|=\\sqrt3 と分かったとき、実部 \\(\\operatorname{Re}(z+w)\\) の最大値は何で、実際にその値は作れそうかな？",
+    "normalized": "その通り、ここまで完璧だよ。では |z+w|=\\sqrt3 と分かったとき、実部 \\(\\operatorname{Re}(z+w)\\) の最大値は何で、実際にその値は作れそうかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_55",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その通り、答えは \u001b[1m336/625\u001b[0m だね。補集合で考えたのがすごくよかったけど、どこがラクになるポイントだったと思う？",
+    "normalized": "その通り、答えは [1m336/625[0m だね。補集合で考えたのがすごくよかったけど、どこがラクになるポイントだったと思う？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_334",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その 5/2 はむしろ大事で、a^2 として正ならOKなんだ。じゃあ逆に『ありえない』のはどんなときか、一番大きい数を z として \u0018(x^2+y^2-z^2)/2\u0019 がどうなったらアウトか考えてみよう。",
+    "normalized": "その 5/2 はむしろ大事で、a^2 として正ならOKなんだ。じゃあ逆に『ありえない』のはどんなときか、一番大きい数を z として (x^2+y^2-z^2)/2 がどうなったらアウトか考えてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_515",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "いいところに気づいてるよ。ただ、「or」は1つ当てはまればOKだから、たとえば \u001d(1,1)\u001d は条件Iを満たすかな？そこを確かめると表の作り方がはっきりするよ。",
+    "normalized": "いいところに気づいてるよ。ただ、「or」は1つ当てはまればOKだから、たとえば (1,1) は条件Iを満たすかな？そこを確かめると表の作り方がはっきりするよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_96",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その通り、ばっちり！ \u001d(3x-5)^2-67\u001c だから a=3、b=-5 で、ab=-15 だね。",
+    "normalized": "その通り、ばっちり！ (3x-5)^2-67 だから a=3、b=-5 で、ab=-15 だね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_239",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "うん、その 11 通りという見通しはかなりよさそう。最後に、各 k について \u0001(x-1)^k(x+1)^{10-k}\u0001 を考えると条件をちゃんと満たすか、ひとこと確認してみよう。",
+    "normalized": "うん、その 11 通りという見通しはかなりよさそう。最後に、各 k について (x-1)^k(x+1)^{10-k} を考えると条件をちゃんと満たすか、ひとこと確認してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1421",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その見方でばっちり進められてるよ。では \\binom{20}{n}=\\binom{20}{11} になるのは、対称性も使うと n は 11 以外にもう1つ何があるかな？",
+    "normalized": "うん、その見方でばっちり進められてるよ。では \\binom{20}{n}=\\binom{20}{11} になるのは、対称性も使うと n は 11 以外にもう1つ何があるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_652",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "うん、\u001c\\(\\frac{-1-5i}{13}\\)\u001dで正解だよ！ 共役をかけて分母を実数にする流れ、しっかりできていてよかったね。",
+    "normalized": "うん、\\(\\frac{-1-5i}{13}\\)で正解だよ！ 共役をかけて分母を実数にする流れ、しっかりできていてよかったね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_781",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その見方で合ってるよ。では \u0000k=-2y^2-3y+5\u0000 を y の2次方程式の形に直したとき、『解が1個だけ』の条件は何になるかな？",
+    "normalized": "うん、その見方で合ってるよ。では k=-2y^2-3y+5 を y の2次方程式の形に直したとき、『解が1個だけ』の条件は何になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_170",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "いいところまで来てるよ。`pt-4p-4t` を \u001c(p-4)(t-4)\u001d の形にしたいとき、あといくつ足せばぴったりになるかな？",
+    "normalized": "いいところまで来てるよ。`pt-4p-4t` を (p-4)(t-4) の形にしたいとき、あといくつ足せばぴったりになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_257",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "うん、\u001d(-3,2)\u001dで合ってるよ、ここまでしっかりできてる。余裕があれば、2つの内積がほんとに0になるかだけサッと確かめて終わりにしよう。",
+    "normalized": "うん、(-3,2)で合ってるよ、ここまでしっかりできてる。余裕があれば、2つの内積がほんとに0になるかだけサッと確かめて終わりにしよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_119",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その通り、候補は2つだね。じゃあ \u001d(a^2-b^2=8)\u001d にそれぞれ入れると、どっちが8になるかな？",
+    "normalized": "その通り、候補は2つだね。じゃあ (a^2-b^2=8) にそれぞれ入れると、どっちが8になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1290",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "いいね、そこまで出ればあと一歩！ 1-3\\times\\frac{1}{36} を計算するといくつになるかな？",
+    "normalized": "いいね、そこまで出ればあと一歩！ 1-3\\times\\frac{1}{36} を計算するといくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_64",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その答えでOK、\u001c7/16\u001dだね。最後に『なぜそうなるか』を、会わない2つの三角形を使って1文で言えたら完璧！",
+    "normalized": "その答えでOK、7/16だね。最後に『なぜそうなるか』を、会わない2つの三角形を使って1文で言えたら完璧！",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1386",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "その通り、きれいに求まったね。最後に f(x)=3^x-2^x を元の式に代入して、本当に両辺が一致するかだけ確認してみよう。",
+    "normalized": "その通り、きれいに求まったね。最後に f(x)=3^x-2^x を元の式に代入して、本当に両辺が一致するかだけ確認してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_437",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい流れだよ、その因数分解でOK。まずは \u001d分母が0にならない条件\u001d を確認してから、約分したあとの式がどうなるか書いてみよう。",
+    "normalized": "いい流れだよ、その因数分解でOK。まずは 分母が0にならない条件 を確認してから、約分したあとの式がどうなるか書いてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_538",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いいね、答えは合ってるよ。じゃあ最後に、どうして \u00185÷8\u0019 で小数にできるのかを一言で言えるかな？",
+    "normalized": "いいね、答えは合ってるよ。じゃあ最後に、どうして 5÷8 で小数にできるのかを一言で言えるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_471",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい考え方だね、その方針でほぼOK！ 半径1の円がこの正方形の中に全部入っているかだけ、座標の範囲 \u001c-2〜2\u001d を見て確認してみよう。",
+    "normalized": "いい考え方だね、その方針でほぼOK！ 半径1の円がこの正方形の中に全部入っているかだけ、座標の範囲 -2〜2 を見て確認してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_87",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい流れだよ、そこまでは完璧！ じゃあ \u001dCとDは同じ確率\u001d だから、合わせて \\(\\frac{3}{8}\\) を2つに等しく分けると1つ分はいくつになるかな？",
+    "normalized": "いい流れだよ、そこまでは完璧！ じゃあ CとDは同じ確率 だから、合わせて \\(\\frac{3}{8}\\) を2つに等しく分けると1つ分はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_555",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい流れだよ、その式でほぼ決まり！ \nでは \u001cs/t=(-b/10)÷(-b/6)\u001d を整理すると、b はどうなって比はいくつになるかな？",
+    "normalized": "いい流れだよ、その式でほぼ決まり！ \nでは s/t=(-b/10)÷(-b/6) を整理すると、b はどうなって比はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_698",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その2つの式でOK。じゃあまず、整数の場合は本当に解があるかを見て、次に n(n+1)=110 を満たす整数 n を探してみよう。",
+    "normalized": "その2つの式でOK。じゃあまず、整数の場合は本当に解があるかを見て、次に n(n+1)=110 を満たす整数 n を探してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_571",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その考え方で合ってるよ。じゃあ次は一般項に入れて、205項目のとき \u001cr\u001e の指数は何になるかな？",
+    "normalized": "うん、その考え方で合ってるよ。じゃあ次は一般項に入れて、205項目のとき r の指数は何になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_365",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい出だし！この式、両辺に何か足すと \u001c(a+3)(b+3)\u001d の形にできそうだけど、何を足せばいいかな？",
+    "normalized": "いい出だし！この式、両辺に何か足すと (a+3)(b+3) の形にできそうだけど、何を足せばいいかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_802",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その式でOKだよ。あとは \u00185!×4!/8!\u0019 を約分するといくつになるかな？",
+    "normalized": "その式でOKだよ。あとは 5!×4!/8! を約分するといくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_687",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "ここまですごくいいよ。 \n\neまず \u001d5831-168\u001c を計算するといくつになる？ そこからさらに60を引いて、負の部分をもう一度確かめてみよう。",
+    "normalized": "ここまですごくいいよ。 \n\neまず 5831-168 を計算するといくつになる？ そこからさらに60を引いて、負の部分をもう一度確かめてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_866",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その見通しでOK！ じゃあ \u001d(b+3)(b+5)=2b^2+4b+3\u001d を展開して、まずは b の方程式を1本つくってみよう。",
+    "normalized": "その見通しでOK！ じゃあ (b+3)(b+5)=2b^2+4b+3 を展開して、まずは b の方程式を1本つくってみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_218",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "いいね、そこは合ってるよ。次は逆向きに、\u001d\\frac{x}{x-1}=\\sec^2 t\u001c となる x は何かを解いてみようか？",
+    "normalized": "いいね、そこは合ってるよ。次は逆向きに、\\frac{x}{x-1}=\\sec^2 t となる x は何かを解いてみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_617",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい流れだよ、平方完成はばっちりできてる。じゃあ \u001d-(x+4)^2\u001c はいちばん大きいときいくつになるかな？そのとき x も言えそう？",
+    "normalized": "いい流れだよ、平方完成はばっちりできてる。じゃあ -(x+4)^2 はいちばん大きいときいくつになるかな？そのとき x も言えそう？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_210",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "正解、商は2だね！ しかも \u0011n と 11-n の二乗の余りが同じ\u0011って気づけたのがとてもよかったよ。",
+    "normalized": "正解、商は2だね！ しかも n と 11-n の二乗の余りが同じって気づけたのがとてもよかったよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_163",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "そこまではすごくいいよ。 \nでは \u001d-x > -15\u001c の両辺に -1 をかけると、不等号の向きはそのままかな、逆かな？",
+    "normalized": "そこまではすごくいいよ。 \nでは -x > -15 の両辺に -1 をかけると、不等号の向きはそのままかな、逆かな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_507",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "かなりいい流れだよ。最後に1つだけ、対数だから真数の条件 \u0018(x-1)^2>0\u0019 を見て、出した2つの値がどちらも使えるか確認してみよう。",
+    "normalized": "かなりいい流れだよ。最後に1つだけ、対数だから真数の条件 (x-1)^2>0 を見て、出した2つの値がどちらも使えるか確認してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_645",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "その置き方、すごくいいよ。まずは a+b がいくつになるか見てみようか？ そのあと \u0018(\\sqrt{a}+\\sqrt{b})^2\u0019 を使うと先に進めるよ。",
+    "normalized": "その置き方、すごくいいよ。まずは a+b がいくつになるか見てみようか？ そのあと (\\sqrt{a}+\\sqrt{b})^2 を使うと先に進めるよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1308",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その通り！ じゃあ3つ全部に \\frac{ab}{a+b}\\le\\frac{a+b}{4} を使って足すと、\n\\(S\\le ?\\) になるかな。等号がいつ成り立つかも一緒に見てみよう。",
+    "normalized": "その通り！ じゃあ3つ全部に \\frac{ab}{a+b}\\le\\frac{a+b}{4} を使って足すと、\n\\(S\\le ?\\) になるかな。等号がいつ成り立つかも一緒に見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_202",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "うん、その変形で合ってるよ。じゃあ \u0007-x=-32\u0007 から x にするには、両辺をどうすればいいかな？",
+    "normalized": "うん、その変形で合ってるよ。じゃあ -x=-32 から x にするには、両辺をどうすればいいかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_423",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "そう、それで全部そろったね。だから点Pは \u001c(4,-2,3)\u001d とまとめればOKだよ。",
+    "normalized": "そう、それで全部そろったね。だから点Pは (4,-2,3) とまとめればOKだよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_269",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "その置き方、すごくいいよ。まずは解の積に注目して、\u001c(2t)(t)=18\u001d から t^2 がいくつになるか出してみようか？",
+    "normalized": "その置き方、すごくいいよ。まずは解の積に注目して、(2t)(t)=18 から t^2 がいくつになるか出してみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_876",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その気づき、すごくいいよ。じゃあ \u0018(x+10)^2=0\u0019 なら、x はいくつになるかな？",
+    "normalized": "その気づき、すごくいいよ。じゃあ (x+10)^2=0 なら、x はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_871",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その考え方でばっちりだよ。じゃあ \u0017ab\\equiv17,\\ 10a\\equiv10,\\ 10b\\equiv10,\\ 100\\equiv0\\pmod{20}\u0017 を全部足すと、全体は何あまりになるかな？",
+    "normalized": "その考え方でばっちりだよ。じゃあ ab\\equiv17,\\ 10a\\equiv10,\\ 10b\\equiv10,\\ 100\\equiv0\\pmod{20} を全部足すと、全体は何あまりになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_706",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "あと一歩だよ。百の位で出た最後の繰り上がり1は、いちばん左にそのまま書くから、答えは本当に \u001b[1m何桁\u001b[0mになるかな？",
+    "normalized": "あと一歩だよ。百の位で出た最後の繰り上がり1は、いちばん左にそのまま書くから、答えは本当に [1m何桁[0mになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_453",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だよ、場合分けの前に整理すると楽になる。 \nまず n+6 は必ず0以上だから、右辺の 2-n はどんな条件を満たしていないといけないかな？",
+    "normalized": "いい着眼点だよ、場合分けの前に整理すると楽になる。 \nまず n+6 は必ず0以上だから、右辺の 2-n はどんな条件を満たしていないといけないかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_459",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その通り、\u001d\\(\\frac{29}{120}\\)\u001dで正解！ 0行目だけ1が1個で、1〜14行目は両端の2個ずつと考えられていて、とてもいい整理だよ。",
+    "normalized": "その通り、\\(\\frac{29}{120}\\)で正解！ 0行目だけ1が1個で、1〜14行目は両端の2個ずつと考えられていて、とてもいい整理だよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_76",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その置き方でばっちりだよ。では次に、\u0000三次式の x^2 の係数は『解の和のマイナス』になるから、f と g でその係数が等しいとして a と b の関係を出してみようか？",
+    "normalized": "うん、その置き方でばっちりだよ。では次に、三次式の x^2 の係数は『解の和のマイナス』になるから、f と g でその係数が等しいとして a と b の関係を出してみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_76",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "その形でOK！ では \u0000(r+1)(r+7) と (r+3)(r+9) を展開して、b の項を片側に集めると b がどうなるか出してみよう。",
+    "normalized": "その形でOK！ では (r+1)(r+7) と (r+3)(r+9) を展開して、b の項を片側に集めると b がどうなるか出してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_793",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "うん、完璧！ \u001d343750=125^2\\times22\u001c だから、最短距離は **125\\sqrt{22}** で確定だね。",
+    "normalized": "うん、完璧！ 343750=125^2\\times22 だから、最短距離は **125\\sqrt{22}** で確定だね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_643",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "いいね、そこまで合ってるよ。最後に \u001d-\u001c1/8 を元の式に入れて、左右が本当に同じになるかだけ確認してみよう。",
+    "normalized": "いいね、そこまで合ってるよ。最後に -1/8 を元の式に入れて、左右が本当に同じになるかだけ確認してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_126",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "完璧！その通りで、値域は \\((-\u001einfty,3)\\cup(3,\u001einfty)\\) だよ。",
+    "normalized": "完璧！その通りで、値域は \\((-infty,3)\\cup(3,infty)\\) だよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_668",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いいね、立式はもうできてるよ。あとは左の \u001d同じ文字をまとめる\u001c とどうなるか、そこだけやってみよう。",
+    "normalized": "いいね、立式はもうできてるよ。あとは左の 同じ文字をまとめる とどうなるか、そこだけやってみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_737",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その考え方で合ってるよ。まず \u001c-265x+2800=0\u001d を解くと、x は何人くらいになるかな？",
+    "normalized": "うん、その考え方で合ってるよ。まず -265x+2800=0 を解くと、x は何人くらいになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_82",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だよ、その『半分の -8』が大事！ じゃあ実際に \u001c(x-8)^2\u001d を展開すると、最後の数は何になるかな？",
+    "normalized": "いい着眼点だよ、その『半分の -8』が大事！ じゃあ実際に (x-8)^2 を展開すると、最後の数は何になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_797",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いいね、その式の立て方は合ってるよ。じゃあ次は \u0018x^2y=40\u0019 に y=4000 を入れると、x^2 はいくつになるかな？",
+    "normalized": "いいね、その式の立て方は合ってるよ。じゃあ次は x^2y=40 に y=4000 を入れると、x^2 はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_562",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その整理、ばっちりだよ。じゃあ次は \u001c\\binom{6}{0},\\binom{6}{1},\\dots,\\binom{6}{6}\u001d を並べて、奇数のものが何個あるかだけ数えてみよう。",
+    "normalized": "その整理、ばっちりだよ。じゃあ次は \\binom{6}{0},\\binom{6}{1},\\dots,\\binom{6}{6} を並べて、奇数のものが何個あるかだけ数えてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_790",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "うん、その代入で合ってるよ。 \u001c-84÷-32\u001d は正負どっちになるか見て、次に 84/32 をいちばん簡単な形にできるかな？",
+    "normalized": "うん、その代入で合ってるよ。 -84÷-32 は正負どっちになるか見て、次に 84/32 をいちばん簡単な形にできるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_836",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その分け方すごくいいね。では \u001d1になる組\u001c は全部で何組できるかな？",
+    "normalized": "うん、その分け方すごくいいね。では 1になる組 は全部で何組できるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_850",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "展開は合ってるよ、いい流れ！ じゃあまず \u001d両辺から3xを引く\u001c と、式はどうなるかな？",
+    "normalized": "展開は合ってるよ、いい流れ！ じゃあまず 両辺から3xを引く と、式はどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_464",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい流れだよ、その \u001dcos\\theta=\\frac{1}{\\sqrt{1+x^2}}\u001d をそのまま元の式に代入すると、x についてどんな方程式になるかな？",
+    "normalized": "いい流れだよ、その cos\\theta=\\frac{1}{\\sqrt{1+x^2}} をそのまま元の式に代入すると、x についてどんな方程式になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_300",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その確認で完璧だよ。答えは『値域は y≠2（つまり (-∞,2)∪(2,∞)）』とまとめればOK！",
+    "normalized": "その確認で完璧だよ。答えは『値域は y≠2（つまり (-∞,2)∪(2,∞)）』とまとめればOK！",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_171",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "余り6まで合ってるよ。じゃあ確認として、今の商候補に \u001d(x+1)\u001d をかけると何になるかな？",
+    "normalized": "余り6まで合ってるよ。じゃあ確認として、今の商候補に (x+1) をかけると何になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_245",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "その考え方いいね、まず y= の形にするのは合ってるよ。式全体を3倍して y を1つだけにすると、x の係数は \u0012どうなるかな？",
+    "normalized": "その考え方いいね、まず y= の形にするのは合ってるよ。式全体を3倍して y を1つだけにすると、x の係数は どうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_245",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "うん、\u0005/6 で合ってるよ！ 元の傾き -6/5 とかけると -1 になるから、垂直の条件もちゃんと満たしてるね。",
+    "normalized": "うん、/6 で合ってるよ！ 元の傾き -6/5 とかけると -1 になるから、垂直の条件もちゃんと満たしてるね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_755",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その表し方でOKだよ。じゃあ次は『44%増加』を使って、\u0000後の面積と前の面積の関係を式で1本にしてみようか？",
+    "normalized": "その表し方でOKだよ。じゃあ次は『44%増加』を使って、後の面積と前の面積の関係を式で1本にしてみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_755",
+    "conversation_index": 17,
+    "role": "teacher",
+    "turn": 8,
+    "original": "そう、その半径は5でOK！ じゃあ問題が聞いている『もとの面積』は、\u0000\\(\\pi r^2\\) に 5 を入れるとどうなるかな？",
+    "normalized": "そう、その半径は5でOK！ じゃあ問題が聞いている『もとの面積』は、\\(\\pi r^2\\) に 5 を入れるとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_773",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "そのまま計算しなくて大丈夫だよ。まずは \u0012121,233,345\u0013 をそれぞれ3で割った余りだけ見て、平方して足すとどうなるか試してみよう？",
+    "normalized": "そのまま計算しなくて大丈夫だよ。まずは 121,233,345 をそれぞれ3で割った余りだけ見て、平方して足すとどうなるか試してみよう？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_575",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その計算でOK！ 最後に \u001c3x-y+4z=0\u001d に代入して 0 になるかだけ自分で確かめてみよう。",
+    "normalized": "その計算でOK！ 最後に 3x-y+4z=0 に代入して 0 になるかだけ自分で確かめてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_776",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "いいね、その条件まで出せたのは大きいよ。じゃあ最後に、1000以下で \u001d1,5,9,\u001d… と並ぶ数は全部で何個あるか数えてみよう。",
+    "normalized": "いいね、その条件まで出せたのは大きいよ。じゃあ最後に、1000以下で 1,5,9,… と並ぶ数は全部で何個あるか数えてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_91",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "うん、それで正解だよ。展開で確認できているし、\u001111z¹⁷(5+11z¹⁷)\u0011 以上はもう共通にくくれないから、これで完成！",
+    "normalized": "うん、それで正解だよ。展開で確認できているし、11z¹⁷(5+11z¹⁷) 以上はもう共通にくくれないから、これで完成！",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_830",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "そこまで整理できていれば十分進んでるよ。次は両辺に x+5 をかけて、右辺を \u001c(2-x)(x+5)\u001d として展開するとどうなるかな？",
+    "normalized": "そこまで整理できていれば十分進んでるよ。次は両辺に x+5 をかけて、右辺を (2-x)(x+5) として展開するとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_833",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "そう、その \u001d-2/3乗\u001c でぴったりだよ！ じゃあ右辺の \\((7^3)^{-2/3}\\) は、指数をかけ算すると 7 の何乗になるかな？",
+    "normalized": "そう、その -2/3乗 でぴったりだよ！ じゃあ右辺の \\((7^3)^{-2/3}\\) は、指数をかけ算すると 7 の何乗になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_610",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "うん、\u001b[1mn=697\u001b[0mで正解！ 面倒そうに見えても、実部と虚部に分けるときれいに解けたね。",
+    "normalized": "うん、[1mn=697[0mで正解！ 面倒そうに見えても、実部と虚部に分けるときれいに解けたね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_630",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その進め方で合ってるよ。次は \u001d-1 は奇数か偶数か\u001c を見て、どっちの式を使うか決めてみよう。",
+    "normalized": "うん、その進め方で合ってるよ。次は -1 は奇数か偶数か を見て、どっちの式を使うか決めてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_427",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その変形でいいよ。では \u001d-n\\equiv72\u001d から、101を法にしたときの「72の反対側の数」はいくつになるかな？",
+    "normalized": "うん、その変形でいいよ。では -n\\equiv72 から、101を法にしたときの「72の反対側の数」はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_238",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その説明で完璧だよ。だから \u001c-4g(0)=3\u001d から、答えは \\(g(0)=-\\frac{3}{4}\\) でOK！",
+    "normalized": "その説明で完璧だよ。だから -4g(0)=3 から、答えは \\(g(0)=-\\frac{3}{4}\\) でOK！",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_855",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その通り。じゃあ \u0007-90\\le n\\le90\u0007 の中で、\\sin n^\\circ=-\\sin59^\\circ になる角はまず1つすぐ言えるかな？ もう1つありそうかも見てみよう。",
+    "normalized": "その通り。じゃあ -90\\le n\\le90 の中で、\\sin n^\\circ=-\\sin59^\\circ になる角はまず1つすぐ言えるかな？ もう1つありそうかも見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_27",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だよ。その予想が合ってるか、\u0012\\left(\\frac12A\\right)(2A^{-1})\u0013 を計算すると何になるか確かめてみよう。",
+    "normalized": "いい着眼点だよ。その予想が合ってるか、\\left(\\frac12A\\right)(2A^{-1}) を計算すると何になるか確かめてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_607",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "その方針で合ってるよ。まずは分母を消して考えやすくしたいから、\u0014A を作って \u0014A\\mathbf{v}=0 とすると1行目はどんな式になるかな？",
+    "normalized": "その方針で合ってるよ。まずは分母を消して考えやすくしたいから、A を作って A\\mathbf{v}=0 とすると1行目はどんな式になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_86",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その置き方いいね。式の \u001d2(x+x/2)\u001d が「たて2本＋よこ2本」になっているかを確認して、合っていそうなら次は x を解いてみよう。",
+    "normalized": "うん、その置き方いいね。式の 2(x+x/2) が「たて2本＋よこ2本」になっているかを確認して、合っていそうなら次は x を解いてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_362",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "うん、結論はその通りで定義域は \u0018x\\le 0\u0019 だよ。最後に確認だけ、どうして x<0 だと大小が逆になるのか、一言で言えるかな？",
+    "normalized": "うん、結論はその通りで定義域は x\\le 0 だよ。最後に確認だけ、どうして x<0 だと大小が逆になるのか、一言で言えるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_331",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "そこまでできればかなり見えてるよ。 \n今の式で \u0010^2001=10×10^2000 と見て、10^2000 を約分すると何が残るかな？",
+    "normalized": "そこまでできればかなり見えてるよ。 \n今の式で ^2001=10×10^2000 と見て、10^2000 を約分すると何が残るかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_331",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その判断で正解！ \u001d\\(\\frac{101}{20}=5.05\\) だから、いちばん近い整数は \\(5\\) だね。",
+    "normalized": "その判断で正解！ \\(\\frac{101}{20}=5.05\\) だから、いちばん近い整数は \\(5\\) だね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_445",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "そう、それで答えは \u001c(n)\u001d だね！ きれいにまとまったよ、必要なら次に『なぜ和が 2^n になるか』も一緒に確認できるよ。",
+    "normalized": "そう、それで答えは (n) だね！ きれいにまとまったよ、必要なら次に『なぜ和が 2^n になるか』も一緒に確認できるよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_277",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい感じ、その考え方でかなり進めてるよ。 \u001c\\lceil -8.8 \\rceil\u001d がなぜ -8 になるのか、『-8.8以上の整数でいちばん小さいものはどれ？』で確認してみよう。",
+    "normalized": "いい感じ、その考え方でかなり進めてるよ。 \\lceil -8.8 \\rceil がなぜ -8 になるのか、『-8.8以上の整数でいちばん小さいものはどれ？』で確認してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_358",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "うん、完璧！『値域に入る ⇔ 方程式 f(x)=1 が実数解をもつ』と見れば、最大値は \u001d29/4\u001d って自分でしっかりたどれているよ。",
+    "normalized": "うん、完璧！『値域に入る ⇔ 方程式 f(x)=1 が実数解をもつ』と見れば、最大値は 29/4 って自分でしっかりたどれているよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_123",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その通り、中心は \u001c(3,2,4)\u001d でOK！ よく気づけたね——立方体では空間対角線の中点が中心になる、という見方が使えたのがよかったよ。",
+    "normalized": "その通り、中心は (3,2,4) でOK！ よく気づけたね——立方体では空間対角線の中点が中心になる、という見方が使えたのがよかったよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_667",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その考え方で合ってるよ、\u001cgcd(m,n)=2\u001e だね。最後に一言だけ、\"差が1になると最大公約数が1になる\" 理由を自分の言葉で言えたら完璧！",
+    "normalized": "その考え方で合ってるよ、gcd(m,n)=2 だね。最後に一言だけ、\"差が1になると最大公約数が1になる\" 理由を自分の言葉で言えたら完璧！",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_806",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "うん、その式で合ってるよ。じゃあ次は \u001d(59-2)÷19\u001d を計算すると、公差はいくつになるかな？",
+    "normalized": "うん、その式で合ってるよ。じゃあ次は (59-2)÷19 を計算すると、公差はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_80",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その考え方でばっちり！ じゃあ最後に、\u0018したがって \\(x^2+\\frac{1}{x^2}\\) の値は何か\u0019を答えとしてはっきり書いてみよう。",
+    "normalized": "その考え方でばっちり！ じゃあ最後に、したがって \\(x^2+\\frac{1}{x^2}\\) の値は何かを答えとしてはっきり書いてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_4",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その気づき、すごくいいよ。じゃあ \u001d1つのAからは全部で何通り\u001c になるか出して、同じことが4つのA全部に言えるか考えてみよう。",
+    "normalized": "その気づき、すごくいいよ。じゃあ 1つのAからは全部で何通り になるか出して、同じことが4つのA全部に言えるか考えてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_882",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その気づきが決め手だよ。最大値64に実際になっているなら3つの根はどう確定して、そこから \u0000a\u0000 はいくつになるかな？",
+    "normalized": "その気づきが決め手だよ。最大値64に実際になっているなら3つの根はどう確定して、そこから a はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_769",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい感じ、その分け方は合ってるよ。どうして \u001dかけ算\u001d でよさそうか、赤と緑の出方の関係を一言で言ってみようか？",
+    "normalized": "いい感じ、その分け方は合ってるよ。どうして かけ算 でよさそうか、赤と緑の出方の関係を一言で言ってみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_212",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その判断、かなり核心だよ。じゃあ \u001d-a^2+3a=-2\u001d を解いて、その a のとき不等式が x について本当に1個だけになる形か確かめてみよう。",
+    "normalized": "その判断、かなり核心だよ。じゃあ -a^2+3a=-2 を解いて、その a のとき不等式が x について本当に1個だけになる形か確かめてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_301",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "いいね、そこまで正確だよ。じゃあ次は \u001717-2b=7\u0017 から、17を反対側に移すとどうなるかな？",
+    "normalized": "いいね、そこまで正確だよ。じゃあ次は 17-2b=7 から、17を反対側に移すとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_618",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "うん、その式でばっちり。じゃあ次は \u001000+x=2500\u0010 の両方から1000を引くと、x はいくつになりそう？",
+    "normalized": "うん、その式でばっちり。じゃあ次は 00+x=2500 の両方から1000を引くと、x はいくつになりそう？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1099",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その考え方でかなりいいよ。これを ad-bc の形で見ると、a,b,c,d はそれぞれ何になるかな？",
+    "normalized": "うん、その考え方でかなりいいよ。これを ad-bc の形で見ると、a,b,c,d はそれぞれ何になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_865",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その方針で合ってるよ。では \u001dB^{-1}A^{-1}\u001d をそのまま書いて、まず左上の成分がいくつになるかだけ出してみよう。",
+    "normalized": "うん、その方針で合ってるよ。では B^{-1}A^{-1} をそのまま書いて、まず左上の成分がいくつになるかだけ出してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1565",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "そう、その気づきが大事だよ。じゃあ \\(n=17\to N\\) の部分和を2、3項だけ書いて、最後に何が残るか自分で言ってみよう。",
+    "normalized": "そう、その気づきが大事だよ。じゃあ \\(n=17\to N\\) の部分和を2、3項だけ書いて、最後に何が残るか自分で言ってみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1565",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "そのまとめ方で完璧、答えは 272 だね。部分和で残る \\(\\frac{272}{N-15}\\) が 0 に行くから、ちゃんと無限和まで言い切れているよ。",
+    "normalized": "そのまとめ方で完璧、答えは 272 だね。部分和で残る \\(\\frac{272}{N-15}\\) が 0 に行くから、ちゃんと無限和まで言い切れているよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_404",
+    "conversation_index": 21,
+    "role": "teacher",
+    "turn": 10,
+    "original": "そう、それで最小は 8 だね。最後に \u001d8 と 40 の最大公約数・最小公倍数がちゃんと条件に合うか\u001c を自分の言葉で確認してみよう。",
+    "normalized": "そう、それで最小は 8 だね。最後に 8 と 40 の最大公約数・最小公倍数がちゃんと条件に合うか を自分の言葉で確認してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_487",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その通り！ じゃあ \u0004det(AB)=4×(-5)\u0004 だから、答えをはっきり書くとどうなるかな？",
+    "normalized": "その通り！ じゃあ det(AB)=4×(-5) だから、答えをはっきり書くとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_642",
+    "conversation_index": 11,
+    "role": "teacher",
+    "turn": 5,
+    "original": "正解、\u00108\\sqrt3\u0011 で合ってるよ！ 今回のポイントは『3つの小三角形の面積の和＝全体の面積』で、結果的に 5+6+7 が正三角形の高さとして働いたことだね。",
+    "normalized": "正解、8\\sqrt3 で合ってるよ！ 今回のポイントは『3つの小三角形の面積の和＝全体の面積』で、結果的に 5+6+7 が正三角形の高さとして働いたことだね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_244",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その説明でOK！ じゃあ最終答えは、0は入らないこともふまえて \u001c-4, -2, -1, 1, 2, 4\u001d で確定できるね。",
+    "normalized": "その説明でOK！ じゃあ最終答えは、0は入らないこともふまえて -4, -2, -1, 1, 2, 4 で確定できるね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1258",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい視点だよ、その「垂直」がかなり効く。まず [a,\nb+(b\\times a),\nb] を2つに分けるとどうなる？そのうち1つはすぐ0と言えそうかな。",
+    "normalized": "いい視点だよ、その「垂直」がかなり効く。まず [a,\nb+(b\\times a),\nb] を2つに分けるとどうなる？そのうち1つはすぐ0と言えそうかな。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_392",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい線いってるよ。45の \u001d5分の1\u001d がほんとに9になるか、そこだけ自分で確かめてみようか？",
+    "normalized": "いい線いってるよ。45の 5分の1 がほんとに9になるか、そこだけ自分で確かめてみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_43",
+    "conversation_index": 13,
+    "role": "teacher",
+    "turn": 6,
+    "original": "その感覚で合ってるよ。『0も許すと何通り』『先頭が0のものは何通り』の2つをそれぞれ \u001d\binom{}{ }\u001d で書くと、k桁の個数はどう表せるかな？",
+    "normalized": "その感覚で合ってるよ。『0も許すと何通り』『先頭が0のものは何通り』の2つをそれぞれ \\binom{}{ } で書くと、k桁の個数はどう表せるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_419",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その考え方で合ってるよ。全部ばらばらに試すより、まず 12\u0012star2 の値と 9*3 の値をそれぞれ4通り出して、『分子が分母の2倍』になる組があるか見てみようか。",
+    "normalized": "うん、その考え方で合ってるよ。全部ばらばらに試すより、まず 12star2 の値と 9*3 の値をそれぞれ4通り出して、『分子が分母の2倍』になる組があるか見てみようか。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_419",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "いいね、その組み合わせで合ってるよ。じゃあ同じように ★=×、*=+ を \u001c(7★3)/(12*6)\u001d に入れると、分子と分母はそれぞれいくつになるかな？",
+    "normalized": "いいね、その組み合わせで合ってるよ。じゃあ同じように ★=×、*=+ を (7★3)/(12*6) に入れると、分子と分母はそれぞれいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_541",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "うん、その式で最後までいけるよ。まず \u0001/3-1/729 を1つの分数にするといくつになるかな？",
+    "normalized": "うん、その式で最後までいけるよ。まず /3-1/729 を1つの分数にするといくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_541",
+    "conversation_index": 13,
+    "role": "teacher",
+    "turn": 6,
+    "original": "うん、\u0012121/243\u0012 で合ってるよ。きれいに最後までたどれたね—中の項が消えるしくみもちゃんとつかめてるよ。",
+    "normalized": "うん、121/243 で合ってるよ。きれいに最後までたどれたね—中の項が消えるしくみもちゃんとつかめてるよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_213",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい考え方だね、その調子！ \u0007arcsin の答えは『どの範囲の角』から選ぶんだっけ？ その範囲で \u0007π/2 が入っているか確認してみよう。",
+    "normalized": "いい考え方だね、その調子！ arcsin の答えは『どの範囲の角』から選ぶんだっけ？ その範囲で π/2 が入っているか確認してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_213",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "完璧！ \u0007arcsin は主値の範囲で選ぶから、\\(\\arcsin 1=\\frac{\\pi}{2}\\) で大丈夫だよ。",
+    "normalized": "完璧！ arcsin は主値の範囲で選ぶから、\\(\\arcsin 1=\\frac{\\pi}{2}\\) で大丈夫だよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_99",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だよ。1つだけ確認すると、0になったら困るのは \u001b[1m\\(\\lfloor x^2-7x+13\\rfloor\\)\u001b[0m のほうだよね；じゃあ \\(\\lfloor A\\rfloor=0\\) って、A はどんな範囲にあるときかな？",
+    "normalized": "いい着眼点だよ。1つだけ確認すると、0になったら困るのは [1m\\(\\lfloor x^2-7x+13\\rfloor\\)[0m のほうだよね；じゃあ \\(\\lfloor A\\rfloor=0\\) って、A はどんな範囲にあるときかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_99",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "うん、合ってるよ。定義域は \\((-\binfty,\\frac32]\\cup[4,\\infty)\\) で、端では中身がちょうど1だから \\(\\lfloor1\\rfloor=1\\) になって使えるのも確認できるね。",
+    "normalized": "うん、合ってるよ。定義域は \\((-infty,\\frac32]\\cup[4,\\infty)\\) で、端では中身がちょうど1だから \\(\\lfloor1\\rfloor=1\\) になって使えるのも確認できるね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_485",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だよ。では次に、\f(f(x))^3 と (g(x))^2 の **x^6 の係数** はそれぞれいくつになるか見て、引き算したときに6次項が本当に残るか確かめてみよう。",
+    "normalized": "いい着眼点だよ。では次に、(f(x))^3 と (g(x))^2 の **x^6 の係数** はそれぞれいくつになるか見て、引き算したときに6次項が本当に残るか確かめてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_485",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その通り、6次の係数はどちらも1だね。じゃあ \u001c(f(x))^3-(g(x))^2\u001d の6次項はどうなって、次に何次の項を調べればよさそうかな？",
+    "normalized": "その通り、6次の係数はどちらも1だね。じゃあ (f(x))^3-(g(x))^2 の6次項はどうなって、次に何次の項を調べればよさそうかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_446",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい感じ、r は合っています。θ は y/x を見ると tanθ はいくつになるかな？ そこから基準角が本当に π/4 か確かめてみよう。",
+    "normalized": "いい感じ、r は合っています。θ は y/x を見ると tanθ はいくつになるかな？ そこから基準角が本当に π/4 か確かめてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_75",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その式の立て方も \u0000=9a+3 から \u0000a=-1/3 も合ってるよ。次は『a+b+c』を出したいんだけど、式を展開して読むのと、x=1 を代入して考えるのと、どっちでいけそうかな？",
+    "normalized": "うん、その式の立て方も =9a+3 から a=-1/3 も合ってるよ。次は『a+b+c』を出したいんだけど、式を展開して読むのと、x=1 を代入して考えるのと、どっちでいけそうかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_75",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "うん、\u001b正解で、a+b+c=-\\frac{7}{3} だよ。x=1 のとき y=a+b+c になることを使えたのがとてもよかったね。",
+    "normalized": "うん、正解で、a+b+c=-\\frac{7}{3} だよ。x=1 のとき y=a+b+c になることを使えたのがとてもよかったね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_165",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "あと一歩だよ。\\(-\\frac{72}{243}\\) は 9 で約分すると、マイナスもそのままで \u001cどうなるかな？",
+    "normalized": "あと一歩だよ。\\(-\\frac{72}{243}\\) は 9 で約分すると、マイナスもそのままで どうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_165",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その通り、\u0018(x^2y^3z=-\\frac{8}{27})\u0019 だね。自分で途中のミスを直して最後までたどり着けたのがとてもいいよ。",
+    "normalized": "その通り、(x^2y^3z=-\\frac{8}{27}) だね。自分で途中のミスを直して最後までたどり着けたのがとてもいいよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_734",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だよ。計算に入る前に、たとえば \u0000(1,2) と (2,1)、(1,3) と (3,1) を見比べると、全体としてこの行列にはどんな特徴がありそう？",
+    "normalized": "いい着眼点だよ。計算に入る前に、たとえば (1,2) と (2,1)、(1,3) と (3,1) を見比べると、全体としてこの行列にはどんな特徴がありそう？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_734",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その通り！ じゃあ \u0000det(A)=-det(A) を両辺整理すると、\u0000det(A) はいくつって言えるかな？",
+    "normalized": "その通り！ じゃあ det(A)=-det(A) を両辺整理すると、det(A) はいくつって言えるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_293",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その判断いいね、あと一歩！ \u0001-1倍したあとの多項式をそのまま書くとどうなるかな？ x の係数がちゃんと -4 かも見てみよう。",
+    "normalized": "その判断いいね、あと一歩！ -1倍したあとの多項式をそのまま書くとどうなるかな？ x の係数がちゃんと -4 かも見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_293",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "うん、それで大丈夫！ \u001c-2-3i と -2+3i を解にもって、x の係数も -4 になっているから、求める二次多項式は \u001c-x^2-4x-13 だね。",
+    "normalized": "うん、それで大丈夫！ -2-3i と -2+3i を解にもって、x の係数も -4 になっているから、求める二次多項式は -x^2-4x-13 だね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_264",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "11って考え方は自然だよ。まず \u001b(6,-5)\u001b の長さを出してみようか——単位ベクトルを k 個足した和の長さと比べると、k の下限が見えてくるよ。",
+    "normalized": "11って考え方は自然だよ。まず (6,-5) の長さを出してみようか——単位ベクトルを k 個足した和の長さと比べると、k の下限が見えてくるよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_264",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "いい流れ！ じゃあ最後に、『8個の単位ベクトルで長さ \u001b(61 のベクトルを作れる理由』を一言で説明できるかな？",
+    "normalized": "いい流れ！ じゃあ最後に、『8個の単位ベクトルで長さ (61 のベクトルを作れる理由』を一言で説明できるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_172",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だよ、\u0016を使うのは合ってる。まず式を \\(x^2+8x=1\\) にして、両辺に \\(16\\) を足したら右辺はいくつになるかな？",
+    "normalized": "いい着眼点だよ、を使うのは合ってる。まず式を \\(x^2+8x=1\\) にして、両辺に \\(16\\) を足したら右辺はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_172",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "そう、それでOK！\bはんぶんの4を使って \u0016 を足す、って流れがつかめてるね。",
+    "normalized": "そう、それでOK！はんぶんの4を使って  を足す、って流れがつかめてるね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_767",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "その考え方、すごくいいよ。 \bただ、\b\")(x+y)^2=144\" なら \bx+y は2通りあるよね？その中で大きいほうはどっちかな？",
+    "normalized": "その考え方、すごくいいよ。 ただ、\")(x+y)^2=144\" なら x+y は2通りあるよね？その中で大きいほうはどっちかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_544",
+    "conversation_index": 13,
+    "role": "teacher",
+    "turn": 6,
+    "original": "いい流れだよ。次は \u0000((p+q+r)^2=p^2+q^2+r^2+2(pq+qr+rp)) を使うと、\u0000(pq+qr+rp) はいくつになるかな？",
+    "normalized": "いい流れだよ。次は ((p+q+r)^2=p^2+q^2+r^2+2(pq+qr+rp)) を使うと、(pq+qr+rp) はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_544",
+    "conversation_index": 17,
+    "role": "teacher",
+    "turn": 8,
+    "original": "正解、121だよ！ 面積比を3つの角の三角形で分けて、最後に対称式 \u0000(p+q+r)^2 を使ったのがうまかったね。",
+    "normalized": "正解、121だよ！ 面積比を3つの角の三角形で分けて、最後に対称式 (p+q+r)^2 を使ったのがうまかったね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_315",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "いいね、そこまで完璧だよ。二乗したものの和が0になるとき、\u0018(x-5)^2\u0019 と \u0018(y+3)^2\u0019 はそれぞれいくつだと言えるかな？",
+    "normalized": "いいね、そこまで完璧だよ。二乗したものの和が0になるとき、(x-5)^2 と (y+3)^2 はそれぞれいくつだと言えるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_578",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "そこまで合ってるよ、その『ややこしさ』はみんな引っかかるところ。まずは \u001d-(2x^2+9x-5)\u001c が各項どう変わるかだけ、1つずつ書いてみよう。",
+    "normalized": "そこまで合ってるよ、その『ややこしさ』はみんな引っかかるところ。まずは -(2x^2+9x-5) が各項どう変わるかだけ、1つずつ書いてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_578",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "そう、その考え方でばっちり。じゃあ \u001b(2x^2+9x-35)+(-2x^2-9x+5)\u001b の同じ種類の項どうしをまとめると、何が残るかな？",
+    "normalized": "そう、その考え方でばっちり。じゃあ (2x^2+9x-35)+(-2x^2-9x+5) の同じ種類の項どうしをまとめると、何が残るかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_473",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その立て方も整理した式も合ってるよ。次は \u0018x^2-6x-16=0\u0019 を、積が-16・和が-6になる2つの数で因数分解できるか見てみよう。",
+    "normalized": "うん、その立て方も整理した式も合ってるよ。次は x^2-6x-16=0 を、積が-16・和が-6になる2つの数で因数分解できるか見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_473",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その答えで正解！ \u0018(-2,18); (8,38)\u0019 だね。",
+    "normalized": "その答えで正解！ (-2,18); (8,38) だね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_837",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "いいね、その整理はばっちり。じゃあ \u001d-3x=48\u001c から x だけにするには、両辺を何で割ればよさそう？",
+    "normalized": "いいね、その整理はばっちり。じゃあ -3x=48 から x だけにするには、両辺を何で割ればよさそう？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_837",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その通り、x=-16 だね。最後に元の式へ代入して、\u001d√(1-3×(-16))\u001c が 7 になるかだけ確認してみよう。",
+    "normalized": "その通り、x=-16 だね。最後に元の式へ代入して、√(1-3×(-16)) が 7 になるかだけ確認してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_880",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "いいね、その変形は正しいよ。じゃあ今度は x^2-6x も同じように平方完成して、式全体を \u001f(x-3)^2\u001f と \u001f2(y-5)^2\u001f を使って書き直してみよう。",
+    "normalized": "いいね、その変形は正しいよ。じゃあ今度は x^2-6x も同じように平方完成して、式全体を (x-3)^2 と 2(y-5)^2 を使って書き直してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_108",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だよ、ちゃんと係数との関係を使う流れに近づいてる。まずは \u001c(d-1)(e-1)\u001d を展開するとどんな形になるかな？",
+    "normalized": "いい着眼点だよ、ちゃんと係数との関係を使う流れに近づいてる。まずは (d-1)(e-1) を展開するとどんな形になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_108",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その通り、そこまでできればあと一歩！ じゃあ \u001d2x^2+3x-5=0\u001d で、解の和 d+e と積 de はそれぞれいくつになるかな？",
+    "normalized": "その通り、そこまでできればあと一歩！ じゃあ 2x^2+3x-5=0 で、解の和 d+e と積 de はそれぞれいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_660",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その方針でばっちりだよ。まず \u001d1+2+2^2+2^3\u001d と \u001d1+5+5^2\u001d をそれぞれ計算すると、N はいくつになるかな？",
+    "normalized": "うん、その方針でばっちりだよ。まず 1+2+2^2+2^3 と 1+5+5^2 をそれぞれ計算すると、N はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_113",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、そこまで完璧だよ。次は \u001c-204/306\u001d をできるだけ簡単にして、その数を \u001cw=(15,-9)\u001d に掛けてみようか？",
+    "normalized": "うん、そこまで完璧だよ。次は -204/306 をできるだけ簡単にして、その数を w=(15,-9) に掛けてみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_51",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その変形ばっちり！ じゃあ次は \u001d(1+t)^4\u001c と \u001d(1-t)^4\u001c を展開して、足したときに消える項を見つけてみよう。",
+    "normalized": "その変形ばっちり！ じゃあ次は (1+t)^4 と (1-t)^4 を展開して、足したときに消える項を見つけてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_40",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その違和感、すごく大事だよ。3つのかっこの中にある x を1個ずつ数えて、\u0018x+\u0018x+\u0018x と \u0018x/2 が何個あるか、もう一度だけ見直してみよう。",
+    "normalized": "その違和感、すごく大事だよ。3つのかっこの中にある x を1個ずつ数えて、x+x+x と x/2 が何個あるか、もう一度だけ見直してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_791",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その整理ばっちり。次はそれぞれを \u0000(1-c), (1-c^2), (1-c^3)\u0000 でくくる形にして、もし c≠1 なら各式から何が言えるか見てみよう。",
+    "normalized": "その整理ばっちり。次はそれぞれを (1-c), (1-c^2), (1-c^3) でくくる形にして、もし c≠1 なら各式から何が言えるか見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_791",
+    "conversation_index": 11,
+    "role": "teacher",
+    "turn": 5,
+    "original": "ここまでかなりいいよ。最後に『本当に実現できるか』を見よう—たとえば c=ω のとき、r,s,t が ω倍して入れ替わるような相異なる3つの数、思いつく？",
+    "normalized": "ここまでかなりいいよ。最後に『本当に実現できるか』を見よう—たとえば c=ω のとき、r,s,t が ω倍して入れ替わるような相異なる3つの数、思いつく？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_309",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "うん、その考え方でOKだよ。じゃあ \u0005xの差\u0005 と \u0005yの差\u0005 をそれぞれ出して、2点間の距離の公式に入れるとどうなるかな？",
+    "normalized": "うん、その考え方でOKだよ。じゃあ xの差 と yの差 をそれぞれ出して、2点間の距離の公式に入れるとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_655",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい感じ、その2つは合ってるよ。じゃあ次は、中心 \u001d(-2,0)\u001c から焦点 \u001d(-2+\\sqrt{34},0)\u001c までの距離 c はいくつになるかな？",
+    "normalized": "いい感じ、その2つは合ってるよ。じゃあ次は、中心 (-2,0) から焦点 (-2+\\sqrt{34},0) までの距離 c はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_710",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "かなりいい流れだよ。最後に1つだけ、\u001cs/t=1/2\u001d がどうして \u001ct=2s\u001d を意味するのか、自分の言葉で言い換えてみてくれる？",
+    "normalized": "かなりいい流れだよ。最後に1つだけ、s/t=1/2 がどうして t=2s を意味するのか、自分の言葉で言い換えてみてくれる？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_288",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "うん、答えは \u001d1/6\u001d でよさそうだね。最後に、『電車がいつ来ても確率が変わらないのはなぜか』を一言で言ってみようか？",
+    "normalized": "うん、答えは 1/6 でよさそうだね。最後に、『電車がいつ来ても確率が変わらないのはなぜか』を一言で言ってみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_288",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その説明でばっちりだよ。答えは \u001d1/6\u001d、考え方もちゃんと合ってる！",
+    "normalized": "その説明でばっちりだよ。答えは 1/6、考え方もちゃんと合ってる！",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1338",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい流れでできてるよ！最後に、問題は |a-b| を聞いているけど、君の出した a-b=11 からその値はそのままいくつかな？",
+    "normalized": "いい流れでできてるよ！最後に、問題は |a-b| を聞いているけど、君の出した a-b=11 からその値はそのままいくつかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_870",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その見方でばっちりだよ。次は4つとも \u001elog 5/\u001elog 4 みたいに“同じ底の対数の比”に直して、積にすると何が消えそうか見てみよう。",
+    "normalized": "うん、その見方でばっちりだよ。次は4つとも log 5/log 4 みたいに“同じ底の対数の比”に直して、積にすると何が消えそうか見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_870",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その流れで完璧！ \u001elog_4 8=\u001e3/2 になるのも、4=2^2・8=2^3 から確かめられるね。",
+    "normalized": "その流れで完璧！ log_4 8=3/2 になるのも、4=2^2・8=2^3 から確かめられるね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_249",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だよ。まずは商に直さず、3つの式をそのまま全部足すと左辺の \u001elog x,\u001elog y,\u001elog z\u001f がどうなるか見てみよう。",
+    "normalized": "いい着眼点だよ。まずは商に直さず、3つの式をそのまま全部足すと左辺の log x,log y,log z がどうなるか見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_151",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい見通しだね、その考え方でかなり進んでるよ。では \u001d√b=k\u001d とおけたとして、条件は \u001da+k がどんな数になること\u001d に言い換えられるかな？",
+    "normalized": "いい見通しだね、その考え方でかなり進んでるよ。では √b=k とおけたとして、条件は a+k がどんな数になること に言い換えられるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_128",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その置き換え方で合ってるよ。次は \u001c(2x)^2\u001d と \u001c-3(2x)\u001d を計算して、式を簡単にまとめるとどうなるかな？",
+    "normalized": "うん、その置き換え方で合ってるよ。次は (2x)^2 と -3(2x) を計算して、式を簡単にまとめるとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_241",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "その変形で合ってるよ、いい出だし！ そのあと \u001ccos x\u001d だけの式に整理すると、どんな二次式になるかな？",
+    "normalized": "その変形で合ってるよ、いい出だし！ そのあと cos x だけの式に整理すると、どんな二次式になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_241",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "いいね、その因数分解でOK！ じゃあ \u001ccos x\u001d が取りうる値を考えると c=2 と c=-1 のどっちが使えて、そこから x はいくつになるかな？",
+    "normalized": "いいね、その因数分解でOK！ じゃあ cos x が取りうる値を考えると c=2 と c=-1 のどっちが使えて、そこから x はいくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_864",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい出だしだよ。その10通りが本当に重なってないか、席を1〜10と置いて (1,2,3) から順に少し書いてみようか？",
+    "normalized": "いい出だしだよ。その10通りが本当に重なってないか、席を1〜10と置いて (1,2,3) から順に少し書いてみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_864",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "その説明で完璧！答えは \\(\\frac{1}{12}\\) で、自分でちゃんと理由まで言えたのがとてもいいね。",
+    "normalized": "その説明で完璧！答えは \\(\\frac{1}{12}\\) で、自分でちゃんと理由まで言えたのがとてもいいね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_384",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "そこまでは合ってるよ。次は \u001d(g(x)+f(x))(g(x)-f(x))\u001c を見て、\u001d(a+b)(a-b)\u001c の形になっていないか考えてみよう。",
+    "normalized": "そこまでは合ってるよ。次は (g(x)+f(x))(g(x)-f(x)) を見て、(a+b)(a-b) の形になっていないか考えてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_308",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その数え方でばっちり。じゃあ第8項をまず \u001d3×(3/2)^7\u001d と置いて、分子と分母をそれぞれ計算するとどうなるかな？",
+    "normalized": "その数え方でばっちり。じゃあ第8項をまず 3×(3/2)^7 と置いて、分子と分母をそれぞれ計算するとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_308",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "正解、\u001b3\\(\\dfrac{6561}{128}\\)\u001b で合ってるよ！『第8項だから公比を7回かける』って考え方もちゃんとできていて、とてもいいです。",
+    "normalized": "正解、3\\(\\dfrac{6561}{128}\\) で合ってるよ！『第8項だから公比を7回かける』って考え方もちゃんとできていて、とてもいいです。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_622",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "そこまでとてもいい流れだよ。迷ったら分数は \u001c256\times4\u001d と \u001c625\times1\u001d を比べて、どっちが大きいか見てみよう。",
+    "normalized": "そこまでとてもいい流れだよ。迷ったら分数は 256\\times4 と 625\\times1 を比べて、どっちが大きいか見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_284",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "その見通し、すごくいいよ。まず \u001d隣り合う項の比\u001dに注目して、\u001da_n/a_{n-1}\u001d を考えると漸化式はどう書き換えられそうかな？",
+    "normalized": "その見通し、すごくいいよ。まず 隣り合う項の比に注目して、a_n/a_{n-1} を考えると漸化式はどう書き換えられそうかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_251",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "その考え方いいよ、もう大事なところは見えてる。まずは \u001c(1,7)-(2,-4)\u001d を計算して、tが5増えたときのベクトルの増え方を出してみようか。",
+    "normalized": "その考え方いいよ、もう大事なところは見えてる。まずは (1,7)-(2,-4) を計算して、tが5増えたときのベクトルの増え方を出してみようか。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_251",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "うん、\u001c\\left(\\frac35,\\frac{57}5\\right)\u001d で正解！ 今のポイントは『ベクトルの増え方をまずtの差で割って、1あたりの変化に直す』ことだね。",
+    "normalized": "うん、\\left(\\frac35,\\frac{57}5\\right) で正解！ 今のポイントは『ベクトルの増え方をまずtの差で割って、1あたりの変化に直す』ことだね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_495",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい流れでできてるよ、答えは4になりそうだね。最後に確認で、どうして \u001c(-1)^{11}\u001d が \u001c-1\u001d になるのか、奇数乗・偶数乗の規則で言えるかな？",
+    "normalized": "いい流れでできてるよ、答えは4になりそうだね。最後に確認で、どうして (-1)^{11} が -1 になるのか、奇数乗・偶数乗の規則で言えるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_751",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "そこまで合ってるよ、方針はばっちり。まずは \u001c2\\omega^2\u001d と \u001c-4\\omega\u001d を別々に出して、実部どうし・虚部どうしをまとめるとどうなるかな？",
+    "normalized": "そこまで合ってるよ、方針はばっちり。まずは 2\\omega^2 と -4\\omega を別々に出して、実部どうし・虚部どうしをまとめるとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_261",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい出だしだね、その方針で十分いけるよ。まず \u001d(1,2)\u001d と \u001d(1,3)\u001d では、和と積のどっちが大きいか比べてみようか？",
+    "normalized": "いい出だしだね、その方針で十分いけるよ。まず (1,2) と (1,3) では、和と積のどっちが大きいか比べてみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_853",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "うん、その矛盾でOKだよ。じゃあ最後に、「なぜその矛盾が出たら \u001c y=\\frac15 \u001d は取れないと言えるのか」を一言で言ってみよう。",
+    "normalized": "うん、その矛盾でOKだよ。じゃあ最後に、「なぜその矛盾が出たら  y=\\frac15  は取れないと言えるのか」を一言で言ってみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_853",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その説明でばっちりだよ。だから、取り得ない値は \u001c1/5\u001d だね。",
+    "normalized": "その説明でばっちりだよ。だから、取り得ない値は 1/5 だね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_291",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その式の立て方で合ってるよ。じゃあ次は、0じゃない項だけにしぼって \u001d3^2\u001d と \u001d3^4\u001d を計算すると、いくつになるかな？",
+    "normalized": "うん、その式の立て方で合ってるよ。じゃあ次は、0じゃない項だけにしぼって 3^2 と 3^4 を計算すると、いくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_41",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "その方針いいね、条件は実は傾きに分けるとかなり整理できるよ。まずは \u001cf(2)-f(1)\u001e と \u001cf(4)-f(3)\u001e を計算すると、それぞれ a について何が言えるかな？",
+    "normalized": "その方針いいね、条件は実は傾きに分けるとかなり整理できるよ。まずは f(2)-f(1) と f(4)-f(3) を計算すると、それぞれ a について何が言えるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_741",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "その式まではばっちりだよ。因数分解しやすくするために式を4倍して、さらに何を足せば \u001c(2a-17)(2b-17)\u001d の形になりそうか考えてみよう。",
+    "normalized": "その式まではばっちりだよ。因数分解しやすくするために式を4倍して、さらに何を足せば (2a-17)(2b-17) の形になりそうか考えてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_741",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "いい流れだよ、そのまま左辺を \u001c(2a-17)(2b-17)\u001d と見て一致するか確認してみよう。できたら、289 の正の約数の組は何通りあるかな？",
+    "normalized": "いい流れだよ、そのまま左辺を (2a-17)(2b-17) と見て一致するか確認してみよう。できたら、289 の正の約数の組は何通りあるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_231",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だね。その式、\u0018(a+b)^3\u0019 の展開 \u001899^3, 3・99^2・1, 3・99・1^2, 1^3\u0019 と見比べると、a と b は何になりそう？",
+    "normalized": "いい着眼点だね。その式、(a+b)^3 の展開 99^3, 3・99^2・1, 3・99・1^2, 1^3 と見比べると、a と b は何になりそう？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_226",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "完璧！\u001c実数係数でこれ以上できない形\u001dまでちゃんとできていて、答えは \u001c(w-2)(w+2)(w^2+4)\u001d でOKだよ。",
+    "normalized": "完璧！実数係数でこれ以上できない形までちゃんとできていて、答えは (w-2)(w+2)(w^2+4) でOKだよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_278",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい方針だよ、そこまでは合ってる。まずは \u0007cos(\\frac{\\pi}{3}+x) と \\cos(\\frac{\\pi}{3}-x) を公式で並べて書いて、どの項だけ符号が逆になるか見てみよう。",
+    "normalized": "いい方針だよ、そこまでは合ってる。まずは cos(\\frac{\\pi}{3}+x) と \\cos(\\frac{\\pi}{3}-x) を公式で並べて書いて、どの項だけ符号が逆になるか見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_278",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "いいね、そこは正確に出せてるよ。では \u0012a=\\frac12\\cos x,\\ b=\\frac{\\sqrt3}{2}\\sin x\u0013 と見て、\\((a-b)^2+(a+b)^2\\) がどうなるか考えてみよう。",
+    "normalized": "いいね、そこは正確に出せてるよ。では a=\\frac12\\cos x,\\ b=\\frac{\\sqrt3}{2}\\sin x と見て、\\((a-b)^2+(a+b)^2\\) がどうなるか考えてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_278",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その変形ばっちりだよ。今の式をまず \ffrac12\\cos^2x+\\frac32\\sin^2x にして、最初の \\cos^2x を足すと全体がどうまとまるか見てみよう。",
+    "normalized": "その変形ばっちりだよ。今の式をまず frac12\\cos^2x+\\frac32\\sin^2x にして、最初の \\cos^2x を足すと全体がどうまとまるか見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_106",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その見方すごくいいよ。次は \\,x+2y\\, と \\,xy\\, をつなげたいので、\u001c(x+2y)^2\u001d は \\,xy\\, を使って下からどうおさえられそうかな？",
+    "normalized": "うん、その見方すごくいいよ。次は \\,x+2y\\, と \\,xy\\, をつなげたいので、(x+2y)^2 は \\,xy\\, を使って下からどうおさえられそうかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_106",
+    "conversation_index": 11,
+    "role": "teacher",
+    "turn": 5,
+    "original": "うん、そこまで完璧だよ。じゃあ最後に x も出して、\u001ex,y,z\u001f がそのとき本当に条件を満たすことと、最小値が 96 で確定することを自分の言葉でまとめてみよう。",
+    "normalized": "うん、そこまで完璧だよ。じゃあ最後に x も出して、x,y,z がそのとき本当に条件を満たすことと、最小値が 96 で確定することを自分の言葉でまとめてみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_661",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "いい気づきだね、その因数分解でOK。じゃあ \u001c(8x-1)=0\u001d と \u001c(x-8)=0\u001d から、それぞれ x はいくつになる？そのうち大きい方を選んでみよう。",
+    "normalized": "いい気づきだね、その因数分解でOK。じゃあ (8x-1)=0 と (x-8)=0 から、それぞれ x はいくつになる？そのうち大きい方を選んでみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_157",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい出だし！その見方のまま、今度は \u001cC=8^{1/8}\u001d を \u001c2\u001d のべきに直すとどうなるかな？",
+    "normalized": "いい出だし！その見方のまま、今度は C=8^{1/8} を 2 のべきに直すとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_61",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい考え方だよ、その変形で合ってる。最後に「どうして \u001ctan(2π+θ)=tanθ\u001e といえるか」か「なぜ \u001ctan(π/4)=1\u001e か」を一言で言えるかな？",
+    "normalized": "いい考え方だよ、その変形で合ってる。最後に「どうして tan(2π+θ)=tanθ といえるか」か「なぜ tan(π/4)=1 か」を一言で言えるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_282",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いいね、その2つは合ってるよ。じゃあ今わかった『g(f(8))=8』をそのまま使うと、次の \u001cf(g(f(8)))\u001e は何になるかな？",
+    "normalized": "いいね、その2つは合ってるよ。じゃあ今わかった『g(f(8))=8』をそのまま使うと、次の f(g(f(8))) は何になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_282",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "そう、それでOK！ 式の中の f, g, f, g, f の5回を数えても、最後は \u001c√8\u001d になるね。",
+    "normalized": "そう、それでOK！ 式の中の f, g, f, g, f の5回を数えても、最後は √8 になるね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_780",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その式、すごくいいところまで来てるよ。そこで \u001d25+4k^2=m^2\u001c とおいて、\u001d(m-2k)(m+2k)=25\u001c にすると何組ありそうかな？",
+    "normalized": "その式、すごくいいところまで来てるよ。そこで 25+4k^2=m^2 とおいて、(m-2k)(m+2k)=25 にすると何組ありそうかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_1212",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "うん、その答えで正解！ 7,73,4 は共通の約数もないから条件もOKで、m+n+p=84 だね。",
+    "normalized": "うん、その答えで正解！ 7,73,4 は共通の約数もないから条件もOKで、m+n+p=84 だね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_435",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい出だしだよ。 \u001c\\frac{2\\times3}{6}\u001d と \u001c\\frac{6}{3}\u001d をそれぞれ先に簡単にすると、何×何になるかな？",
+    "normalized": "いい出だしだよ。 \\frac{2\\times3}{6} と \\frac{6}{3} をそれぞれ先に簡単にすると、何×何になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_420",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい着眼点だよ、その『差が19』を見るのが大事。まずは |x_i|<1 から |x_1|+…+|x_n| は n と比べてどうなるか、そこだけ言えそう？",
+    "normalized": "いい着眼点だよ、その『差が19』を見るのが大事。まずは |x_i|<1 から |x_1|+…+|x_n| は n と比べてどうなるか、そこだけ言えそう？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_659",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その立て方で合ってるよ。じゃあ次はその2つを実際に計算して、\u001c(x, y)\u001d の形で書いてみよう！",
+    "normalized": "うん、その立て方で合ってるよ。じゃあ次はその2つを実際に計算して、(x, y) の形で書いてみよう！",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_659",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その通り、会う場所は \u001c(-2, 3)\u001d だよ！式の立て方も計算もばっちりできてるね。",
+    "normalized": "その通り、会う場所は (-2, 3) だよ！式の立て方も計算もばっちりできてるね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_817",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい出だしだね、その約分で合ってるよ。次は \u001d\\frac{45}{4}\\cdot\\frac{5}{120}\\cdot\\frac{8}{3}\u001c の中で、かける前に分子と分母で約分できる組を1つ探してみようか？",
+    "normalized": "いい出だしだね、その約分で合ってるよ。次は \\frac{45}{4}\\cdot\\frac{5}{120}\\cdot\\frac{8}{3} の中で、かける前に分子と分母で約分できる組を1つ探してみようか？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_817",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "うん、\u001d\\frac{5}{4}\u001cで合ってるよ！3と3、8と8がそれぞれ1になるからそうなる、って確認できればばっちり。",
+    "normalized": "うん、\\frac{5}{4}で合ってるよ！3と3、8と8がそれぞれ1になるからそうなる、って確認できればばっちり。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_429",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その調子、ここまで完璧だよ。では \u001dlog_2 x=4\u001d から、x は何になるかな？",
+    "normalized": "その調子、ここまで完璧だよ。では log_2 x=4 から、x は何になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_429",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "正解、よくできたね！最後に \u0018x=16\u0019 を元の式に入れて本当に 6 になるかだけ確認してみよう。",
+    "normalized": "正解、よくできたね！最後に x=16 を元の式に入れて本当に 6 になるかだけ確認してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_754",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "うん、その式変形で合ってるよ。じゃあ最後に、両辺を14で割ると \u001cw\u001e はどんな分数になるかな？",
+    "normalized": "うん、その式変形で合ってるよ。じゃあ最後に、両辺を14で割ると w はどんな分数になるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_754",
+    "conversation_index": 7,
+    "role": "teacher",
+    "turn": 3,
+    "original": "うん、\u001cw\u001e=\\(\\frac{1}{12}\\) で正解！ ちゃんと順番に式を整理できていたよ。",
+    "normalized": "うん、w=\\(\\frac{1}{12}\\) で正解！ ちゃんと順番に式を整理できていたよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_766",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "その考え方で合ってるよ。じゃあ今の式を \u001d-(243A+27B+3C)+4\u001d と見て、さっきの 7 をそのまま使うといくつになるかな？",
+    "normalized": "その考え方で合ってるよ。じゃあ今の式を -(243A+27B+3C)+4 と見て、さっきの 7 をそのまま使うといくつになるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_766",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "その通り、余りは \u0003-3\u0003 だよ！ 余りの定理と、奇数次の項は x を -3 にすると符号が変わることをうまく使えたね。",
+    "normalized": "その通り、余りは -3 だよ！ 余りの定理と、奇数次の項は x を -3 にすると符号が変わることをうまく使えたね。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_729",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい整理だね、ここまではばっちり。次は \u001d右辺−左辺の分数\u001c を1つにまとめると何になるか見てみよう。",
+    "normalized": "いい整理だね、ここまではばっちり。次は 右辺−左辺の分数 を1つにまとめると何になるか見てみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_729",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "その答えで正解！\n\frac{8+\\sqrt{34}}{5},\frac{8-\\sqrt{34}}{5} はどちらも 0,1,-1 ではないので、そのまま確定でOKだよ。",
+    "normalized": "その答えで正解！\n\\frac{8+\\sqrt{34}}{5},\\frac{8-\\sqrt{34}}{5} はどちらも 0,1,-1 ではないので、そのまま確定でOKだよ。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_633",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "いい着眼点だね！ その予想が本当に合ってるか、\u001c$f(x)=x^2+3x$\u001d を式 \u001c$f(x+y)=f(x)+f(y)+2xy$\u001d の左右に入れて比べるとどうなるかな？",
+    "normalized": "いい着眼点だね！ その予想が本当に合ってるか、$f(x)=x^2+3x$ を式 $f(x+y)=f(x)+f(y)+2xy$ の左右に入れて比べるとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_318",
+    "conversation_index": 3,
+    "role": "teacher",
+    "turn": 1,
+    "original": "そうそう、その流れでOK！ まず面積をきれいな数にして、そこから \u0014r=\\frac{\\text{面積}}{27}\u0015 と、BCへの高さ \u0014h=\\frac{2\\times\\text{面積}}{24}\u0015 を出してみよう。",
+    "normalized": "そうそう、その流れでOK！ まず面積をきれいな数にして、そこから r=\\frac{\\text{面積}}{27} と、BCへの高さ h=\\frac{2\\times\\text{面積}}{24} を出してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_10",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その置き方でばっちりだよ。まずは全部やろうとしなくて大丈夫だから、\u001d2乗の和が12296\u001cをそのまま式にするとどうなるかな？",
+    "normalized": "うん、その置き方でばっちりだよ。まずは全部やろうとしなくて大丈夫だから、2乗の和が12296をそのまま式にするとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_10",
+    "conversation_index": 9,
+    "role": "teacher",
+    "turn": 4,
+    "original": "うん、そのくくり方で合ってるよ。まず両辺を3で割ってから、n(n+2) を n^2+2n と見て、\u001d(n+1)^2-1\u001cの形にできないか試してみよう。",
+    "normalized": "うん、そのくくり方で合ってるよ。まず両辺を3で割ってから、n(n+2) を n^2+2n と見て、(n+1)^2-1の形にできないか試してみよう。",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_600",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "いい出だしだよ、その考え方で合ってる。じゃあ例えば『表表裏裏裏』みたいな1つの並びの確率は、\u001d2/3\u001dと\u001d1/3\u001dを使ってどう書けるかな？",
+    "normalized": "いい出だしだよ、その考え方で合ってる。じゃあ例えば『表表裏裏裏』みたいな1つの並びの確率は、2/3と1/3を使ってどう書けるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_158",
+    "conversation_index": 1,
+    "role": "teacher",
+    "turn": 0,
+    "original": "うん、その式は合ってるよ。次に |\\mathbf a\\cdot(\\mathbf b\\times\\mathbf c)|^2 を、\\(\\mathbf a\\cdot\\mathbf a,\\mathbf a\\cdot\\mathbf b\\) たちで作る3×3の行列式で表せるんだけど、その行列はこの条件だとどうなるかな？",
+    "normalized": "うん、その式は合ってるよ。次に |\\mathbf a\\cdot(\\mathbf b\\times\\mathbf c)|^2 を、\\(\\mathbf a\\cdot\\mathbf a,\\mathbf a\\cdot\\mathbf b\\) たちで作る3×3の行列式で表せるんだけど、その行列はこの条件だとどうなるかな？",
+    "requires_semantic_review": true
+  },
+  {
+    "source_id": "math_train_158",
+    "conversation_index": 5,
+    "role": "teacher",
+    "turn": 2,
+    "original": "そう、その形で合ってるよ。じゃあ |\\mathbf a\\cdot(\\mathbf b\\times\\mathbf c)|=1/\\sqrt{10} だったから、その2乗と今の行列式を等しいとして、求める式を移項するといくつになるかな？",
+    "normalized": "そう、その形で合ってるよ。じゃあ |\\mathbf a\\cdot(\\mathbf b\\times\\mathbf c)|=1/\\sqrt{10} だったから、その2乗と今の行列式を等しいとして、求める式を移項するといくつになるかな？",
+    "requires_semantic_review": true
+  }
+]

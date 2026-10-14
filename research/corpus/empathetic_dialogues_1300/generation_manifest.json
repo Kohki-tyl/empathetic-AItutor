@@ -1,0 +1,115 @@
+{
+  "config": {
+    "existing_sha256": "2d39118b605a7fc3b5017fc97eae649084dcbee39be9cf51e22074500664e69f",
+    "questions_sha256": "84d4354c9990658ebb39476b5729342d9f628014538a67de1fd9853715d9247e",
+    "teacher_model": "gpt-5.4",
+    "student_model": "gpt-5.4-mini",
+    "teacher_temperature": 0.2,
+    "student_temperature": 0.8,
+    "reasoning_effort": "none",
+    "max_turns": 15,
+    "max_completion_tokens": 4096,
+    "profile_offset": 800,
+    "teacher_prompt_sha256": "3f41cec6c62135b4eee35d6b52557a81cf984b3f535e80e6cae439d263336b17",
+    "student_prompt_sha256": "fbac97cef339427cd8603cc42c41628df713d946afe2227f388d435c176eaadb",
+    "profiles_sha256": "835ae24b79b57298667bcaf3ff12cab330a9860a6a3a7eadff910684b7a25830",
+    "initial_conditions": [
+      "あなたは現在【Frustrated】状態です。気分の悪さ、あるいはこの問題への強い苦手意識により、最初からイライラしており投げやりなトーンです。",
+      "あなたは現在【Confusion】状態です。問題を見て少し戸惑っており、自信がなさそうに解き始めます。",
+      "あなたは現在【Engaged】状態です。前向きに解く意欲があり、集中して取り組み始めます。"
+    ],
+    "teacher_schema": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "teacher_response",
+        "strict": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "thought_process": {
+              "type": "string"
+            },
+            "student_emotion": {
+              "type": "string",
+              "enum": [
+                "Engaged",
+                "Curious",
+                "Neutral",
+                "Confusion",
+                "Frustrated",
+                "Bored",
+                "Anxious",
+                "Eureka",
+                "Proud",
+                "Relieved"
+              ]
+            },
+            "roadmap_breakdown": {
+              "type": "string"
+            },
+            "next_step_plan": {
+              "type": "string"
+            },
+            "is_completed": {
+              "type": "boolean"
+            },
+            "teacher_utterance": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "thought_process",
+            "student_emotion",
+            "roadmap_breakdown",
+            "next_step_plan",
+            "is_completed",
+            "teacher_utterance"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "run_fingerprint": "57f9f073e2932f9c3d63ce6379372df96317e24505feeb89c227d8a5021613b8"
+  },
+  "created_at": "2026-10-14T13:18:52.855355+00:00",
+  "status": "completed",
+  "saved_in_source_order": 500,
+  "pilot_dialogues": 2,
+  "additional_dialogues": 500,
+  "combined_dialogues": 1300,
+  "completed_dialogues": 484,
+  "max_turn_incomplete_dialogues": 16,
+  "additional_sha256": "0ddcf80568edc7b8760fbbc7e46471a1833d075f5fadda75ee3d1dec1411f4d3",
+  "combined_sha256": "8e8083f301a986201ac54c988abca1a91c53423b6fe8bff913e8ac4ce7de43a6",
+  "review_status": "generated_not_mathematically_audited",
+  "surface_postprocessing_fields": 115,
+  "archive_verification": {
+    "existing_dialogues": 800,
+    "additional_dialogues": 500,
+    "combined_dialogues": 1300,
+    "original_800_unchanged": true,
+    "combined_prefix_matches_original": true,
+    "duplicate_source_ids": 0,
+    "overlap_with_original_1000_questions": 0,
+    "teacher_turns": 2167,
+    "completed_dialogues": 484,
+    "max_turn_incomplete_dialogues": 16,
+    "review_status": "structure_checked_not_mathematically_audited",
+    "resolved_models": [
+      "gpt-5.4-2026-03-05",
+      "gpt-5.4-mini-2026-03-17"
+    ],
+    "api_calls": 4334,
+    "latex_surface_repaired_calls": 313,
+    "surface_postprocessed_fields": 115
+  },
+  "runtime": {
+    "python": "3.11.4",
+    "openai": "2.40.0"
+  },
+  "usage": {
+    "prompt_tokens": 6312979,
+    "completion_tokens": 928101,
+    "total_tokens": 7241080
+  }
+}

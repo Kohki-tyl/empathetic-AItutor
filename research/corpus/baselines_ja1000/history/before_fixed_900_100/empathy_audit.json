@@ -1,0 +1,60 @@
+{
+  "records": 1000,
+  "source_sha256": "c9c3bdd818f63ddd070df0e96ddcfa006c3fdc40888455e75b34678186ced468",
+  "target_sha256": "645aa70d2f5cabf684b8243637305f9d5d10bba52d6c287f9baae7c4406362c1",
+  "models": [
+    "gpt-6-luna"
+  ],
+  "train_records": 882,
+  "validation_records": 118,
+  "assistant_turns": 2052,
+  "flagged_records": [
+    {
+      "id": "empatheticdialogues:hit:4088_conv:8177",
+      "flags": [
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "25",
+            "25"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "empatheticdialogues:hit:7822_conv:15644",
+      "flags": [
+        {
+          "turn": 4,
+          "type": "additional_numeric_notation",
+          "values": [
+            "11"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "empatheticdialogues:hit:7445_conv:14890",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "11"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "11"
+          ]
+        }
+      ]
+    }
+  ],
+  "status": "structural_checks_passed",
+  "review_status": "machine_translated_unreviewed",
+  "limitations": "Checks do not establish semantic fidelity, correct empathy, or mathematical correctness."
+}

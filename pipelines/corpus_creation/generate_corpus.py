@@ -4,8 +4,14 @@ import json
 from openai import OpenAI
 from tqdm import tqdm
 
-api_key = os.getenv('GPT_API_KEY')
-client = OpenAI(api_key=api_key)
+client = None
+
+
+def get_client():
+    global client
+    if client is None:
+        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY') or os.getenv('GPT_API_KEY'))
+    return client
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -65,6 +71,7 @@ teacher_response_schema = {
 }
 
 def generate_dialogue(problem: str, profile_dict: dict, initial_condition: str, max_turns: int = 15) -> dict:
+    api_client = get_client()
     formatted_profile = (
         f"【学年】: {profile_dict.get('grade', '不明')}\n"
         f"【学習済みの範囲】: {profile_dict.get('learned_scope', '不明')}\n"
@@ -96,7 +103,7 @@ def generate_dialogue(problem: str, profile_dict: dict, initial_condition: str, 
             else:
                 active_student_context = student_context
 
-            student_response = client.chat.completions.create(
+            student_response = api_client.chat.completions.create(
                 model="gpt-5.4-mini", 
                 messages=active_student_context,
                 temperature=0.8 
@@ -115,7 +122,7 @@ def generate_dialogue(problem: str, profile_dict: dict, initial_condition: str, 
         student_context.append({"role": "assistant", "content": student_utterance})
 
         try:
-            teacher_response = client.chat.completions.create(
+            teacher_response = api_client.chat.completions.create(
                 model="gpt-5.4", 
                 messages=teacher_context,
                 response_format=teacher_response_schema,

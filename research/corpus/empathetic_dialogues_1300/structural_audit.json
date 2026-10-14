@@ -1,0 +1,20 @@
+{
+  "existing_dialogues": 800,
+  "additional_dialogues": 500,
+  "combined_dialogues": 1300,
+  "original_800_unchanged": true,
+  "combined_prefix_matches_original": true,
+  "duplicate_source_ids": 0,
+  "overlap_with_original_1000_questions": 0,
+  "teacher_turns": 2167,
+  "completed_dialogues": 484,
+  "max_turn_incomplete_dialogues": 16,
+  "review_status": "structure_checked_not_mathematically_audited",
+  "resolved_models": [
+    "gpt-5.4-2026-03-05",
+    "gpt-5.4-mini-2026-03-17"
+  ],
+  "api_calls": 4334,
+  "latex_surface_repaired_calls": 313,
+  "surface_postprocessed_fields": 115
+}

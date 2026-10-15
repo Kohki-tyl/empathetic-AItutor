@@ -1,0 +1,32 @@
+{
+  "evaluated": 500,
+  "recommendations": {
+    "keep": 413,
+    "reject": 64,
+    "review": 23
+  },
+  "sft_eligible": 413,
+  "critical_failure_dialogues": 69,
+  "false_affirmation_dialogues": 71,
+  "false_affirmation_events": 126,
+  "incomplete_dialogues": 16,
+  "averages": {
+    "emotion_alignment_score": 8.53,
+    "pedagogical_empathy_score": 8.61,
+    "mathematical_correctness_score": 8.726,
+    "error_detection_recovery_score": 7.942,
+    "adaptive_scaffolding_score": 8.616,
+    "length_control_score": 9.762,
+    "total_score": 52.186
+  },
+  "resolved_models": [
+    "gpt-5.4-2026-03-05"
+  ],
+  "token_usage": {
+    "prompt_tokens": 1897957,
+    "completion_tokens": 211774,
+    "total_tokens": 2109731
+  },
+  "content_candidates_with_control_characters": 23,
+  "sft_candidates_after_local_checks": 390
+}

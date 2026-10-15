@@ -1,0 +1,171 @@
+{
+  "seed": 42,
+  "validation_count": 100,
+  "method": "minimum_changed_rows_with_indivisible_groups",
+  "datasets": {
+    "math": {
+      "train": 900,
+      "validation": 100,
+      "changed_records": [
+        {
+          "id": "mathdial:5000011:2057",
+          "group_id": "5000011",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "mathdial:5000007:1399",
+          "group_id": "5000007",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "mathdial:5000341:1099",
+          "group_id": "5000341",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "mathdial:5001006:351",
+          "group_id": "5001006",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "mathdial:5001006:277",
+          "group_id": "5001006",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "mathdial:5000341:1630",
+          "group_id": "5000341",
+          "previous_split": "validation",
+          "split": "train"
+        }
+      ],
+      "previous_en_sha256": "b3e2122e913ffedc19ae841dc79c1f33a6a894ef787af5a1bd55c4f6a87f38a8",
+      "previous_ja_sha256": "c4fd50049993d9de64fc68eca43e8f32b0e006cffb9c3db2b55b15913871a437",
+      "en_sha256": "badba19bbe0c600e872f3e21c223bf8bff08bea4a95626dd639c81b926fa647f",
+      "ja_sha256": "aff2c8739287f4b309f6a9dfd6c0c5f0936e7e645ba54b47f29005eac732ae4d"
+    },
+    "empathy": {
+      "train": 900,
+      "validation": 100,
+      "changed_records": [
+        {
+          "id": "empatheticdialogues:hit:12012_conv:24025",
+          "group_id": "hit:12012_conv:24025",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:4235_conv:8470",
+          "group_id": "hit:4235_conv:8470",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:11315_conv:22631",
+          "group_id": "hit:11315_conv:22631",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:11927_conv:23855",
+          "group_id": "hit:11927_conv:23855",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:6637_conv:13275",
+          "group_id": "hit:6637_conv:13275",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:10771_conv:21543",
+          "group_id": "hit:10771_conv:21543",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:2682_conv:5365",
+          "group_id": "hit:2682_conv:5365",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:1830_conv:3660",
+          "group_id": "hit:1830_conv:3660",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:4048_conv:8097",
+          "group_id": "hit:4048_conv:8097",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:10447_conv:20894",
+          "group_id": "hit:10447_conv:20894",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:5913_conv:11826",
+          "group_id": "hit:5913_conv:11826",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:4364_conv:8729",
+          "group_id": "hit:4364_conv:8729",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:10276_conv:20552",
+          "group_id": "hit:10276_conv:20552",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:3682_conv:7364",
+          "group_id": "hit:3682_conv:7364",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:8626_conv:17252",
+          "group_id": "hit:8626_conv:17252",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:4380_conv:8760",
+          "group_id": "hit:4380_conv:8760",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:8013_conv:16026",
+          "group_id": "hit:8013_conv:16026",
+          "previous_split": "validation",
+          "split": "train"
+        },
+        {
+          "id": "empatheticdialogues:hit:3727_conv:7455",
+          "group_id": "hit:3727_conv:7455",
+          "previous_split": "validation",
+          "split": "train"
+        }
+      ],
+      "previous_en_sha256": "c9c3bdd818f63ddd070df0e96ddcfa006c3fdc40888455e75b34678186ced468",
+      "previous_ja_sha256": "645aa70d2f5cabf684b8243637305f9d5d10bba52d6c287f9baae7c4406362c1",
+      "en_sha256": "b3b1746fb6b4a78fd2a47006d7c0c0fb7a48846ff469a5e5ea8ec74fb77668ed",
+      "ja_sha256": "c8c9d7004110414f39b8636ba654982bcaef49948a967e37cb37631d870c2c25"
+    }
+  }
+}

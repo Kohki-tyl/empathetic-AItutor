@@ -1,0 +1,20 @@
+{
+  "scope": "Only the three automatic numeric-notation flags were checked; the full corpus is not human reviewed.",
+  "reviews": [
+    {
+      "id": "empatheticdialogues:hit:4088_conv:8177",
+      "decision": "acceptable lexical-to-numeric notation",
+      "reason": "quarter translated as 25 cents"
+    },
+    {
+      "id": "empatheticdialogues:hit:7822_conv:15644",
+      "decision": "acceptable lexical-to-numeric notation",
+      "reason": "November translated as 11?"
+    },
+    {
+      "id": "empatheticdialogues:hit:7445_conv:14890",
+      "decision": "acceptable lexical-to-numeric notation",
+      "reason": "November translated as 11?"
+    }
+  ]
+}

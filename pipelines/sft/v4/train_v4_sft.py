@@ -208,7 +208,9 @@ def resolve_config(path: Path) -> tuple[dict[str, Any], Path, Path]:
     return config, dataset, output_dir
 
 
-def validate_messages(rows: list[dict[str, Any]], expected_records: int) -> None:
+def validate_messages(rows: list[dict[str, Any]], expected_records: int, response_format: str = "structured") -> None:
+    if response_format not in {"structured", "plain"}:
+        raise ValueError("response_format must be structured or plain")
     if len(rows) != expected_records:
         raise ValueError(
             f"レコード数が想定と異なります: expected={expected_records}, actual={len(rows)}"
@@ -239,7 +241,7 @@ def validate_messages(rows: list[dict[str, Any]], expected_records: int) -> None
                 raise ValueError(f"空のmessage: {record_id}:{message_index}")
             if any(ord(char) < 32 and char not in "\n\t\r" for char in content):
                 raise ValueError(f"制御文字を含むmessage: {record_id}:{message_index}")
-            if message["role"] == "assistant":
+            if message["role"] == "assistant" and response_format == "structured":
                 markers = ("<analysis>", "</analysis>", "<final>", "</final>")
                 match = re.fullmatch(
                     r"<analysis>\s*(.*?)\s*</analysis>\s*"
@@ -262,6 +264,14 @@ def deterministic_split(
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     if len(rows) < 2:
         raise ValueError("学習・検証分割には2件以上必要です")
+    if any("split" in row for row in rows):
+        if any(row.get("split") not in {"train", "validation"} for row in rows):
+            raise ValueError("Explicit splits must all be train or validation")
+        train = [row for row in rows if row["split"] == "train"]
+        validation = [row for row in rows if row["split"] == "validation"]
+        if not train or not validation:
+            raise ValueError("Explicit train/validation split is empty")
+        return train, validation
     order = list(range(len(rows)))
     random.Random(seed).shuffle(order)
     validation_count = max(1, int(round(len(rows) * validation_ratio)))
@@ -304,6 +314,7 @@ def encode_with_assistant_mask(
     max_length: int,
     analysis_loss_weight: float = 0.25,
     final_loss_weight: float = 1.0,
+    response_format: str = "structured",
 ) -> EncodedRecord:
     record_id = str(row["id"])
     messages = row["messages"]
@@ -341,6 +352,11 @@ def encode_with_assistant_mask(
             raise ValueError(
                 f"chat templateのprefix性が成立しません: {record_id}:{index}"
             )
+        if response_format == "plain":
+            labels[len(before):len(after)] = full_ids[len(before):len(after)]
+            loss_weights[len(before):len(after)] = [final_loss_weight] * (len(after) - len(before))
+            final_tokens += len(after) - len(before)
+            continue
         assistant_content = str(message["content"])
         stripped_content = assistant_content.strip()
         match = re.fullmatch(
@@ -477,7 +493,7 @@ def prepare_run(
         )
     dataset_sha256 = assert_dataset_hash(dataset_path, str(config["dataset_sha256"]))
     rows = read_jsonl(dataset_path)
-    validate_messages(rows, int(config["expected_records"]))
+    validate_messages(rows, int(config["expected_records"]), config.get("response_format", "structured"))
     train_rows, validation_rows = deterministic_split(
         rows,
         float(config["validation_ratio"]),
@@ -490,6 +506,7 @@ def prepare_run(
             int(config["max_length"]),
             float(config["analysis_loss_weight"]),
             float(config["final_loss_weight"]),
+            config.get("response_format", "structured"),
         )
         for row in train_rows
     ]
@@ -500,6 +517,7 @@ def prepare_run(
             int(config["max_length"]),
             float(config["analysis_loss_weight"]),
             float(config["final_loss_weight"]),
+            config.get("response_format", "structured"),
         )
         for row in validation_rows
     ]
@@ -529,7 +547,7 @@ def structure_check(config_path: Path) -> dict[str, Any]:
         raise FileNotFoundError(f"SFT入力がありません: {dataset_path}")
     dataset_sha256 = assert_dataset_hash(dataset_path, str(config["dataset_sha256"]))
     rows = read_jsonl(dataset_path)
-    validate_messages(rows, int(config["expected_records"]))
+    validate_messages(rows, int(config["expected_records"]), config.get("response_format", "structured"))
     train_rows, validation_rows = deterministic_split(
         rows, float(config["validation_ratio"]), int(config["seed"])
     )

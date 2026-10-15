@@ -1,0 +1,1850 @@
+{
+  "records": 1000,
+  "source_sha256": "badba19bbe0c600e872f3e21c223bf8bff08bea4a95626dd639c81b926fa647f",
+  "target_sha256": "aff2c8739287f4b309f6a9dfd6c0c5f0936e7e645ba54b47f29005eac732ae4d",
+  "models": [
+    "gpt-6-luna"
+  ],
+  "train_records": 900,
+  "validation_records": 100,
+  "assistant_turns": 6407,
+  "flagged_records": [
+    {
+      "id": "mathdial:5000165:1855",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000960:960",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "30"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 4,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 8,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 10,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000338:224",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 9,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 11,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000961:1484",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "１"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000137:2159",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000493:813",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3",
+            "3",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3",
+            "3",
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000697:1690",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 8,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 9,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 10,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 11,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 15,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 17,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 19,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 21,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 22,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000914:148",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 17,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5001033:1882",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 9,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 10,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 11,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000769:1604",
+      "flags": [
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "４"
+          ]
+        },
+        {
+          "turn": 15,
+          "type": "additional_numeric_notation",
+          "values": [
+            "４"
+          ]
+        },
+        {
+          "turn": 23,
+          "type": "additional_numeric_notation",
+          "values": [
+            "２"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000116:2116",
+      "flags": [
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "7"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000435:1372",
+      "flags": [
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000914:1735",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 9,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 13,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 16,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 18,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 19,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 20,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000700:1586",
+      "flags": [
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000900:1801",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "9",
+            "9",
+            "10",
+            "10"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "9",
+            "9",
+            "9",
+            "9",
+            "10",
+            "10"
+          ]
+        },
+        {
+          "turn": 4,
+          "type": "additional_numeric_notation",
+          "values": [
+            "9",
+            "9",
+            "10",
+            "10"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "9",
+            "10"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "9",
+            "10"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "9",
+            "10"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5001116:175",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "12",
+            "28"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000106:164",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "2"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "2"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000371:340",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3",
+            "2"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "3"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "5",
+            "3"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000165:842",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000468:582",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5001080:1162",
+      "flags": [
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000724:512",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3",
+            "3"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000874:1445",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "10",
+            "11",
+            "11",
+            "12"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "10",
+            "11",
+            "12"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "12"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000003:1588",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "1"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 8,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 9,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 10,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 11,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "1"
+          ]
+        },
+        {
+          "turn": 13,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000672:233",
+      "flags": [
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000457:1961",
+      "flags": [
+        {
+          "turn": 17,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5001018:753",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000612:2152",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000135:1944",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 4,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000654:1241",
+      "flags": [
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1",
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000612:1720",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000976:1126",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "4",
+            "4",
+            "3",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000631:189",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 9,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000574:504",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000724:1705",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3",
+            "3"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3"
+          ]
+        },
+        {
+          "turn": 14,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3"
+          ]
+        },
+        {
+          "turn": 15,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3"
+          ]
+        },
+        {
+          "turn": 16,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5001060:1715",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3",
+            "1",
+            "4"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3",
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3",
+            "1"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "3"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 8,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "3"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000926:1759",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000702:2222",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "4",
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "4",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000934:676",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 4,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 10,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 11,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000838:94",
+      "flags": [
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 23,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 25,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 27,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000695:1187",
+      "flags": [
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 13,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000114:1214",
+      "flags": [
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5001003:1220",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "10"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "10",
+            "10",
+            "10"
+          ]
+        },
+        {
+          "turn": 4,
+          "type": "additional_numeric_notation",
+          "values": [
+            "10"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "10"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "10"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "10",
+            "10"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000556:865",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "6",
+            "7",
+            "8"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "6",
+            "7",
+            "8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000338:1032",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 2,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000016:662",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "12",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "12",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "2",
+            "12"
+          ]
+        },
+        {
+          "turn": 8,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "2"
+          ]
+        },
+        {
+          "turn": 10,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "2"
+          ]
+        },
+        {
+          "turn": 12,
+          "type": "additional_numeric_notation",
+          "values": [
+            "12",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "turn": 14,
+          "type": "additional_numeric_notation",
+          "values": [
+            "12",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "turn": 15,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "12",
+            "1"
+          ]
+        },
+        {
+          "turn": 16,
+          "type": "additional_numeric_notation",
+          "values": [
+            "12",
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000700:606",
+      "flags": [
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 9,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 11,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 13,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000016:466",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "12",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "turn": 4,
+          "type": "additional_numeric_notation",
+          "values": [
+            "12",
+            "1",
+            "2"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "12",
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000689:959",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "１"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "１"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "１",
+            "８"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "８"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000809:1171",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1",
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 4,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000400:51",
+      "flags": [
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000362:529",
+      "flags": [
+        {
+          "turn": 4,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000345:1109",
+      "flags": [
+        {
+          "turn": 4,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000631:1631",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 9,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 11,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        },
+        {
+          "turn": 15,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000612:2018",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000942:571",
+      "flags": [
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 10,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 15,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000302:638",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "2",
+            "2",
+            "1",
+            "1",
+            "6"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "6",
+            "6",
+            "6",
+            "2",
+            "2",
+            "1"
+          ]
+        },
+        {
+          "turn": 4,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "1",
+            "6",
+            "6"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000900:794",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "9",
+            "9",
+            "10",
+            "10"
+          ]
+        },
+        {
+          "turn": 3,
+          "type": "additional_numeric_notation",
+          "values": [
+            "9",
+            "9",
+            "9",
+            "10",
+            "10"
+          ]
+        },
+        {
+          "turn": 4,
+          "type": "additional_numeric_notation",
+          "values": [
+            "9"
+          ]
+        },
+        {
+          "turn": 5,
+          "type": "additional_numeric_notation",
+          "values": [
+            "9",
+            "9",
+            "9",
+            "10",
+            "10",
+            "10"
+          ]
+        },
+        {
+          "turn": 6,
+          "type": "additional_numeric_notation",
+          "values": [
+            "9",
+            "9",
+            "10"
+          ]
+        },
+        {
+          "turn": 7,
+          "type": "additional_numeric_notation",
+          "values": [
+            "9",
+            "9",
+            "9",
+            "10",
+            "10"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000926:1694",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mathdial:5000987:732",
+      "flags": [
+        {
+          "turn": 8,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3"
+          ]
+        }
+      ]
+    }
+  ],
+  "status": "structural_checks_passed",
+  "review_status": "machine_translated_unreviewed",
+  "limitations": "Checks do not establish semantic fidelity, correct empathy, or mathematical correctness."
+}

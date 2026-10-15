@@ -1,0 +1,907 @@
+{
+  "dataset": "nlile/hendrycks-MATH-benchmark",
+  "dataset_revision": "465bcdb36f5962aa3512891498966df785fc3c18",
+  "source_split": "train",
+  "source_url": "https://huggingface.co/datasets/nlile/hendrycks-MATH-benchmark/resolve/465bcdb36f5962aa3512891498966df785fc3c18/data/train-00000-of-00001.parquet",
+  "source_parquet_sha256": "5bb914caa970c120a9a139ccedef764da11e62965ac31f4dfff3ccf774199375",
+  "existing": "E:\\github\\empathetic-AItutor\\pipelines\\corpus_creation\\questions\\translated_1000_math.jsonl",
+  "existing_sha256": "fe371a28683defa8a61c46b3c311a576dbb1120b019976ab635a90a14ff23e45",
+  "existing_records": 1000,
+  "existing_alignment_verified": true,
+  "selection": "sequential_after_max_existing_source_index_excluding_diagrams_and_duplicates",
+  "count": 500,
+  "selected_ids": [
+    "math_train_1098",
+    "math_train_1099",
+    "math_train_1100",
+    "math_train_1101",
+    "math_train_1102",
+    "math_train_1104",
+    "math_train_1105",
+    "math_train_1106",
+    "math_train_1107",
+    "math_train_1108",
+    "math_train_1109",
+    "math_train_1111",
+    "math_train_1112",
+    "math_train_1113",
+    "math_train_1115",
+    "math_train_1116",
+    "math_train_1117",
+    "math_train_1118",
+    "math_train_1119",
+    "math_train_1120",
+    "math_train_1121",
+    "math_train_1122",
+    "math_train_1124",
+    "math_train_1125",
+    "math_train_1126",
+    "math_train_1127",
+    "math_train_1128",
+    "math_train_1129",
+    "math_train_1131",
+    "math_train_1132",
+    "math_train_1133",
+    "math_train_1134",
+    "math_train_1135",
+    "math_train_1136",
+    "math_train_1137",
+    "math_train_1138",
+    "math_train_1139",
+    "math_train_1140",
+    "math_train_1141",
+    "math_train_1142",
+    "math_train_1143",
+    "math_train_1145",
+    "math_train_1146",
+    "math_train_1147",
+    "math_train_1148",
+    "math_train_1149",
+    "math_train_1150",
+    "math_train_1151",
+    "math_train_1152",
+    "math_train_1153",
+    "math_train_1154",
+    "math_train_1156",
+    "math_train_1157",
+    "math_train_1158",
+    "math_train_1159",
+    "math_train_1160",
+    "math_train_1161",
+    "math_train_1162",
+    "math_train_1163",
+    "math_train_1164",
+    "math_train_1165",
+    "math_train_1166",
+    "math_train_1167",
+    "math_train_1168",
+    "math_train_1169",
+    "math_train_1170",
+    "math_train_1172",
+    "math_train_1174",
+    "math_train_1175",
+    "math_train_1176",
+    "math_train_1177",
+    "math_train_1178",
+    "math_train_1179",
+    "math_train_1181",
+    "math_train_1182",
+    "math_train_1183",
+    "math_train_1184",
+    "math_train_1185",
+    "math_train_1186",
+    "math_train_1187",
+    "math_train_1188",
+    "math_train_1190",
+    "math_train_1191",
+    "math_train_1194",
+    "math_train_1195",
+    "math_train_1196",
+    "math_train_1197",
+    "math_train_1198",
+    "math_train_1199",
+    "math_train_1200",
+    "math_train_1201",
+    "math_train_1202",
+    "math_train_1203",
+    "math_train_1204",
+    "math_train_1205",
+    "math_train_1206",
+    "math_train_1207",
+    "math_train_1208",
+    "math_train_1209",
+    "math_train_1210",
+    "math_train_1211",
+    "math_train_1212",
+    "math_train_1213",
+    "math_train_1214",
+    "math_train_1215",
+    "math_train_1216",
+    "math_train_1218",
+    "math_train_1219",
+    "math_train_1220",
+    "math_train_1221",
+    "math_train_1222",
+    "math_train_1223",
+    "math_train_1224",
+    "math_train_1225",
+    "math_train_1226",
+    "math_train_1228",
+    "math_train_1229",
+    "math_train_1231",
+    "math_train_1232",
+    "math_train_1233",
+    "math_train_1234",
+    "math_train_1235",
+    "math_train_1236",
+    "math_train_1237",
+    "math_train_1238",
+    "math_train_1239",
+    "math_train_1240",
+    "math_train_1241",
+    "math_train_1242",
+    "math_train_1243",
+    "math_train_1244",
+    "math_train_1246",
+    "math_train_1247",
+    "math_train_1248",
+    "math_train_1249",
+    "math_train_1250",
+    "math_train_1253",
+    "math_train_1255",
+    "math_train_1256",
+    "math_train_1258",
+    "math_train_1260",
+    "math_train_1261",
+    "math_train_1262",
+    "math_train_1263",
+    "math_train_1264",
+    "math_train_1265",
+    "math_train_1266",
+    "math_train_1269",
+    "math_train_1270",
+    "math_train_1271",
+    "math_train_1272",
+    "math_train_1273",
+    "math_train_1274",
+    "math_train_1277",
+    "math_train_1278",
+    "math_train_1279",
+    "math_train_1280",
+    "math_train_1281",
+    "math_train_1284",
+    "math_train_1285",
+    "math_train_1286",
+    "math_train_1287",
+    "math_train_1288",
+    "math_train_1289",
+    "math_train_1290",
+    "math_train_1293",
+    "math_train_1294",
+    "math_train_1295",
+    "math_train_1296",
+    "math_train_1297",
+    "math_train_1298",
+    "math_train_1299",
+    "math_train_1300",
+    "math_train_1301",
+    "math_train_1304",
+    "math_train_1306",
+    "math_train_1307",
+    "math_train_1308",
+    "math_train_1309",
+    "math_train_1310",
+    "math_train_1311",
+    "math_train_1312",
+    "math_train_1313",
+    "math_train_1314",
+    "math_train_1315",
+    "math_train_1316",
+    "math_train_1317",
+    "math_train_1318",
+    "math_train_1319",
+    "math_train_1320",
+    "math_train_1321",
+    "math_train_1324",
+    "math_train_1325",
+    "math_train_1326",
+    "math_train_1328",
+    "math_train_1329",
+    "math_train_1330",
+    "math_train_1331",
+    "math_train_1332",
+    "math_train_1334",
+    "math_train_1335",
+    "math_train_1336",
+    "math_train_1337",
+    "math_train_1338",
+    "math_train_1339",
+    "math_train_1340",
+    "math_train_1341",
+    "math_train_1343",
+    "math_train_1345",
+    "math_train_1346",
+    "math_train_1347",
+    "math_train_1348",
+    "math_train_1349",
+    "math_train_1350",
+    "math_train_1351",
+    "math_train_1353",
+    "math_train_1354",
+    "math_train_1355",
+    "math_train_1357",
+    "math_train_1358",
+    "math_train_1359",
+    "math_train_1360",
+    "math_train_1361",
+    "math_train_1362",
+    "math_train_1363",
+    "math_train_1364",
+    "math_train_1366",
+    "math_train_1367",
+    "math_train_1368",
+    "math_train_1369",
+    "math_train_1370",
+    "math_train_1373",
+    "math_train_1374",
+    "math_train_1375",
+    "math_train_1376",
+    "math_train_1377",
+    "math_train_1378",
+    "math_train_1380",
+    "math_train_1381",
+    "math_train_1382",
+    "math_train_1383",
+    "math_train_1384",
+    "math_train_1385",
+    "math_train_1386",
+    "math_train_1387",
+    "math_train_1389",
+    "math_train_1390",
+    "math_train_1391",
+    "math_train_1392",
+    "math_train_1393",
+    "math_train_1394",
+    "math_train_1396",
+    "math_train_1397",
+    "math_train_1398",
+    "math_train_1399",
+    "math_train_1400",
+    "math_train_1401",
+    "math_train_1402",
+    "math_train_1404",
+    "math_train_1407",
+    "math_train_1408",
+    "math_train_1409",
+    "math_train_1410",
+    "math_train_1411",
+    "math_train_1412",
+    "math_train_1413",
+    "math_train_1414",
+    "math_train_1415",
+    "math_train_1416",
+    "math_train_1417",
+    "math_train_1418",
+    "math_train_1419",
+    "math_train_1421",
+    "math_train_1423",
+    "math_train_1424",
+    "math_train_1425",
+    "math_train_1428",
+    "math_train_1429",
+    "math_train_1430",
+    "math_train_1431",
+    "math_train_1432",
+    "math_train_1434",
+    "math_train_1436",
+    "math_train_1437",
+    "math_train_1438",
+    "math_train_1439",
+    "math_train_1440",
+    "math_train_1441",
+    "math_train_1442",
+    "math_train_1443",
+    "math_train_1444",
+    "math_train_1445",
+    "math_train_1446",
+    "math_train_1448",
+    "math_train_1449",
+    "math_train_1450",
+    "math_train_1452",
+    "math_train_1454",
+    "math_train_1455",
+    "math_train_1456",
+    "math_train_1457",
+    "math_train_1458",
+    "math_train_1459",
+    "math_train_1460",
+    "math_train_1461",
+    "math_train_1462",
+    "math_train_1464",
+    "math_train_1465",
+    "math_train_1466",
+    "math_train_1467",
+    "math_train_1468",
+    "math_train_1469",
+    "math_train_1470",
+    "math_train_1471",
+    "math_train_1472",
+    "math_train_1473",
+    "math_train_1474",
+    "math_train_1475",
+    "math_train_1476",
+    "math_train_1477",
+    "math_train_1478",
+    "math_train_1479",
+    "math_train_1480",
+    "math_train_1481",
+    "math_train_1483",
+    "math_train_1484",
+    "math_train_1485",
+    "math_train_1486",
+    "math_train_1487",
+    "math_train_1488",
+    "math_train_1489",
+    "math_train_1490",
+    "math_train_1493",
+    "math_train_1494",
+    "math_train_1495",
+    "math_train_1496",
+    "math_train_1497",
+    "math_train_1498",
+    "math_train_1499",
+    "math_train_1501",
+    "math_train_1502",
+    "math_train_1503",
+    "math_train_1504",
+    "math_train_1505",
+    "math_train_1506",
+    "math_train_1507",
+    "math_train_1508",
+    "math_train_1509",
+    "math_train_1510",
+    "math_train_1511",
+    "math_train_1512",
+    "math_train_1513",
+    "math_train_1514",
+    "math_train_1515",
+    "math_train_1516",
+    "math_train_1518",
+    "math_train_1519",
+    "math_train_1520",
+    "math_train_1521",
+    "math_train_1522",
+    "math_train_1523",
+    "math_train_1525",
+    "math_train_1526",
+    "math_train_1527",
+    "math_train_1528",
+    "math_train_1529",
+    "math_train_1530",
+    "math_train_1531",
+    "math_train_1532",
+    "math_train_1533",
+    "math_train_1534",
+    "math_train_1535",
+    "math_train_1536",
+    "math_train_1538",
+    "math_train_1539",
+    "math_train_1541",
+    "math_train_1542",
+    "math_train_1544",
+    "math_train_1545",
+    "math_train_1546",
+    "math_train_1547",
+    "math_train_1548",
+    "math_train_1549",
+    "math_train_1550",
+    "math_train_1551",
+    "math_train_1552",
+    "math_train_1554",
+    "math_train_1555",
+    "math_train_1556",
+    "math_train_1557",
+    "math_train_1558",
+    "math_train_1559",
+    "math_train_1560",
+    "math_train_1561",
+    "math_train_1563",
+    "math_train_1564",
+    "math_train_1565",
+    "math_train_1566",
+    "math_train_1567",
+    "math_train_1568",
+    "math_train_1571",
+    "math_train_1572",
+    "math_train_1573",
+    "math_train_1574",
+    "math_train_1575",
+    "math_train_1576",
+    "math_train_1578",
+    "math_train_1579",
+    "math_train_1580",
+    "math_train_1582",
+    "math_train_1584",
+    "math_train_1586",
+    "math_train_1587",
+    "math_train_1588",
+    "math_train_1589",
+    "math_train_1590",
+    "math_train_1592",
+    "math_train_1593",
+    "math_train_1594",
+    "math_train_1595",
+    "math_train_1597",
+    "math_train_1598",
+    "math_train_1599",
+    "math_train_1602",
+    "math_train_1603",
+    "math_train_1604",
+    "math_train_1607",
+    "math_train_1608",
+    "math_train_1609",
+    "math_train_1610",
+    "math_train_1611",
+    "math_train_1612",
+    "math_train_1613",
+    "math_train_1614",
+    "math_train_1615",
+    "math_train_1616",
+    "math_train_1617",
+    "math_train_1618",
+    "math_train_1619",
+    "math_train_1620",
+    "math_train_1622",
+    "math_train_1623",
+    "math_train_1624",
+    "math_train_1625",
+    "math_train_1626",
+    "math_train_1627",
+    "math_train_1630",
+    "math_train_1631",
+    "math_train_1632",
+    "math_train_1633",
+    "math_train_1634",
+    "math_train_1635",
+    "math_train_1638",
+    "math_train_1639",
+    "math_train_1640",
+    "math_train_1641",
+    "math_train_1642",
+    "math_train_1643",
+    "math_train_1645",
+    "math_train_1646",
+    "math_train_1647",
+    "math_train_1648",
+    "math_train_1649",
+    "math_train_1650",
+    "math_train_1651",
+    "math_train_1652",
+    "math_train_1653",
+    "math_train_1654",
+    "math_train_1655",
+    "math_train_1656",
+    "math_train_1658",
+    "math_train_1659",
+    "math_train_1661",
+    "math_train_1662",
+    "math_train_1663",
+    "math_train_1664",
+    "math_train_1665",
+    "math_train_1666",
+    "math_train_1667",
+    "math_train_1668",
+    "math_train_1669",
+    "math_train_1670",
+    "math_train_1671",
+    "math_train_1672",
+    "math_train_1675",
+    "math_train_1676",
+    "math_train_1677",
+    "math_train_1679",
+    "math_train_1680",
+    "math_train_1681",
+    "math_train_1682",
+    "math_train_1683",
+    "math_train_1684",
+    "math_train_1685",
+    "math_train_1686",
+    "math_train_1689",
+    "math_train_1690",
+    "math_train_1691",
+    "math_train_1692",
+    "math_train_1693"
+  ],
+  "skipped": [
+    {
+      "index": 1103,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1110,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1114,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1123,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1130,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1144,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1155,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1171,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1173,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1180,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1189,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1192,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1193,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1217,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1227,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1230,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1245,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1251,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1252,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1254,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1257,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1259,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1267,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1268,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1275,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1276,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1282,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1283,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1291,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1292,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1302,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1303,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1305,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1322,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1323,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1327,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1333,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1342,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1344,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1352,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1356,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1365,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1371,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1372,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1379,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1388,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1395,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1403,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1405,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1406,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1420,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1422,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1426,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1427,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1433,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1435,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1447,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1451,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1453,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1463,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1482,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1491,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1492,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1500,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1517,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1524,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1537,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1540,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1543,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1553,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1562,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1569,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1570,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1577,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1581,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1583,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1585,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1591,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1596,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1600,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1601,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1605,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1606,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1621,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1628,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1629,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1636,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1637,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1644,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1657,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1660,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1673,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1674,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1678,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1687,
+      "reason": "diagram_dependent_or_asy"
+    },
+    {
+      "index": 1688,
+      "reason": "diagram_dependent_or_asy"
+    }
+  ],
+  "original_math_splits": {
+    "test": 188,
+    "train": 312
+  },
+  "original_math_test_may_be_present": true,
+  "output_sha256": "0b5a4a2f729b58372a9a954b6c654ffd9b33f79d06e0590645038a128fcdbdc4"
+}

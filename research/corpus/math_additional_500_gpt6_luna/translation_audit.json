@@ -1,0 +1,124 @@
+{
+  "records": 500,
+  "source_sha256": "0b5a4a2f729b58372a9a954b6c654ffd9b33f79d06e0590645038a128fcdbdc4",
+  "target_sha256": "15ed92ac1821be6d33952aaccbfb3d25c82468716edebdde3a8e1676d99c5d7e",
+  "models": [
+    "gpt-6-luna"
+  ],
+  "train_records": 500,
+  "validation_records": 0,
+  "assistant_turns": 500,
+  "flagged_records": [
+    {
+      "id": "math_train_1119",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3"
+          ]
+        },
+        {
+          "turn": 2,
+          "type": "additional_numeric_notation",
+          "values": [
+            "3"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "math_train_1120",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "2",
+            "2"
+          ]
+        },
+        {
+          "turn": 2,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "2",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "math_train_1278",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        },
+        {
+          "turn": 2,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1",
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "math_train_1337",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "１"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "math_train_1351",
+      "flags": [
+        {
+          "turn": 2,
+          "type": "additional_numeric_notation",
+          "values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "math_train_1616",
+      "flags": [
+        {
+          "turn": 1,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2"
+          ]
+        },
+        {
+          "turn": 2,
+          "type": "additional_numeric_notation",
+          "values": [
+            "2",
+            "2",
+            "2"
+          ]
+        }
+      ]
+    }
+  ],
+  "status": "structural_checks_passed",
+  "review_status": "machine_translated_unreviewed",
+  "limitations": "Checks do not establish semantic fidelity, correct empathy, or mathematical correctness."
+}

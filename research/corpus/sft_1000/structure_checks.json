@@ -1,0 +1,23 @@
+{
+  "math": {
+    "status": "structure_ok",
+    "dataset_sha256": "aff2c8739287f4b309f6a9dfd6c0c5f0936e7e645ba54b47f29005eac732ae4d",
+    "records": 1000,
+    "train_records": 900,
+    "validation_records": 100
+  },
+  "empathy": {
+    "status": "structure_ok",
+    "dataset_sha256": "c8c9d7004110414f39b8636ba654982bcaef49948a967e37cb37631d870c2c25",
+    "records": 1000,
+    "train_records": 900,
+    "validation_records": 100
+  },
+  "eduempathy": {
+    "status": "structure_ok",
+    "dataset_sha256": "390e07615a4ad32cb92ab36c9a51a9031cf940cf15d847b57f14b30c34885b58",
+    "records": 1000,
+    "train_records": 900,
+    "validation_records": 100
+  }
+}

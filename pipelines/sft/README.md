@@ -2,6 +2,8 @@
 
 SFT関連ファイルは、評価テストのバージョンとは独立して管理する。
 
+MathDial・EmpatheticDialogues・両者混合の比較学習は [baselines/README.md](baselines/README.md) を参照する。v4 と同じ基盤モデル・LoRA 設定を利用し、通常応答の assistant-only loss、対話単位分割、教師 token 予算指定に対応する。
+
 ```text
 sft/
 ├── shared/

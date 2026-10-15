@@ -1,5 +1,7 @@
 # 日本語SFT用の3条件・各1,000対話
 
+analysis付きEduEmpathyの別条件は [eduempathy_analysis](eduempathy_analysis/README.md) を参照。同じ1,000対話・900/100分割を維持し、800対話版と同じプロンプトとanalysis/final形式で学習する。
+
 2026-10-15作成。リポジトリ内の既存コーパスから作成し、元データは変更していない。
 
 | 条件 | フォルダ | 学習 | 検証 | assistant発話数（全体） |

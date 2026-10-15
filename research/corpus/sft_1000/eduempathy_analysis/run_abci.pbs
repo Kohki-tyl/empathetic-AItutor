@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -q rt_HG
+#PBS -l select=1
+#PBS -l walltime=12:00:00
+#PBS -N edu-analysis
+#PBS -j oe
+set -euo pipefail
+cd "${PBS_O_WORKDIR}"
+source /etc/profile.d/modules.sh
+module load python/3.12/3.12.9
+module load cuda/13.0/13.0.1
+source .venv/bin/activate
+export PYTHONUNBUFFERED=1
+export TOKENIZERS_PARALLELISM=false
+python train.py --structure-only
+python train.py --resume auto

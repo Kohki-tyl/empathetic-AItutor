@@ -1,0 +1,4 @@
+.venv/
+outputs/
+logs/
+edu-analysis.o*
